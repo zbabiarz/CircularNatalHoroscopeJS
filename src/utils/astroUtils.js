@@ -4,19 +4,16 @@ import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
 
-function getChironSign(birthDate) {
-  const date = new Date(birthDate)
+function getChironSign(degree) {
+  const zodiacSigns = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ]
 
-  for (const entry of chironSigns) {
-    const start = new Date(entry.start)
-    const end = new Date(entry.end)
+  const normalizedDegree = ((degree % 360) + 360) % 360
+  const signIndex = Math.floor(normalizedDegree / 30)
 
-    if (date >= start && date <= end) {
-      return entry.sign
-    }
-  }
-
-  return 'Unknown'
+  return zodiacSigns[signIndex]
 }
 
 function getChironDegree(birthDate) {
@@ -41,8 +38,8 @@ function getChironDegree(birthDate) {
 export async function calculateChironData(formData) {
   const { name, email, birthDate, birthTime, birthLocation, birthCoordinates } = formData
 
-  const chironSign = getChironSign(birthDate)
   const chironDegree = getChironDegree(birthDate)
+  const chironSign = getChironSign(chironDegree)
 
   let chironHouse = null
   let shadowId = `chiron_${chironSign.toLowerCase()}`
