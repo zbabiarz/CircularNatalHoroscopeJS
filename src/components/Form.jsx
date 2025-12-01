@@ -1,4 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
+import { useLoadScript, Autocomplete } from '@react-google-maps/api'
+
+const libraries = ['places']
 
 function Form({ onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState({
@@ -6,7 +9,15 @@ function Form({ onSubmit, isSubmitting }) {
     email: '',
     birthDate: '',
     birthTime: '',
-    birthLocation: ''
+    birthLocation: '',
+    birthCoordinates: null
+  })
+
+  const autocompleteRef = useRef(null)
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries
   })
 
   const handleChange = (e) => {
@@ -16,15 +27,49 @@ function Form({ onSubmit, isSubmitting }) {
     })
   }
 
+  const handlePlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace()
+
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat()
+        const lng = place.geometry.location.lng()
+
+        setFormData({
+          ...formData,
+          birthLocation: place.formatted_address || place.name,
+          birthCoordinates: [lat, lng]
+        })
+      }
+    }
+  }
+
+  const handleLocationInputChange = (e) => {
+    setFormData({
+      ...formData,
+      birthLocation: e.target.value,
+      birthCoordinates: null
+    })
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    
+
     if (!formData.name || !formData.email || !formData.birthDate) {
       alert('Please fill in all required fields')
       return
     }
-    
+
+    if (!formData.birthTime || !formData.birthCoordinates) {
+      alert('Birth time and location are required for accurate Chiron calculations. Please select a location from the dropdown.')
+      return
+    }
+
     onSubmit(formData)
+  }
+
+  if (loadError) {
+    return <div className="text-red-600">Error loading maps. Please refresh the page.</div>
   }
 
   return (
@@ -78,7 +123,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
-          Birth Time <span className="text-sm text-brown/60">(optional)</span>
+          Birth Time <span className="text-magenta">*</span>
         </label>
         <input
           type="time"
@@ -86,23 +131,55 @@ function Form({ onSubmit, isSubmitting }) {
           name="birthTime"
           value={formData.birthTime}
           onChange={handleChange}
+          required
           className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
         />
+        <p className="text-xs text-brown/60 mt-1">Use 24-hour format (e.g., 14:30 for 2:30 PM)</p>
       </div>
 
       <div>
         <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
-          Birth Location <span className="text-sm text-brown/60">(optional - City, State or coordinates)</span>
+          Birth Location <span className="text-magenta">*</span>
         </label>
-        <input
-          type="text"
-          id="birthLocation"
-          name="birthLocation"
-          value={formData.birthLocation}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
-          placeholder="Los Angeles, CA or 34.05, -118.24"
-        />
+        {isLoaded ? (
+          <Autocomplete
+            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onPlaceChanged={handlePlaceChanged}
+            options={{
+              types: ['(cities)'],
+              fields: ['formatted_address', 'geometry', 'name']
+            }}
+          >
+            <input
+              type="text"
+              id="birthLocation"
+              name="birthLocation"
+              value={formData.birthLocation}
+              onChange={handleLocationInputChange}
+              required
+              className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              placeholder="Start typing city name..."
+            />
+          </Autocomplete>
+        ) : (
+          <input
+            type="text"
+            id="birthLocation"
+            name="birthLocation"
+            value={formData.birthLocation}
+            onChange={handleLocationInputChange}
+            required
+            disabled
+            className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50 opacity-50"
+            placeholder="Loading location search..."
+          />
+        )}
+        <p className="text-xs text-brown/60 mt-1">
+          {formData.birthCoordinates
+            ? `✓ Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
+            : 'Select a location from the dropdown for accurate calculations'
+          }
+        </p>
       </div>
 
       <button
