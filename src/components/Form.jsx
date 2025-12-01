@@ -15,8 +15,10 @@ function Form({ onSubmit, isSubmitting }) {
 
   const autocompleteRef = useRef(null)
 
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: googleMapsApiKey || '',
     libraries
   })
 
@@ -60,11 +62,36 @@ function Form({ onSubmit, isSubmitting }) {
       return
     }
 
+    if (!formData.birthTime || !formData.birthLocation || !formData.birthCoordinates) {
+      alert('Birth time and location are required. Please select a location from the dropdown.')
+      return
+    }
+
     onSubmit(formData)
   }
 
   if (loadError) {
-    return <div className="text-red-600">Error loading maps. Please refresh the page.</div>
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+        <p className="font-semibold mb-2">Error loading location search</p>
+        <p className="text-sm">Please check that your Google Maps API key is configured correctly in the .env file.</p>
+      </div>
+    )
+  }
+
+  if (!googleMapsApiKey) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
+        <p className="font-semibold mb-2">Google Maps API Key Required</p>
+        <p className="text-sm mb-2">To use location search, you need to:</p>
+        <ol className="text-sm list-decimal ml-5 space-y-1">
+          <li>Get a Google Maps API key from <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
+          <li>Enable the "Places API" and "Maps JavaScript API"</li>
+          <li>Add it to your .env file as: VITE_GOOGLE_MAPS_API_KEY=your_key_here</li>
+          <li>Restart the development server</li>
+        </ol>
+      </div>
+    )
   }
 
   return (
@@ -118,7 +145,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
-          Birth Time <span className="text-sm text-brown/60">(optional)</span>
+          Birth Time <span className="text-magenta">*</span>
         </label>
         <input
           type="time"
@@ -126,14 +153,15 @@ function Form({ onSubmit, isSubmitting }) {
           name="birthTime"
           value={formData.birthTime}
           onChange={handleChange}
+          required
           className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
         />
-        <p className="text-xs text-brown/60 mt-1">Use 24-hour format (e.g., 14:30 for 2:30 PM)</p>
+        <p className="text-xs text-brown/60 mt-1">Required for accurate house placement</p>
       </div>
 
       <div>
         <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
-          Birth Location <span className="text-sm text-brown/60">(optional - for more accurate results)</span>
+          Birth Location <span className="text-magenta">*</span>
         </label>
         {isLoaded ? (
           <Autocomplete
@@ -169,7 +197,7 @@ function Form({ onSubmit, isSubmitting }) {
         <p className="text-xs text-brown/60 mt-1">
           {formData.birthCoordinates
             ? `✓ Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
-            : 'Select a location from the dropdown for accurate calculations'
+            : 'Start typing and select your birth city from the dropdown'
           }
         </p>
       </div>
