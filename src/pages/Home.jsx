@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import { calculateChironData } from '../utils/astroUtils'
+import { supabase } from '../lib/supabase'
 
 function Home() {
   const navigate = useNavigate()
@@ -9,10 +10,29 @@ function Home() {
 
   const handleSubmit = async (formData) => {
     setIsSubmitting(true)
-    
+
     try {
       const result = await calculateChironData(formData)
-      
+
+      const { error: dbError } = await supabase
+        .from('shadow_work_results')
+        .insert({
+          name: result.name,
+          email: result.email,
+          birth_date: formData.birthDate,
+          birth_time: formData.birthTime || null,
+          birth_location: formData.birthLocation || null,
+          chiron_sign: result.chironSign,
+          chiron_degree: result.chironDegree,
+          chiron_house: result.chironHouse || null,
+          shadow_id: result.shadowId,
+          shadow_text: result.shadowText
+        })
+
+      if (dbError) {
+        console.error('Database error:', dbError)
+      }
+
       try {
         await fetch('https://n8n.yourdomain.com/webhook/chiron_shadow', {
           method: 'POST',
@@ -22,7 +42,7 @@ function Home() {
       } catch (webhookError) {
         console.warn('Webhook error:', webhookError)
       }
-      
+
       const params = new URLSearchParams({
         shadowId: result.shadowId,
         name: result.name,
@@ -30,7 +50,7 @@ function Home() {
         chironHouse: result.chironHouse || '',
         chironDegree: result.chironDegree || ''
       })
-      
+
       navigate(`/result?${params.toString()}`)
     } catch (error) {
       console.error('Error:', error)
