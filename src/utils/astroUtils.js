@@ -1,5 +1,6 @@
 import { Horoscope } from '../Horoscope'
 import { Origin } from '../Origin'
+import { getHouseFromDD } from '../utilities/astrology'
 import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
@@ -40,26 +41,8 @@ function getChironDegree(birthDate) {
 
 function calculateChironHouse(chironDegree, horoscope) {
   const houses = horoscope.Houses
-
-  for (let i = 0; i < houses.length; i++) {
-    const house = houses[i]
-    const nextHouse = houses[(i + 1) % houses.length]
-
-    const currentCusp = house.ChartPosition.Ecliptic.DecimalDegrees
-    const nextCusp = nextHouse.ChartPosition.Ecliptic.DecimalDegrees
-
-    if (nextCusp > currentCusp) {
-      if (chironDegree >= currentCusp && chironDegree < nextCusp) {
-        return house.id
-      }
-    } else {
-      if (chironDegree >= currentCusp || chironDegree < nextCusp) {
-        return house.id
-      }
-    }
-  }
-
-  return 1
+  const house = getHouseFromDD(houses, chironDegree)
+  return house ? house.id : 1
 }
 
 export async function calculateChironData(formData) {
