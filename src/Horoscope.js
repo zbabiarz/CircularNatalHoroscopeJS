@@ -32,6 +32,7 @@ import {
   zodiacPositionToHorizon,
   getHouseFromDD,
   constructHouses,
+  calculateChironPosition,
 } from './utilities/astrology';
 
 //////////
@@ -484,6 +485,12 @@ export class Horoscope {
         case 'lilith':
           eclipticDegrees = ephemerisResults.find((body) => body.key === 'moon')
             .orbit.meanApogee.apparentLongitude;
+          break;
+        case 'chiron':
+          eclipticDegrees = calculateChironPosition({
+            ephemerisResults,
+            zodiac: this._zodiac,
+          });
           break;
         default:
           eclipticDegrees = null;

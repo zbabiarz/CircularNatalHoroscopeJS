@@ -1,5 +1,6 @@
 import Sign from '../Sign';
 import House from '../House';
+import chironDegrees from '../data/chiron-degrees.json';
 
 import {
   modulo, arccot, degreesToRadians, radiansToDegrees, tanFromDegrees, cosFromDegrees, sinFromDegrees, isDegreeWithinCircleArc,
@@ -781,4 +782,32 @@ export const calculateCampanusHouseCusps = ({
     modulo(c11, 360).toFixed(4),
     modulo(c12, 360).toFixed(4),
   ];
+};
+
+export const calculateChironPosition = ({ ephemerisResults, zodiac }) => {
+  if (!ephemerisResults || ephemerisResults.length === 0) {
+    return 0;
+  }
+
+  const sunData = ephemerisResults.find((body) => body.key === 'sun');
+  if (!sunData || !sunData.date) {
+    return 0;
+  }
+
+  const birthDate = new Date(sunData.date);
+
+  let closestEntry = chironDegrees[0];
+  let minDiff = Math.abs(new Date(closestEntry.date) - birthDate);
+
+  for (const entry of chironDegrees) {
+    const entryDate = new Date(entry.date);
+    const diff = Math.abs(entryDate - birthDate);
+
+    if (diff < minDiff) {
+      minDiff = diff;
+      closestEntry = entry;
+    }
+  }
+
+  return closestEntry.degree;
 };

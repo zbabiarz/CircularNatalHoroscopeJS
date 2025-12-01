@@ -38,30 +38,6 @@ function getChironDegree(birthDate) {
   return closestEntry.degree
 }
 
-function calculateChironHouse(chironDegree, horoscope) {
-  const houses = horoscope.Houses
-
-  for (let i = 0; i < houses.length; i++) {
-    const house = houses[i]
-    const nextHouse = houses[(i + 1) % houses.length]
-
-    const currentCusp = house.ChartPosition.Ecliptic.DecimalDegrees
-    const nextCusp = nextHouse.ChartPosition.Ecliptic.DecimalDegrees
-
-    if (nextCusp > currentCusp) {
-      if (chironDegree >= currentCusp && chironDegree < nextCusp) {
-        return house.id
-      }
-    } else {
-      if (chironDegree >= currentCusp || chironDegree < nextCusp) {
-        return house.id
-      }
-    }
-  }
-
-  return 1
-}
-
 export async function calculateChironData(formData) {
   const { name, email, birthDate, birthTime, birthLocation, birthCoordinates } = formData
 
@@ -104,8 +80,11 @@ export async function calculateChironData(formData) {
         zodiac: 'tropical'
       })
 
-      chironHouse = calculateChironHouse(chironDegree, horoscope)
-      shadowId = `chiron_${chironSign.toLowerCase()}_${chironHouse}`
+      const chironPoint = horoscope.CelestialPoints.chiron
+      if (chironPoint && chironPoint.House) {
+        chironHouse = chironPoint.House.id
+        shadowId = `chiron_${chironSign.toLowerCase()}_${chironHouse}`
+      }
     } catch (error) {
       console.error('Error calculating house:', error)
     }

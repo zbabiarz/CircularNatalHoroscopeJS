@@ -106,6 +106,9 @@ export const POINTS = {
   },
   lilith: {
     label: 'Lilith'
+  },
+  chiron: {
+    label: 'Chiron'
   }
 }
 
