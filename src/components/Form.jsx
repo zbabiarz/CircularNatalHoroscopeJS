@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useLoadScript, Autocomplete } from '@react-google-maps/api'
 
 const libraries = ['places']
@@ -12,6 +12,7 @@ function Form({ onSubmit, isSubmitting }) {
     birthLocation: '',
     birthCoordinates: null
   })
+  const [apiStatus, setApiStatus] = useState('loading')
 
   const autocompleteRef = useRef(null)
 
@@ -19,8 +20,18 @@ function Form({ onSubmit, isSubmitting }) {
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: googleMapsApiKey || '',
-    libraries
+    libraries,
+    preventGoogleFontsLoading: true
   })
+
+  useEffect(() => {
+    if (loadError) {
+      console.error('Google Maps API Error:', loadError)
+      setApiStatus('error')
+    } else if (isLoaded) {
+      setApiStatus('loaded')
+    }
+  }, [isLoaded, loadError])
 
   const handleChange = (e) => {
     setFormData({
@@ -70,15 +81,6 @@ function Form({ onSubmit, isSubmitting }) {
     onSubmit(formData)
   }
 
-  if (loadError) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-        <p className="font-semibold mb-2">Error loading location search</p>
-        <p className="text-sm">Please check that your Google Maps API key is configured correctly in the .env file.</p>
-      </div>
-    )
-  }
-
   if (!googleMapsApiKey) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
@@ -90,6 +92,35 @@ function Form({ onSubmit, isSubmitting }) {
           <li>Add it to your .env file as: VITE_GOOGLE_MAPS_API_KEY=your_key_here</li>
           <li>Restart the development server</li>
         </ol>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+        <p className="font-semibold mb-2">Google Maps API Error</p>
+        <p className="text-sm mb-3">The API key is present but there's an issue loading the Maps API.</p>
+        <div className="text-sm space-y-2 mb-3">
+          <p className="font-semibold">Common fixes:</p>
+          <ol className="list-decimal ml-5 space-y-1">
+            <li>Go to <a href="https://console.cloud.google.com/apis/library" target="_blank" rel="noopener noreferrer" className="underline font-medium">Google Cloud Console APIs</a></li>
+            <li>Make sure these APIs are enabled:
+              <ul className="list-disc ml-5 mt-1">
+                <li>Places API (New)</li>
+                <li>Maps JavaScript API</li>
+                <li>Geocoding API</li>
+              </ul>
+            </li>
+            <li>Ensure billing is enabled for your project</li>
+            <li>Check that your API key has no restrictions blocking localhost</li>
+            <li>Wait a few minutes after enabling APIs, then refresh this page</li>
+          </ol>
+        </div>
+        <details className="text-xs mt-2">
+          <summary className="cursor-pointer font-medium">Technical details</summary>
+          <pre className="mt-2 p-2 bg-red-100 rounded overflow-auto">{loadError.message || 'Unknown error'}</pre>
+        </details>
       </div>
     )
   }
@@ -163,9 +194,12 @@ function Form({ onSubmit, isSubmitting }) {
         <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
           Birth Location <span className="text-magenta">*</span>
         </label>
-        {isLoaded ? (
+        {isLoaded && apiStatus === 'loaded' ? (
           <Autocomplete
-            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onLoad={(autocomplete) => {
+              autocompleteRef.current = autocomplete
+              console.log('Autocomplete loaded successfully')
+            }}
             onPlaceChanged={handlePlaceChanged}
             options={{
               types: ['(cities)'],
@@ -178,6 +212,7 @@ function Form({ onSubmit, isSubmitting }) {
               name="birthLocation"
               value={formData.birthLocation}
               onChange={handleLocationInputChange}
+              autoComplete="off"
               className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
               placeholder="Start typing city name..."
             />
