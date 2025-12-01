@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 
 function Result() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
   
   const name = searchParams.get('name')
@@ -64,7 +65,10 @@ function Result() {
         </div>
         
         <div className={`text-center transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <button className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105">
+          <button
+            onClick={() => navigate('/')}
+            className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+          >
             Continue Your Healing Journey
           </button>
         </div>
