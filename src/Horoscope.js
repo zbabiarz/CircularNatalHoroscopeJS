@@ -1,6 +1,5 @@
 import moment from 'moment-timezone';
-import * as EphemerisModule from '../lib/ephemeris-1.2.1.bundle';
-const Ephemeris = EphemerisModule.default || EphemerisModule;
+import Ephemeris from '../lib/ephemeris-1.2.1.bundle';
 import Sign from './Sign';
 import ChartPosition from './ChartPosition';
 import House from './House';
