@@ -1,3 +1,5 @@
+import { Horoscope } from '../Horoscope'
+import { Origin } from '../Origin'
 import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
@@ -36,10 +38,28 @@ function getChironDegree(birthDate) {
   return closestEntry.degree
 }
 
-function calculateSimpleHouse(chironDegree) {
-  const houseSize = 30
-  const house = Math.floor(chironDegree / houseSize) + 1
-  return house > 12 ? house - 12 : house
+function calculateChironHouse(chironDegree, horoscope) {
+  const houses = horoscope.Houses
+
+  for (let i = 0; i < houses.length; i++) {
+    const house = houses[i]
+    const nextHouse = houses[(i + 1) % houses.length]
+
+    const currentCusp = house.ChartPosition.Ecliptic.DecimalDegrees
+    const nextCusp = nextHouse.ChartPosition.Ecliptic.DecimalDegrees
+
+    if (nextCusp > currentCusp) {
+      if (chironDegree >= currentCusp && chironDegree < nextCusp) {
+        return house.id
+      }
+    } else {
+      if (chironDegree >= currentCusp || chironDegree < nextCusp) {
+        return house.id
+      }
+    }
+  }
+
+  return 1
 }
 
 export async function calculateChironData(formData) {
@@ -52,8 +72,43 @@ export async function calculateChironData(formData) {
   let shadowId = `chiron_${chironSign.toLowerCase()}`
 
   if (birthTime && birthCoordinates) {
-    chironHouse = calculateSimpleHouse(chironDegree)
-    shadowId = `chiron_${chironSign.toLowerCase()}_${chironHouse}`
+    try {
+      let hours, minutes
+
+      if (birthTime.includes(' ')) {
+        const [time, period] = birthTime.split(' ')
+        ;[hours, minutes] = time.split(':').map(Number)
+
+        if (period === 'PM' && hours !== 12) {
+          hours += 12
+        } else if (period === 'AM' && hours === 12) {
+          hours = 0
+        }
+      } else {
+        ;[hours, minutes] = birthTime.split(':').map(Number)
+      }
+
+      const origin = new Origin({
+        year: parseInt(birthDate.split('-')[0]),
+        month: parseInt(birthDate.split('-')[1]) - 1,
+        date: parseInt(birthDate.split('-')[2]),
+        hour: hours,
+        minute: minutes,
+        latitude: birthCoordinates[0],
+        longitude: birthCoordinates[1]
+      })
+
+      const horoscope = new Horoscope({
+        origin,
+        houseSystem: 'placidus',
+        zodiac: 'tropical'
+      })
+
+      chironHouse = calculateChironHouse(chironDegree, horoscope)
+      shadowId = `chiron_${chironSign.toLowerCase()}_${chironHouse}`
+    } catch (error) {
+      console.error('Error calculating house:', error)
+    }
   }
 
   const shadowText = shadowMap[shadowId]?.description ||
