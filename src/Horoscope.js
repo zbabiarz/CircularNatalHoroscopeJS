@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import Ephemeris from '../lib/ephemeris-1.2.1.bundle';
+const Ephemeris = window.Ephemeris;
 import Sign from './Sign';
 import ChartPosition from './ChartPosition';
 import House from './House';
