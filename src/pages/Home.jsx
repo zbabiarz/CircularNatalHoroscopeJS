@@ -45,7 +45,11 @@ function Home() {
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
           <div className="flex justify-center mb-4">
-            <div className="text-6xl shimmer">✨</div>
+            <img
+              src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
+              alt="Shadow Work Astro Quiz Logo"
+              className="w-16 h-16 shimmer"
+            />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-brown mb-4">
             Shadow Work Astro Quiz
