@@ -14,6 +14,36 @@ function Home() {
     try {
       const result = await calculateChironData(formData)
 
+      let aiReport = ''
+
+      try {
+        const reportResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-report`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: result.name,
+              chironSign: result.chironSign,
+              chironHouse: result.chironHouse,
+              chironDegree: result.chironDegree
+            })
+          }
+        )
+
+        if (reportResponse.ok) {
+          const reportData = await reportResponse.json()
+          aiReport = reportData.report
+        } else {
+          console.error('Failed to generate AI report:', await reportResponse.text())
+        }
+      } catch (reportError) {
+        console.error('Error generating AI report:', reportError)
+      }
+
       const { error: dbError } = await supabase
         .from('shadow_work_results')
         .insert({
@@ -42,6 +72,8 @@ function Home() {
       } catch (webhookError) {
         console.warn('Webhook error:', webhookError)
       }
+
+      localStorage.setItem('aiReport', aiReport)
 
       const params = new URLSearchParams({
         shadowId: result.shadowId,
