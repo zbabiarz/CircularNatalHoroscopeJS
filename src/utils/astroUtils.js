@@ -4,6 +4,25 @@ import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
 
+function waitForEphemeris() {
+  return new Promise((resolve) => {
+    if (window.Ephemeris) {
+      resolve()
+      return
+    }
+    const checkInterval = setInterval(() => {
+      if (window.Ephemeris) {
+        clearInterval(checkInterval)
+        resolve()
+      }
+    }, 100)
+    setTimeout(() => {
+      clearInterval(checkInterval)
+      resolve()
+    }, 5000)
+  })
+}
+
 function getChironSign(degree) {
   const zodiacSigns = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -45,6 +64,21 @@ export async function calculateChironData(formData) {
   let shadowId = `chiron_${chironSign.toLowerCase()}`
 
   if (birthTime && birthCoordinates) {
+    await waitForEphemeris()
+
+    if (!window.Ephemeris) {
+      console.error('Ephemeris library not loaded')
+      return {
+        name,
+        email,
+        chironSign,
+        chironDegree,
+        chironHouse,
+        shadowId,
+        shadowText: shadowMap[shadowId]?.description || 'Shadow description not found.'
+      }
+    }
+
     try {
       let hours, minutes
 
@@ -77,25 +111,18 @@ export async function calculateChironData(formData) {
         zodiac: 'tropical'
       })
 
-      console.log('Horoscope object:', horoscope)
-      console.log('CelestialPoints:', horoscope.CelestialPoints)
       const chironPoint = horoscope.CelestialPoints.chiron
-      console.log('Chiron point:', chironPoint)
-      console.log('Chiron House:', chironPoint?.House)
 
       if (chironPoint && chironPoint.House) {
         const houseNum = chironPoint.House.id || chironPoint.House
-        console.log('House number:', houseNum)
         chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
         shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
       } else if (chironPoint) {
         const houses = horoscope.Houses
-        console.log('All houses:', houses)
 
         const chironLongitude = chironPoint.ChartPosition?.Ecliptic?.DecimalDegrees ||
                                 chironPoint.longitude ||
                                 chironDegree
-        console.log('Chiron longitude:', chironLongitude)
 
         if (houses && houses.length > 0) {
           for (let i = 0; i < 12; i++) {
@@ -105,15 +132,12 @@ export async function calculateChironData(formData) {
             const currentDegree = currentHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
             const nextDegree = nextHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
 
-            console.log(`House ${i + 1}: ${currentDegree} - ${nextDegree}`)
-
             if (currentDegree !== undefined && nextDegree !== undefined) {
               if (nextDegree > currentDegree) {
                 if (chironLongitude >= currentDegree && chironLongitude < nextDegree) {
                   const houseNum = i + 1
                   chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
                   shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-                  console.log('Found house (normal):', houseNum)
                   break
                 }
               } else {
@@ -121,7 +145,6 @@ export async function calculateChironData(formData) {
                   const houseNum = i + 1
                   chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
                   shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-                  console.log('Found house (wrap):', houseNum)
                   break
                 }
               }
