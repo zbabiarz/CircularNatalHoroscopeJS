@@ -77,10 +77,57 @@ export async function calculateChironData(formData) {
         zodiac: 'tropical'
       })
 
+      console.log('Horoscope object:', horoscope)
+      console.log('CelestialPoints:', horoscope.CelestialPoints)
       const chironPoint = horoscope.CelestialPoints.chiron
+      console.log('Chiron point:', chironPoint)
+      console.log('Chiron House:', chironPoint?.House)
+
       if (chironPoint && chironPoint.House) {
-        chironHouse = `${chironPoint.House.id}${getOrdinalSuffix(chironPoint.House.id)} House`
-        shadowId = `chiron_${chironSign.toLowerCase()}_${chironPoint.House.id}`
+        const houseNum = chironPoint.House.id || chironPoint.House
+        console.log('House number:', houseNum)
+        chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
+        shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
+      } else if (chironPoint) {
+        const houses = horoscope.Houses
+        console.log('All houses:', houses)
+
+        const chironLongitude = chironPoint.ChartPosition?.Ecliptic?.DecimalDegrees ||
+                                chironPoint.longitude ||
+                                chironDegree
+        console.log('Chiron longitude:', chironLongitude)
+
+        if (houses && houses.length > 0) {
+          for (let i = 0; i < 12; i++) {
+            const currentHouse = houses[i]
+            const nextHouse = houses[(i + 1) % 12]
+
+            const currentDegree = currentHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
+            const nextDegree = nextHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
+
+            console.log(`House ${i + 1}: ${currentDegree} - ${nextDegree}`)
+
+            if (currentDegree !== undefined && nextDegree !== undefined) {
+              if (nextDegree > currentDegree) {
+                if (chironLongitude >= currentDegree && chironLongitude < nextDegree) {
+                  const houseNum = i + 1
+                  chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
+                  shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
+                  console.log('Found house (normal):', houseNum)
+                  break
+                }
+              } else {
+                if (chironLongitude >= currentDegree || chironLongitude < nextDegree) {
+                  const houseNum = i + 1
+                  chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
+                  shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
+                  console.log('Found house (wrap):', houseNum)
+                  break
+                }
+              }
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error calculating house:', error)
