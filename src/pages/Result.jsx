@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
+import ReportFormatter from '../components/ReportFormatter'
 
 function Result() {
   const [searchParams] = useSearchParams()
@@ -64,11 +65,9 @@ function Result() {
             )}
           </div>
           
-          <div className="prose prose-lg max-w-none">
+          <div className="max-w-none">
             {aiReport ? (
-              <div className="text-brown/90 leading-relaxed whitespace-pre-line">
-                {aiReport}
-              </div>
+              <ReportFormatter report={aiReport} />
             ) : (
               <p className="text-brown/90 leading-relaxed whitespace-pre-line">
                 {shadowData.description}

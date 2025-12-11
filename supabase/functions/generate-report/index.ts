@@ -61,8 +61,30 @@ Deno.serve(async (req: Request) => {
     const { name, chironSign, chironHouse, chironDegree }: RequestBody = await req.json();
 
     const prompt = chironHouse && chironHouse !== "Unknown"
-      ? `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} in the ${chironHouse} at ${chironDegree.toFixed(2)} degrees. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate. The report should help them understand their core wound and path to healing.`
-      : `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation without house-specific insights. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate. The report should help them understand their core wound and path to healing.`;
+      ? `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} in the ${chironHouse} at ${chironDegree.toFixed(2)} degrees. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate.
+
+Format the report with these sections, each with a bold header (using **Section Name**):
+**Chiron in ${chironSign}**
+**Archetype:** [name of the archetype]
+**Theme:** [main theme]
+**Core Wound:** [detailed explanation of the wound]
+**Your Medicine:** [their healing gift and medicine]
+**Your Invitation:** [what they're being called to do]
+**Journal / Reflection Prompts:** [3-4 reflection questions starting with "-"]
+
+Make it deeply personal, insightful, and healing.`
+      : `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation without house-specific insights. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate.
+
+Format the report with these sections, each with a bold header (using **Section Name**):
+**Chiron in ${chironSign}**
+**Archetype:** [name of the archetype]
+**Theme:** [main theme]
+**Core Wound:** [detailed explanation of the wound]
+**Your Medicine:** [their healing gift and medicine]
+**Your Invitation:** [what they're being called to do]
+**Journal / Reflection Prompts:** [3-4 reflection questions starting with "-"]
+
+Make it deeply personal, insightful, and healing.`;
 
     const threadResponse = await fetch("https://api.openai.com/v1/threads", {
       method: "POST",
