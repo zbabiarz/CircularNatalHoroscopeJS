@@ -1,18 +1,23 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
+import MysticalLoader from '../components/MysticalLoader'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
 
 function Home() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('Calculating your celestial coordinates...')
 
   const handleSubmit = async (formData) => {
     setIsSubmitting(true)
+    setLoadingMessage('Calculating your celestial coordinates...')
 
     try {
       const result = await calculateChironData(formData)
+
+      setLoadingMessage('Channeling your personalized shadow wisdom...')
 
       let aiReport = ''
 
@@ -93,8 +98,10 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
+    <>
+      {isSubmitting && <MysticalLoader message={loadingMessage} />}
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
           <div className="flex justify-center mb-4">
             <img
@@ -120,6 +127,7 @@ function Home() {
         </footer>
       </div>
     </div>
+    </>
   )
 }
 
