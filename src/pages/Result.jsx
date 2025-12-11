@@ -50,14 +50,14 @@ function Result() {
               <p className="text-sm text-brown/60 mb-1">Chiron Sign</p>
               <p className="text-2xl font-bold text-magenta">{chironSign}</p>
             </div>
-            {chironHouse && (
+            {chironHouse && chironHouse !== 'Unknown' && (
               <div className="text-center">
                 <p className="text-sm text-brown/60 mb-1">Chiron House</p>
                 <p className="text-2xl font-bold text-magenta">{chironHouse}</p>
               </div>
             )}
             {chironDegree && (
-              <div className="text-center md:col-span-2">
+              <div className={`text-center ${chironHouse === 'Unknown' ? '' : 'md:col-span-2'}`}>
                 <p className="text-sm text-brown/60 mb-1">Chiron Degree</p>
                 <p className="text-lg font-semibold text-brown">{parseFloat(chironDegree).toFixed(2)}°</p>
               </div>

@@ -69,12 +69,17 @@ function Form({ onSubmit, isSubmitting }) {
     e.preventDefault()
 
     if (!formData.name || !formData.email || !formData.birthDate) {
-      alert('Please fill in all required fields')
+      alert('Please fill in all required fields (name, email, and birth date)')
       return
     }
 
-    if (!formData.birthTime || !formData.birthLocation || !formData.birthCoordinates) {
-      alert('Birth time and location are required. Please select a location from the dropdown.')
+    if (formData.birthTime && !formData.birthLocation) {
+      alert('If you provide birth time, please also select a location from the dropdown.')
+      return
+    }
+
+    if (formData.birthTime && !formData.birthCoordinates) {
+      alert('Please select your birth location from the dropdown suggestions.')
       return
     }
 
@@ -176,7 +181,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
-          Birth Time <span className="text-magenta">*</span>
+          Birth Time <span className="text-brown/40">(Optional)</span>
         </label>
         <input
           type="time"
@@ -184,15 +189,14 @@ function Form({ onSubmit, isSubmitting }) {
           name="birthTime"
           value={formData.birthTime}
           onChange={handleChange}
-          required
           className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
         />
-        <p className="text-xs text-brown/60 mt-1">Required for accurate house placement</p>
+        <p className="text-xs text-brown/60 mt-1">Optional - needed for house placement accuracy</p>
       </div>
 
       <div>
         <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
-          Birth Location <span className="text-magenta">*</span>
+          Birth Location <span className="text-brown/40">(Optional)</span>
         </label>
         {isLoaded && apiStatus === 'loaded' ? (
           <Autocomplete

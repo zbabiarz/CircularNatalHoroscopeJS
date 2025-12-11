@@ -41,7 +41,7 @@ export async function calculateChironData(formData) {
   const chironDegree = getChironDegree(birthDate)
   const chironSign = getChironSign(chironDegree)
 
-  let chironHouse = null
+  let chironHouse = 'Unknown'
   let shadowId = `chiron_${chironSign.toLowerCase()}`
 
   if (birthTime && birthCoordinates) {
@@ -79,8 +79,8 @@ export async function calculateChironData(formData) {
 
       const chironPoint = horoscope.CelestialPoints.chiron
       if (chironPoint && chironPoint.House) {
-        chironHouse = chironPoint.House.id
-        shadowId = `chiron_${chironSign.toLowerCase()}_${chironHouse}`
+        chironHouse = `${chironPoint.House.id}${getOrdinalSuffix(chironPoint.House.id)} House`
+        shadowId = `chiron_${chironSign.toLowerCase()}_${chironPoint.House.id}`
       }
     } catch (error) {
       console.error('Error calculating house:', error)
@@ -96,7 +96,7 @@ export async function calculateChironData(formData) {
     email,
     chironSign,
     chironDegree,
-    chironHouse: chironHouse ? `${chironHouse}${getOrdinalSuffix(chironHouse)} House` : null,
+    chironHouse,
     shadowId,
     shadowText
   }

@@ -54,7 +54,7 @@ function Home() {
           birth_location: formData.birthLocation || null,
           chiron_sign: result.chironSign,
           chiron_degree: result.chironDegree,
-          chiron_house: result.chironHouse || null,
+          chiron_house: result.chironHouse === 'Unknown' ? null : result.chironHouse,
           shadow_id: result.shadowId,
           shadow_text: result.shadowText
         })
@@ -79,8 +79,8 @@ function Home() {
         shadowId: result.shadowId,
         name: result.name,
         chironSign: result.chironSign,
-        chironHouse: result.chironHouse || '',
-        chironDegree: result.chironDegree || ''
+        chironHouse: result.chironHouse,
+        chironDegree: result.chironDegree
       })
 
       navigate(`/result?${params.toString()}`)

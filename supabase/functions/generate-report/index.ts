@@ -60,9 +60,9 @@ Deno.serve(async (req: Request) => {
 
     const { name, chironSign, chironHouse, chironDegree }: RequestBody = await req.json();
 
-    const prompt = chironHouse
+    const prompt = chironHouse && chironHouse !== "Unknown"
       ? `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} in the ${chironHouse} at ${chironDegree.toFixed(2)} degrees. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate. The report should help them understand their core wound and path to healing.`
-      : `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate. The report should help them understand their core wound and path to healing.`;
+      : `Generate a personalized shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation without house-specific insights. Write this in Morgan's voice - warm, insightful, empowering, and deeply compassionate. The report should help them understand their core wound and path to healing.`;
 
     const threadResponse = await fetch("https://api.openai.com/v1/threads", {
       method: "POST",
