@@ -79,8 +79,29 @@ export class Horoscope {
     this._customOrbs = validateCustomOrbs(customOrbs);
 
     // Remember - Ephemeris requires UTC time!
-    const Ephemeris = window.Ephemeris;
+    let Ephemeris = window.Ephemeris;
+
+    if (Ephemeris && typeof Ephemeris !== 'function') {
+      if (typeof Ephemeris.default === 'function') {
+        Ephemeris = Ephemeris.default;
+      } else {
+        for (const key in Ephemeris) {
+          if (typeof Ephemeris[key] === 'function' && key !== '__esModule') {
+            console.log('Found Ephemeris constructor at key:', key);
+            Ephemeris = Ephemeris[key];
+            break;
+          }
+        }
+      }
+    }
+
     if (!Ephemeris || typeof Ephemeris !== 'function') {
+      console.error('Ephemeris debug info:', {
+        exists: !!window.Ephemeris,
+        type: typeof window.Ephemeris,
+        keys: window.Ephemeris ? Object.keys(window.Ephemeris) : [],
+        value: window.Ephemeris
+      });
       throw new Error('Ephemeris library not loaded. Please ensure the ephemeris script is loaded before creating a Horoscope.');
     }
     this.Ephemeris = new Ephemeris({

@@ -4,34 +4,84 @@ import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
 
-function waitForEphemeris() {
+function getEphemerisConstructor() {
+  const ephemeris = window.Ephemeris;
+  if (!ephemeris) return null;
+
+  if (typeof ephemeris === 'function') {
+    return ephemeris;
+  }
+
+  if (typeof ephemeris.default === 'function') {
+    return ephemeris.default;
+  }
+
+  for (const key in ephemeris) {
+    if (typeof ephemeris[key] === 'function' && key !== '__esModule') {
+      return ephemeris[key];
+    }
+  }
+
+  return null;
+}
+
+function loadEphemerisScript() {
   return new Promise((resolve) => {
-    const isValidEphemeris = () => {
-      return window.Ephemeris && typeof window.Ephemeris === 'function'
+    if (getEphemerisConstructor()) {
+      resolve();
+      return;
     }
 
-    if (isValidEphemeris()) {
-      resolve()
-      return
+    const existingScript = document.querySelector('script[src*="ephemeris"]');
+    if (existingScript) {
+      existingScript.remove();
     }
+
+    const script = document.createElement('script');
+    script.src = '/ephemeris-1.2.1.bundle.js';
+    script.async = false;
+
+    script.onload = () => {
+      setTimeout(resolve, 100);
+    };
+
+    script.onerror = () => {
+      console.error('Failed to load ephemeris script');
+      resolve();
+    };
+
+    document.head.appendChild(script);
+  });
+}
+
+function waitForEphemeris() {
+  return new Promise(async (resolve) => {
+    if (getEphemerisConstructor()) {
+      resolve();
+      return;
+    }
+
+    await loadEphemerisScript();
 
     const checkInterval = setInterval(() => {
-      if (isValidEphemeris()) {
-        clearInterval(checkInterval)
-        resolve()
+      if (getEphemerisConstructor()) {
+        clearInterval(checkInterval);
+        resolve();
       }
-    }, 50)
+    }, 50);
 
     setTimeout(() => {
-      clearInterval(checkInterval)
-      if (isValidEphemeris()) {
-        resolve()
-      } else {
-        console.error('Ephemeris library failed to load properly')
-        resolve()
+      clearInterval(checkInterval);
+      if (!getEphemerisConstructor()) {
+        console.error('Ephemeris library failed to load properly', {
+          exists: !!window.Ephemeris,
+          type: typeof window.Ephemeris,
+          keys: window.Ephemeris ? Object.keys(window.Ephemeris) : []
+        });
       }
-    }, 10000)
-  })
+      resolve();
+    }, 5000);
+  });
 }
 
 function getChironSign(degree) {
@@ -77,9 +127,12 @@ export async function calculateChironData(formData) {
   if (birthTime && birthCoordinates) {
     await waitForEphemeris()
 
-    if (!window.Ephemeris || typeof window.Ephemeris !== 'function') {
-      console.error('Ephemeris library not loaded or not a constructor. Type:', typeof window.Ephemeris)
-      console.error('window.Ephemeris:', window.Ephemeris)
+    if (!getEphemerisConstructor()) {
+      console.error('Ephemeris library not loaded or not a constructor', {
+        exists: !!window.Ephemeris,
+        type: typeof window.Ephemeris,
+        keys: window.Ephemeris ? Object.keys(window.Ephemeris) : []
+      });
       return {
         name,
         email,

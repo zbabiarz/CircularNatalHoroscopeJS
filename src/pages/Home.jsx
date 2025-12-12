@@ -68,16 +68,6 @@ function Home() {
         console.error('Database error:', dbError)
       }
 
-      try {
-        await fetch('https://n8n.yourdomain.com/webhook/chiron_shadow', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(result)
-        })
-      } catch (webhookError) {
-        console.warn('Webhook error:', webhookError)
-      }
-
       localStorage.setItem('aiReport', aiReport)
 
       const params = new URLSearchParams({
