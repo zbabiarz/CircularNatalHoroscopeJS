@@ -18,19 +18,7 @@ export const getSignFromDD = (decimalDegrees) =>
   Sign.Data.find((sign) => sign.zodiacStart <= decimalDegrees && sign.zodiacEnd > decimalDegrees);
 export const getHouseFromDD = (houses, decimalDegrees) => {
   decimalDegrees = modulo(decimalDegrees, 360);
-  console.log('getHouseFromDD - Finding house for degree:', decimalDegrees);
-  for (const house of houses) {
-    const start = house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
-    const end = house.ChartPosition.EndPosition.Ecliptic.DecimalDegrees;
-    const isWithin = isDegreeWithinCircleArc(start, end, decimalDegrees);
-    console.log(`  House ${house.id}: ${start.toFixed(2)}° - ${end.toFixed(2)}° | Contains ${decimalDegrees.toFixed(2)}°? ${isWithin}`);
-    if (isWithin) {
-      console.log(`  -> Found in house ${house.id}`);
-      return house;
-    }
-  }
-  console.log('  -> Not found in any house');
-  return null;
+  return houses.find((house) => isDegreeWithinCircleArc(house.ChartPosition.StartPosition.Ecliptic.DecimalDegrees, house.ChartPosition.EndPosition.Ecliptic.DecimalDegrees, decimalDegrees));
 };
 
 export const constructHouses = (cuspsArray, ascendantDegrees, zodiac, language = 'en') => cuspsArray.map((cuspDegree, index) => {

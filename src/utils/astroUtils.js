@@ -3,35 +3,6 @@ import { Origin } from '../Origin'
 import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
-import { isDegreeWithinCircleArc, modulo } from '../utilities/math'
-
-function runChironHouseTest() {
-  console.log('=== CHIRON HOUSE TEST (Zach Birth Data) ===')
-  console.log('Expected: 11th House for Chiron at 118.39°')
-  console.log('')
-
-  const testDegree = 118.39
-
-  console.log('Testing isDegreeWithinCircleArc logic:')
-  console.log(`  90° - 120° contains ${testDegree}°? ${isDegreeWithinCircleArc(90, 120, testDegree)}`)
-  console.log(`  180° - 210° contains ${testDegree}°? ${isDegreeWithinCircleArc(180, 210, testDegree)}`)
-  console.log(`  330° - 30° (wraps) contains ${testDegree}°? ${isDegreeWithinCircleArc(330, 30, testDegree)}`)
-  console.log('')
-
-  console.log('Testing sample house cusps (typical Virgo rising):')
-  const sampleCusps = [152, 180, 210, 242, 275, 310, 332, 0, 30, 62, 95, 125]
-  sampleCusps.forEach((cusp, i) => {
-    const nextCusp = sampleCusps[(i + 1) % 12]
-    const contains = isDegreeWithinCircleArc(cusp, nextCusp, testDegree)
-    console.log(`  House ${i + 1}: ${cusp}° - ${nextCusp}° contains ${testDegree}°? ${contains}`)
-  })
-  console.log('=== END TEST ===')
-}
-
-if (typeof window !== 'undefined') {
-  window.runChironHouseTest = runChironHouseTest
-  setTimeout(runChironHouseTest, 2000)
-}
 
 function getEphemerisConstructor() {
   const ephemeris = window.Ephemeris;
@@ -205,72 +176,29 @@ export async function calculateChironData(formData) {
         zodiac: 'tropical'
       })
 
-      console.log('=== HOUSE CALCULATION DEBUG ===')
-      console.log('Input:', {
-        birthDate,
-        birthTime,
-        hours,
-        minutes,
-        latitude: birthCoordinates[0],
-        longitude: birthCoordinates[1]
-      })
-      console.log('Origin:', {
-        localTime: origin.localTimeFormatted,
-        utcTime: origin.utcTimeFormatted,
-        timezone: origin.timezone?.name,
-        localSiderealTime: origin.localSiderealTime
-      })
-      console.log('Ascendant:', horoscope.Ascendant?.ChartPosition?.Ecliptic?.DecimalDegrees)
-      console.log('Midheaven:', horoscope.Midheaven?.ChartPosition?.Ecliptic?.DecimalDegrees)
-      console.log('House Cusps:')
-      horoscope.Houses.forEach((h, i) => {
-        console.log(`  House ${i + 1}: ${h.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}° - ${h.ChartPosition?.EndPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
-      })
+      const houses = horoscope.Houses
+      const chironLongitude = chironDegree
 
-      const chironPoint = horoscope.CelestialPoints.chiron
-      console.log('Chiron from horoscope:', {
-        degree: chironPoint?.ChartPosition?.Ecliptic?.DecimalDegrees,
-        houseFromLib: chironPoint?.House?.id,
-        sign: chironPoint?.Sign?.label
-      })
-      console.log('Chiron from JSON:', chironDegree)
-      console.log('=== END DEBUG ===')
+      if (houses && houses.length > 0) {
+        for (let i = 0; i < 12; i++) {
+          const house = houses[i]
+          const startDegree = house.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
+          const endDegree = house.ChartPosition?.EndPosition?.Ecliptic?.DecimalDegrees
 
-      if (chironPoint && chironPoint.House) {
-        const houseNum = chironPoint.House.id || chironPoint.House
-        chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
-        shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-      } else if (chironPoint) {
-        const houses = horoscope.Houses
+          if (startDegree !== undefined && endDegree !== undefined) {
+            let isInHouse = false
 
-        const chironLongitude = chironPoint.ChartPosition?.Ecliptic?.DecimalDegrees ||
-                                chironPoint.longitude ||
-                                chironDegree
+            if (endDegree > startDegree) {
+              isInHouse = chironLongitude >= startDegree && chironLongitude < endDegree
+            } else {
+              isInHouse = chironLongitude >= startDegree || chironLongitude < endDegree
+            }
 
-        if (houses && houses.length > 0) {
-          for (let i = 0; i < 12; i++) {
-            const currentHouse = houses[i]
-            const nextHouse = houses[(i + 1) % 12]
-
-            const currentDegree = currentHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
-            const nextDegree = nextHouse.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
-
-            if (currentDegree !== undefined && nextDegree !== undefined) {
-              if (nextDegree > currentDegree) {
-                if (chironLongitude >= currentDegree && chironLongitude < nextDegree) {
-                  const houseNum = i + 1
-                  chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
-                  shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-                  break
-                }
-              } else {
-                if (chironLongitude >= currentDegree || chironLongitude < nextDegree) {
-                  const houseNum = i + 1
-                  chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
-                  shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-                  break
-                }
-              }
+            if (isInHouse) {
+              const houseNum = i + 1
+              chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
+              shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
+              break
             }
           }
         }
