@@ -1,5 +1,4 @@
 import moment from 'moment-timezone';
-const Ephemeris = window.Ephemeris;
 import Sign from './Sign';
 import ChartPosition from './ChartPosition';
 import House from './House';
@@ -80,6 +79,10 @@ export class Horoscope {
     this._customOrbs = validateCustomOrbs(customOrbs);
 
     // Remember - Ephemeris requires UTC time!
+    const Ephemeris = window.Ephemeris;
+    if (!Ephemeris || typeof Ephemeris !== 'function') {
+      throw new Error('Ephemeris library not loaded. Please ensure the ephemeris script is loaded before creating a Horoscope.');
+    }
     this.Ephemeris = new Ephemeris({
       year: this.origin.utcTime.year(),
       month: this.origin.utcTime.month(),

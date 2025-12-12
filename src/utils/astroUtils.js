@@ -6,20 +6,31 @@ import { shadowMap } from '../data/shadowMap'
 
 function waitForEphemeris() {
   return new Promise((resolve) => {
-    if (window.Ephemeris) {
+    const isValidEphemeris = () => {
+      return window.Ephemeris && typeof window.Ephemeris === 'function'
+    }
+
+    if (isValidEphemeris()) {
       resolve()
       return
     }
+
     const checkInterval = setInterval(() => {
-      if (window.Ephemeris) {
+      if (isValidEphemeris()) {
         clearInterval(checkInterval)
         resolve()
       }
-    }, 100)
+    }, 50)
+
     setTimeout(() => {
       clearInterval(checkInterval)
-      resolve()
-    }, 5000)
+      if (isValidEphemeris()) {
+        resolve()
+      } else {
+        console.error('Ephemeris library failed to load properly')
+        resolve()
+      }
+    }, 10000)
   })
 }
 
@@ -66,8 +77,9 @@ export async function calculateChironData(formData) {
   if (birthTime && birthCoordinates) {
     await waitForEphemeris()
 
-    if (!window.Ephemeris) {
-      console.error('Ephemeris library not loaded')
+    if (!window.Ephemeris || typeof window.Ephemeris !== 'function') {
+      console.error('Ephemeris library not loaded or not a constructor. Type:', typeof window.Ephemeris)
+      console.error('window.Ephemeris:', window.Ephemeris)
       return {
         name,
         email,
