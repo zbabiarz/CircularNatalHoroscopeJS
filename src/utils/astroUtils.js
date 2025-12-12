@@ -3,14 +3,6 @@ import { Origin } from '../Origin'
 import chironSigns from '../data/chiron-signs.json'
 import chironDegrees from '../data/chiron-degrees.json'
 import { shadowMap } from '../data/shadowMap'
-import {
-  initSwissEph,
-  calculateJulianDay,
-  calculateHouses,
-  calculateChironPosition as calculateChironSwiss,
-  getZodiacSign,
-  findHouseForPlanet
-} from './swissEph'
 
 function getEphemerisConstructor() {
   const ephemeris = window.Ephemeris;
@@ -133,9 +125,22 @@ export async function calculateChironData(formData) {
   let shadowId = `chiron_${chironSign.toLowerCase()}`
 
   if (birthTime && birthCoordinates) {
-    try {
-      await initSwissEph()
+    await waitForEphemeris()
 
+    if (!getEphemerisConstructor()) {
+      console.error('Ephemeris library not loaded')
+      return {
+        name,
+        email,
+        chironSign,
+        chironDegree,
+        chironHouse,
+        shadowId,
+        shadowText: shadowMap[shadowId]?.description || 'Shadow description not found.'
+      }
+    }
+
+    try {
       let hours, minutes
 
       if (birthTime.includes(' ')) {
@@ -151,56 +156,63 @@ export async function calculateChironData(formData) {
         ;[hours, minutes] = birthTime.split(':').map(Number)
       }
 
-      const [year, month, day] = birthDate.split('-').map(Number)
+      const origin = new Origin({
+        year: parseInt(birthDate.split('-')[0]),
+        month: parseInt(birthDate.split('-')[1]) - 1,
+        date: parseInt(birthDate.split('-')[2]),
+        hour: hours,
+        minute: minutes,
+        latitude: birthCoordinates[0],
+        longitude: birthCoordinates[1]
+      })
 
-      const julianDay = calculateJulianDay(
-        { year, month, day },
-        { hours, minutes }
-      )
+      const horoscope = new Horoscope({
+        origin,
+        houseSystem: 'placidus',
+        zodiac: 'tropical'
+      })
 
-      const houseData = calculateHouses(
-        julianDay,
-        birthCoordinates[0],
-        birthCoordinates[1]
-      )
-
-      const houseCusps = houseData.houses
+      const houses = horoscope.Houses
       const chironLongitude = chironDegree
 
-      console.log('=== CHIRON HOUSE CALCULATION DEBUG (Swiss Ephemeris) ===')
+      console.log('=== CHIRON HOUSE CALCULATION DEBUG ===')
       console.log(`Birth: ${birthDate} ${birthTime} at ${birthLocation}`)
+      console.log(`Julian Day: ${origin.JulianDay}`)
       console.log(`Chiron: ${chironSign} at ${chironLongitude}°`)
-      console.log(`Ascendant: ${houseData.ascendant.toFixed(2)}°`)
-      console.log(`Midheaven (MC): ${houseData.mc.toFixed(2)}°`)
-      console.log('\nHouse Cusps (Placidus):')
+      console.log(`Ascendant: ${horoscope.Ascendant?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
+      console.log(`Midheaven: ${horoscope.Midheaven?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
+      console.log(`IC (House 4 cusp): ${houses[3]?.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
+      console.log('\nHouse Cusps:')
 
-      for (let i = 0; i < 12; i++) {
-        const currentCusp = houseCusps[i]
-        const nextCusp = houseCusps[(i + 1) % 12]
+      if (houses && houses.length > 0) {
+        for (let i = 0; i < 12; i++) {
+          const house = houses[i]
+          const startDegree = house.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees
+          const endDegree = house.ChartPosition?.EndPosition?.Ecliptic?.DecimalDegrees
 
-        let isInHouse = false
-        if (nextCusp > currentCusp) {
-          isInHouse = chironLongitude >= currentCusp && chironLongitude < nextCusp
-        } else {
-          isInHouse = chironLongitude >= currentCusp || chironLongitude < nextCusp
+          if (startDegree !== undefined && endDegree !== undefined) {
+            let isInHouse = false
+
+            if (endDegree > startDegree) {
+              isInHouse = chironLongitude >= startDegree && chironLongitude < endDegree
+            } else {
+              isInHouse = chironLongitude >= startDegree || chironLongitude < endDegree
+            }
+
+            console.log(`  House ${i + 1}: ${startDegree.toFixed(2)}° - ${endDegree.toFixed(2)}° | Contains ${chironLongitude}°? ${isInHouse}`)
+
+            if (isInHouse) {
+              const houseNum = i + 1
+              chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
+              shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
+              console.log(`\n✓ RESULT: Chiron in House ${houseNum}`)
+            }
+          }
         }
-
-        console.log(`  House ${i + 1}: ${currentCusp.toFixed(2)}° - ${nextCusp.toFixed(2)}° | Contains ${chironLongitude}°? ${isInHouse}`)
       }
-
-      const houseNumber = findHouseForPlanet(houseCusps, chironLongitude)
-
-      if (houseNumber) {
-        chironHouse = `${houseNumber}${getOrdinalSuffix(houseNumber)} House`
-        shadowId = `chiron_${chironSign.toLowerCase()}_${houseNumber}`
-        console.log(`\n✓ RESULT: Chiron in House ${houseNumber}`)
-      } else {
-        console.warn('Could not determine house for Chiron')
-      }
-
       console.log('=== END DEBUG ===\n')
     } catch (error) {
-      console.error('Error calculating house with Swiss Ephemeris:', error)
+      console.error('Error calculating house:', error)
     }
   }
 
