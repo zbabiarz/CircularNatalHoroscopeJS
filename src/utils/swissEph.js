@@ -1,4 +1,4 @@
-import sweph from 'sweph-wasm'
+import SwissEph from 'sweph-wasm'
 
 let swissEph = null
 
@@ -6,7 +6,7 @@ export async function initSwissEph() {
   if (swissEph) return swissEph
 
   try {
-    swissEph = await sweph()
+    swissEph = new SwissEph()
     return swissEph
   } catch (error) {
     console.error('Swiss Ephemeris initialization failed:', error)
