@@ -179,6 +179,13 @@ export async function calculateChironData(formData) {
       const houses = horoscope.Houses
       const chironLongitude = chironDegree
 
+      console.log('=== CHIRON HOUSE CALCULATION DEBUG ===')
+      console.log(`Birth: ${birthDate} ${birthTime} at ${birthLocation}`)
+      console.log(`Chiron: ${chironSign} at ${chironLongitude}°`)
+      console.log(`Ascendant: ${horoscope.Ascendant?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
+      console.log(`Midheaven: ${horoscope.Midheaven?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
+      console.log('\nHouse Cusps:')
+
       if (houses && houses.length > 0) {
         for (let i = 0; i < 12; i++) {
           const house = houses[i]
@@ -194,15 +201,18 @@ export async function calculateChironData(formData) {
               isInHouse = chironLongitude >= startDegree || chironLongitude < endDegree
             }
 
+            console.log(`  House ${i + 1}: ${startDegree.toFixed(2)}° - ${endDegree.toFixed(2)}° | Contains ${chironLongitude}°? ${isInHouse}`)
+
             if (isInHouse) {
               const houseNum = i + 1
               chironHouse = `${houseNum}${getOrdinalSuffix(houseNum)} House`
               shadowId = `chiron_${chironSign.toLowerCase()}_${houseNum}`
-              break
+              console.log(`\n✓ RESULT: Chiron in House ${houseNum}`)
             }
           }
         }
       }
+      console.log('=== END DEBUG ===\n')
     } catch (error) {
       console.error('Error calculating house:', error)
     }
