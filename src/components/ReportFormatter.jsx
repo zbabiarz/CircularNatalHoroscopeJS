@@ -47,6 +47,8 @@ function ReportFormatter({ report }) {
     if (lowerTitle.includes('archetype')) return 'archetype'
     if (lowerTitle.includes('theme')) return 'theme'
     if (lowerTitle.includes('core wound')) return 'wound'
+    if (lowerTitle.includes('how it feels')) return 'feels'
+    if (lowerTitle.includes('shadow pattern')) return 'shadow'
     if (lowerTitle.includes('medicine')) return 'medicine'
     if (lowerTitle.includes('invitation')) return 'invitation'
     if (lowerTitle.includes('journal') || lowerTitle.includes('reflection')) return 'prompts'
@@ -76,6 +78,18 @@ function ReportFormatter({ report }) {
       wound: {
         bg: 'bg-gradient-to-r from-brown/5 to-rose/10',
         border: 'border-l-4 border-brown/40',
+        titleColor: 'text-brown',
+        textColor: 'text-brown/90'
+      },
+      feels: {
+        bg: 'bg-gradient-to-r from-rose/10 to-brown/5',
+        border: 'border-l-4 border-rose/50',
+        titleColor: 'text-rose',
+        textColor: 'text-brown/90'
+      },
+      shadow: {
+        bg: 'bg-gradient-to-r from-brown/10 to-rose/5',
+        border: 'border-l-4 border-brown/60',
         titleColor: 'text-brown',
         textColor: 'text-brown/90'
       },
@@ -124,6 +138,8 @@ function ReportFormatter({ report }) {
                 {section.type === 'archetype' && '✨'}
                 {section.type === 'theme' && '🌙'}
                 {section.type === 'wound' && '💫'}
+                {section.type === 'feels' && '💭'}
+                {section.type === 'shadow' && '🌑'}
                 {section.type === 'medicine' && '🔮'}
                 {section.type === 'invitation' && '⭐'}
                 {section.type === 'prompts' && '📝'}
