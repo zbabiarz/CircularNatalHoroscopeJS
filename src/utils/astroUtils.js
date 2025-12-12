@@ -160,6 +160,15 @@ export async function calculateChironData(formData) {
         ;[hours, minutes] = birthTime.split(':').map(Number)
       }
 
+      console.log('DEBUG - Birth data:', {
+        birthDate,
+        birthTime,
+        parsedHours: hours,
+        parsedMinutes: minutes,
+        latitude: birthCoordinates[0],
+        longitude: birthCoordinates[1]
+      })
+
       const origin = new Origin({
         year: parseInt(birthDate.split('-')[0]),
         month: parseInt(birthDate.split('-')[1]) - 1,
@@ -170,13 +179,31 @@ export async function calculateChironData(formData) {
         longitude: birthCoordinates[1]
       })
 
+      console.log('DEBUG - Origin:', {
+        localTime: origin.localTimeFormatted,
+        utcTime: origin.utcTimeFormatted,
+        timezone: origin.timezone?.name
+      })
+
       const horoscope = new Horoscope({
         origin,
         houseSystem: 'placidus',
         zodiac: 'tropical'
       })
 
+      console.log('DEBUG - Ascendant:', horoscope.Ascendant?.ChartPosition?.Ecliptic?.DecimalDegrees)
+      console.log('DEBUG - House Cusps:', horoscope.Houses?.map(h => ({
+        house: h.id,
+        start: h.ChartPosition?.StartPosition?.Ecliptic?.DecimalDegrees,
+        end: h.ChartPosition?.EndPosition?.Ecliptic?.DecimalDegrees
+      })))
+
       const chironPoint = horoscope.CelestialPoints.chiron
+      console.log('DEBUG - Chiron from horoscope:', {
+        degree: chironPoint?.ChartPosition?.Ecliptic?.DecimalDegrees,
+        house: chironPoint?.House?.id,
+        sign: chironPoint?.Sign?.label
+      })
 
       if (chironPoint && chironPoint.House) {
         const houseNum = chironPoint.House.id || chironPoint.House
