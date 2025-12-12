@@ -9,15 +9,19 @@ function ReportFormatter({ report }) {
     lines.forEach((line, index) => {
       const trimmedLine = line.trim()
 
-      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+      const headerMatch = trimmedLine.match(/^\*\*([^*]+)\*\*:?\s*(.*)$/)
+
+      if (headerMatch) {
         if (currentSection) {
           sections.push(currentSection)
         }
 
-        const title = trimmedLine.replace(/\*\*/g, '')
+        const title = headerMatch[1].trim()
+        const inlineContent = headerMatch[2].trim()
+
         currentSection = {
           title,
-          content: [],
+          content: inlineContent ? [inlineContent] : [],
           type: getSectionType(title)
         }
       } else if (trimmedLine && currentSection) {
