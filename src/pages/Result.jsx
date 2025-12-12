@@ -41,7 +41,7 @@ function Result() {
             {name}'s Chiron Shadow
           </h1>
           <p className="text-xl text-magenta font-semibold">
-            The {shadowData.archetype}
+            {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
           </p>
         </div>
         
