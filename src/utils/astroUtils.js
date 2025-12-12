@@ -98,21 +98,51 @@ function getChironSign(degree) {
 
 function getChironDegree(birthDate) {
   const date = new Date(birthDate)
+  const sortedDegrees = [...chironDegrees].sort((a, b) => new Date(a.date) - new Date(b.date))
 
-  let closestEntry = chironDegrees[0]
-  let minDiff = Math.abs(new Date(closestEntry.date) - date)
+  let beforeEntry = null
+  let afterEntry = null
 
-  for (const entry of chironDegrees) {
-    const entryDate = new Date(entry.date)
-    const diff = Math.abs(entryDate - date)
-
-    if (diff < minDiff) {
-      minDiff = diff
-      closestEntry = entry
+  for (let i = 0; i < sortedDegrees.length; i++) {
+    const entryDate = new Date(sortedDegrees[i].date)
+    if (entryDate <= date) {
+      beforeEntry = sortedDegrees[i]
+    }
+    if (entryDate > date && !afterEntry) {
+      afterEntry = sortedDegrees[i]
+      break
     }
   }
 
-  return closestEntry.degree
+  if (!beforeEntry && afterEntry) {
+    return afterEntry.degree
+  }
+  if (beforeEntry && !afterEntry) {
+    return beforeEntry.degree
+  }
+  if (!beforeEntry && !afterEntry) {
+    return chironDegrees[0].degree
+  }
+
+  const beforeDate = new Date(beforeEntry.date)
+  const afterDate = new Date(afterEntry.date)
+  const totalDays = (afterDate - beforeDate) / (1000 * 60 * 60 * 24)
+  const daysSinceBefore = (date - beforeDate) / (1000 * 60 * 60 * 24)
+  const fraction = daysSinceBefore / totalDays
+
+  let degreeDiff = afterEntry.degree - beforeEntry.degree
+  if (Math.abs(degreeDiff) > 180) {
+    if (degreeDiff > 0) {
+      degreeDiff = degreeDiff - 360
+    } else {
+      degreeDiff = degreeDiff + 360
+    }
+  }
+
+  let interpolatedDegree = beforeEntry.degree + (degreeDiff * fraction)
+  interpolatedDegree = ((interpolatedDegree % 360) + 360) % 360
+
+  return Math.round(interpolatedDegree * 100) / 100
 }
 
 export async function calculateChironData(formData) {
@@ -177,7 +207,7 @@ export async function calculateChironData(formData) {
 
       console.log('=== CHIRON HOUSE CALCULATION DEBUG ===')
       console.log(`Birth: ${birthDate} ${birthTime} at ${birthLocation}`)
-      console.log(`Julian Day: ${origin.JulianDay}`)
+      console.log(`Julian Day: ${origin.julianDate}`)
       console.log(`Chiron: ${chironSign} at ${chironLongitude}°`)
       console.log(`Ascendant: ${horoscope.Ascendant?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
       console.log(`Midheaven: ${horoscope.Midheaven?.ChartPosition?.Ecliptic?.DecimalDegrees?.toFixed(2)}°`)
