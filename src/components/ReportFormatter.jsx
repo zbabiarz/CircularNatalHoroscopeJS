@@ -84,7 +84,7 @@ function ReportFormatter({ report }) {
       feels: {
         bg: 'bg-gradient-to-r from-rose/10 to-brown/5',
         border: 'border-l-4 border-rose/50',
-        titleColor: 'text-rose',
+        titleColor: 'text-brown',
         textColor: 'text-brown/90'
       },
       shadow: {
@@ -138,7 +138,7 @@ function ReportFormatter({ report }) {
                 {section.type === 'archetype' && '✨'}
                 {section.type === 'theme' && '🌙'}
                 {section.type === 'wound' && '💫'}
-                {section.type === 'feels' && '💭'}
+                {section.type === 'feels' && '🌊'}
                 {section.type === 'shadow' && '🌑'}
                 {section.type === 'medicine' && '🔮'}
                 {section.type === 'invitation' && '⭐'}
