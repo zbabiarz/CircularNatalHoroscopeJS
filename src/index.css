@@ -193,3 +193,16 @@ body {
 .animate-fade-in-delayed {
   animation: fade-in-delayed 1s ease-in 0.5s both;
 }
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(219, 39, 119, 0.5), 0 0 10px rgba(219, 39, 119, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(219, 39, 119, 0.8), 0 0 30px rgba(219, 39, 119, 0.6), 0 0 40px rgba(219, 39, 119, 0.4);
+  }
+}
+
+.button-glow {
+  animation: glow 2s ease-in-out infinite;
+}
