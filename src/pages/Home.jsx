@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import MysticalLoader from '../components/MysticalLoader'
-import TypewriterText from '../components/TypewriterText'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
 
@@ -105,7 +104,7 @@ function Home() {
             Shadow Work Astro Quiz
           </h1>
           <p className="text-lg text-brown/80">
-            <TypewriterText text="Discover your Chiron placement and unlock deeper insights into your healing journey" />
+            Discover your Chiron placement and unlock deeper insights into your healing journey
           </p>
         </div>
         
