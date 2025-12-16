@@ -74,6 +74,31 @@ function Home() {
         console.error('Database error:', dbError)
       }
 
+      try {
+        await fetch('https://effortlessai.app.n8n.cloud/webhook-test/475b8845-0604-47ab-af7e-fe011922dcdd', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: result.name,
+            email: result.email,
+            birthDate: formData.birthDate,
+            birthTime: formData.birthTime || null,
+            birthLocation: formData.birthLocation || null,
+            birthCoordinates: formData.birthCoordinates || null,
+            chironSign: result.chironSign,
+            chironDegree: result.chironDegree,
+            chironHouse: result.chironHouse,
+            shadowId: result.shadowId,
+            aiReport: aiReport,
+            timestamp: new Date().toISOString()
+          })
+        })
+      } catch (webhookError) {
+        console.error('Webhook error:', webhookError)
+      }
+
       localStorage.setItem('aiReport', aiReport)
 
       const params = new URLSearchParams({
