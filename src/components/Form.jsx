@@ -176,32 +176,36 @@ function Form({ onSubmit, isSubmitting }) {
       </div>
 
       <div>
-        <label htmlFor="birthDate" className="block text-sm font-semibold text-brown mb-2">
-          Birth Date <span className="text-magenta">*</span>
-        </label>
-        <input
-          type="date"
-          id="birthDate"
-          name="birthDate"
-          value={formData.birthDate}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2">
+          <div>
+            <label htmlFor="birthDate" className="block text-sm font-semibold text-brown mb-2">
+              Birth Date <span className="text-magenta">*</span>
+            </label>
+            <input
+              type="date"
+              id="birthDate"
+              name="birthDate"
+              value={formData.birthDate}
+              onChange={handleChange}
+              required
+              className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+            />
+          </div>
 
-      <div>
-        <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
-          Birth Time <span className="text-brown/40">(Optional)</span>
-        </label>
-        <input
-          type="time"
-          id="birthTime"
-          name="birthTime"
-          value={formData.birthTime}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
-        />
+          <div>
+            <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
+              Birth Time <span className="text-brown/40">(Optional)</span>
+            </label>
+            <input
+              type="time"
+              id="birthTime"
+              name="birthTime"
+              value={formData.birthTime}
+              onChange={handleChange}
+              className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+            />
+          </div>
+        </div>
         <p className="text-xs text-brown/60 mt-1">Optional - needed for house placement accuracy</p>
       </div>
 
