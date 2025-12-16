@@ -13,6 +13,7 @@ function Form({ onSubmit, isSubmitting }) {
     birthCoordinates: null
   })
   const [apiStatus, setApiStatus] = useState('loading')
+  const [showBirthTimeWarning, setShowBirthTimeWarning] = useState(false)
 
   const autocompleteRef = useRef(null)
 
@@ -83,6 +84,16 @@ function Form({ onSubmit, isSubmitting }) {
       return
     }
 
+    if (!formData.birthTime) {
+      setShowBirthTimeWarning(true)
+      return
+    }
+
+    onSubmit(formData)
+  }
+
+  const handleConfirmWithoutBirthTime = () => {
+    setShowBirthTimeWarning(false)
     onSubmit(formData)
   }
 
@@ -248,6 +259,46 @@ function Form({ onSubmit, isSubmitting }) {
       >
         {isSubmitting ? 'Calculating...' : 'Reveal My Chiron Shadow'}
       </button>
+
+      {showBirthTimeWarning && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 md:p-8 animate-fade-in">
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mb-4">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0-10a9 9 0 110 18 9 9 0 010-18z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-brown mb-2">Birth Time Not Provided</h3>
+            </div>
+
+            <p className="text-brown/70 mb-6 text-center">
+              Your results will still be valid, but without your birth time, we won't be able to calculate your exact house placements. This means some insights will be less specific.
+            </p>
+
+            <p className="text-sm text-brown/60 mb-6 text-center italic">
+              Would you like to continue without your birth time?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowBirthTimeWarning(false)}
+                className="flex-1 px-4 py-2 border border-brown/20 text-brown font-semibold rounded-lg hover:bg-brown/5 transition-colors duration-200"
+              >
+                Add Birth Time
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmWithoutBirthTime}
+                className="flex-1 px-4 py-3 bg-magenta hover:bg-magenta/90 text-white font-semibold rounded-lg transition-colors duration-200"
+              >
+                Okay, Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   )
 }
