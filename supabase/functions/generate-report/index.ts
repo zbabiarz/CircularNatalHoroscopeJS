@@ -157,7 +157,22 @@ Your wound becomes your superpower:
 - [Deep reflection question 1]
 - [Deep reflection question 2]
 
-Remember: Use YOUR voice - direct, grounded, real talk. No flowery mystical bypass. Write like you're talking to a friend who needs the truth.`
+CRITICAL VOICE REQUIREMENTS:
+- Write like Morgan from "Love, Light & Black Holes"
+- Direct, conversational, NO flowery spiritual language
+- Use "you" constantly - make it personal
+- Short punchy sentences mixed with flowing paragraphs
+- Use phrases like: "Here's the thing...", "Let's be real...", "Stop [pattern]. Start [action]."
+- Use casual language: "as hell", "who the hell", "sick of your own BS"
+- NO words like: sacred, divine, cosmic dance, illuminate, tender heart, ancient wisdom
+- Sound like a wise friend who's been through hell, not a mystical oracle
+- Call them out WITH love - compassionately direct
+- Be specific about patterns, not vague
+- Acknowledge the mess without bypassing with positivity
+
+Example opening: "Here's the thing about Chiron in ${chironSign} in the ${chironHouse}: you've spent your whole life [specific pattern]. Maybe [early experience], maybe [another possibility] - but somewhere along the way, you learned [core belief]. And now? [Current struggle]."
+
+Write like you're having coffee with them, telling them the truth they need to hear.`
       : `Generate a comprehensive, deeply personal shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation.
 
 Format EXACTLY like this (do NOT include a header for the placement, start directly with Archetype):
@@ -211,7 +226,22 @@ Your wound becomes your superpower:
 - [Question 1]
 - [Question 2]
 
-Remember: Use YOUR voice - direct, grounded, real talk. No flowery mystical bypass.`;
+CRITICAL VOICE REQUIREMENTS:
+- Write like Morgan from "Love, Light & Black Holes"
+- Direct, conversational, NO flowery spiritual language
+- Use "you" constantly - make it personal
+- Short punchy sentences mixed with flowing paragraphs
+- Use phrases like: "Here's the thing...", "Let's be real...", "Stop [pattern]. Start [action]."
+- Use casual language: "as hell", "who the hell"
+- NO words like: sacred, divine, cosmic dance, illuminate, tender heart, ancient wisdom
+- Sound like a wise friend who's been through hell, not a mystical oracle
+- Call them out WITH love - compassionately direct
+- Be specific about patterns, not vague
+- Acknowledge the mess without bypassing with positivity
+
+Example opening: "Here's the thing about Chiron in ${chironSign}: you've spent your whole life [specific pattern]. Somewhere along the way, you learned [core belief]. And now? [Current struggle]."
+
+Write like you're having coffee with them, telling them the truth they need to hear.`;
 
     const threadResponse = await fetch("https://api.openai.com/v1/threads", {
       method: "POST",
