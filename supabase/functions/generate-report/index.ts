@@ -93,9 +93,7 @@ Deno.serve(async (req: Request) => {
     const userMessage = chironHouse && chironHouse !== "Unknown"
       ? `Generate a comprehensive, deeply personal shadow work report for ${name} whose Chiron is in ${chironSign} in the ${chironHouse} at ${chironDegree.toFixed(2)} degrees.
 
-Format EXACTLY like this, with these sections:
-
-**Chiron in ${chironSign} in the ${chironHouse}**
+Format EXACTLY like this, with these sections (do NOT include a header for the placement, start directly with Archetype):
 
 **Archetype:** [Give archetype name - do NOT include "The" prefix]
 
@@ -162,9 +160,7 @@ Your wound becomes your superpower:
 Remember: Use YOUR voice - direct, grounded, real talk. No flowery mystical bypass. Write like you're talking to a friend who needs the truth.`
       : `Generate a comprehensive, deeply personal shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation.
 
-Format EXACTLY like this:
-
-**Chiron in ${chironSign}**
+Format EXACTLY like this (do NOT include a header for the placement, start directly with Archetype):
 
 **Archetype:** [Give archetype name - do NOT include "The" prefix]
 

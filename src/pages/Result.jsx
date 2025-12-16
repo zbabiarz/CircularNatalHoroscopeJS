@@ -43,6 +43,13 @@ function Result() {
           <p className="text-xl text-magenta font-semibold">
             {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
           </p>
+          <div className="mt-4 text-brown/70">
+            <p className="text-base">
+              Chiron in {chironSign}
+              {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
+              {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}°`}
+            </p>
+          </div>
         </div>
         
         <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
