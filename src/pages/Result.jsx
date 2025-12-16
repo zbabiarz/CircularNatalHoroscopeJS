@@ -46,23 +46,6 @@ function Result() {
         </div>
         
         <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 pb-8 border-b border-rose/30">
-            <div className="text-center">
-              <p className="text-sm text-brown/60 mb-1">Chiron Sign</p>
-              <p className="text-2xl font-bold text-magenta">{chironSign}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm text-brown/60 mb-1">Chiron House</p>
-              <p className="text-2xl font-bold text-magenta">{chironHouse || 'Unknown'}</p>
-            </div>
-            {chironDegree && (
-              <div className="text-center">
-                <p className="text-sm text-brown/60 mb-1">Chiron Degree</p>
-                <p className="text-lg font-semibold text-brown">{parseFloat(chironDegree).toFixed(2)}°</p>
-              </div>
-            )}
-          </div>
-          
           <div className="max-w-none">
             {aiReport ? (
               <ReportFormatter report={aiReport} />
