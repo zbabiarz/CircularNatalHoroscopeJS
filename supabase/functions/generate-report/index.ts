@@ -17,7 +17,7 @@ async function pollRunStatus(
   apiKey: string,
   threadId: string,
   runId: string,
-  maxWaitTime = 30000
+  maxWaitTime = 90000
 ): Promise<any> {
   const startTime = Date.now();
   let pollInterval = 500;
@@ -65,7 +65,7 @@ async function pollRunStatus(
     }
   );
 
-  throw new Error("Assistant run timed out after 30 seconds");
+  throw new Error("Assistant run timed out after 90 seconds");
 }
 
 Deno.serve(async (req: Request) => {

@@ -22,6 +22,9 @@ function Home() {
       let aiReport = ''
 
       try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 120000)
+
         const reportResponse = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-report`,
           {
@@ -35,9 +38,12 @@ function Home() {
               chironSign: result.chironSign,
               chironHouse: result.chironHouse,
               chironDegree: result.chironDegree
-            })
+            }),
+            signal: controller.signal
           }
         )
+
+        clearTimeout(timeoutId)
 
         if (reportResponse.ok) {
           const reportData = await reportResponse.json()
