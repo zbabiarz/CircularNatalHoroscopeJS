@@ -35,7 +35,11 @@ function Result() {
       <div className="max-w-3xl w-full">
         <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
           <div className="flex justify-center mb-4">
-            <div className="text-6xl shimmer">🌙</div>
+            <img
+              src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
+              alt="Shadow Work Astro Quiz Logo"
+              className="w-32 h-32 shimmer"
+            />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-brown mb-2">
             {name}'s Chiron Shadow
