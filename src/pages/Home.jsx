@@ -100,7 +100,7 @@ function Home() {
               className="w-32 h-32 shimmer"
             />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-brown mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 magical-title">
             Shadow Work Astro Quiz
           </h1>
           <p className="text-lg text-brown/80">
