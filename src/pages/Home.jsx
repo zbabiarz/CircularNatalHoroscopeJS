@@ -97,7 +97,7 @@ function Home() {
             <img
               src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
               alt="Shadow Work Astro Quiz Logo"
-              className="w-16 h-16 shimmer"
+              className="w-32 h-32 shimmer"
             />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-brown mb-4">
