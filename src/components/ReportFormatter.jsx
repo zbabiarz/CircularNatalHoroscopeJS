@@ -46,6 +46,7 @@ function ReportFormatter({ report }) {
     const lowerTitle = title.toLowerCase()
     if (lowerTitle.includes('archetype')) return 'archetype'
     if (lowerTitle.includes('theme')) return 'theme'
+    if (lowerTitle.includes("chiron's story")) return 'chiron'
     if (lowerTitle.includes('core wound')) return 'wound'
     if (lowerTitle.includes('how it feels')) return 'feels'
     if (lowerTitle.includes('shadow pattern')) return 'shadow'
@@ -73,6 +74,12 @@ function ReportFormatter({ report }) {
         bg: 'bg-gradient-to-r from-rose/10 to-magenta/5',
         border: 'border-l-4 border-rose',
         titleColor: 'text-magenta',
+        textColor: 'text-brown/90'
+      },
+      chiron: {
+        bg: 'bg-gradient-to-r from-magenta/5 to-rose/10',
+        border: 'border-l-4 border-magenta/40',
+        titleColor: 'text-brown',
         textColor: 'text-brown/90'
       },
       wound: {
@@ -137,6 +144,7 @@ function ReportFormatter({ report }) {
               <h3 className={`text-xl md:text-2xl font-bold ${style.titleColor} mb-4 flex items-center gap-2`}>
                 {section.type === 'archetype' && '✨'}
                 {section.type === 'theme' && '🌙'}
+                {section.type === 'chiron' && '💔'}
                 {section.type === 'wound' && '💫'}
                 {section.type === 'feels' && '🌊'}
                 {section.type === 'shadow' && '🌑'}

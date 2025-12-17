@@ -99,6 +99,10 @@ Format EXACTLY like this, with these sections (do NOT include a header for the p
 
 **Theme:** [One sentence about the core theme]
 
+**Chiron's Story**
+
+[Opening paragraph about their Chiron placement - use varied openings like "You've spent your whole life...", "There's a pattern here that's been with you since...", "The wound runs deep...", or "Your Chiron whispers a story..." - NOT always "Here's the thing about..."]
+
 **Core Wound**
 
 [Write 3-4 paragraphs explaining:
@@ -170,7 +174,11 @@ CRITICAL VOICE REQUIREMENTS:
 - Be specific about patterns, not vague
 - Acknowledge the mess without bypassing with positivity
 
-Example opening: "Here's the thing about Chiron in ${chironSign} in the ${chironHouse}: you've spent your whole life [specific pattern]. Maybe [early experience], maybe [another possibility] - but somewhere along the way, you learned [core belief]. And now? [Current struggle]."
+Example openings (vary these - use different ones each time):
+- "You've spent your whole life [pattern]. Maybe [experience 1], maybe [experience 2]. But somewhere along the way, you learned [belief]."
+- "There's a pattern here that's been with you since the beginning. [Describe early pattern]. And it still shows up as [current manifestation]."
+- "The wound runs deep with this placement. [Describe the core issue]. You learned early that [belief]. Now? [Current struggle]."
+- "Your Chiron in ${chironSign} in the ${chironHouse} tells a story of [pattern]. It probably started with [early experience]. Now it looks like [current manifestation]."
 
 Write like you're having coffee with them, telling them the truth they need to hear.`
       : `Generate a comprehensive, deeply personal shadow work report for ${name} whose Chiron is in ${chironSign} at ${chironDegree.toFixed(2)} degrees. Birth time was not provided, so focus on the sign-based interpretation.
@@ -180,6 +188,10 @@ Format EXACTLY like this (do NOT include a header for the placement, start direc
 **Archetype:** [Give archetype name - do NOT include "The" prefix]
 
 **Theme:** [One sentence about the core theme]
+
+**Chiron's Story**
+
+[Opening paragraph about their Chiron placement - use varied openings like "You've spent your whole life...", "There's a pattern here...", "The wound runs deep..." - NOT always "Here's the thing about..."]
 
 **Core Wound**
 
@@ -239,7 +251,11 @@ CRITICAL VOICE REQUIREMENTS:
 - Be specific about patterns, not vague
 - Acknowledge the mess without bypassing with positivity
 
-Example opening: "Here's the thing about Chiron in ${chironSign}: you've spent your whole life [specific pattern]. Somewhere along the way, you learned [core belief]. And now? [Current struggle]."
+Example openings (vary these - use different ones each time):
+- "You've spent your whole life [pattern]. Maybe [experience 1], maybe [experience 2]. But somewhere along the way, you learned [belief]."
+- "There's a pattern here that's been with you since the beginning. [Describe early pattern]. And it still shows up as [current manifestation]."
+- "The wound runs deep with this placement. [Describe the core issue]. You learned early that [belief]. Now? [Current struggle]."
+- "Your Chiron in ${chironSign} tells a story of [pattern]. It probably started with [early experience]. Now it looks like [current manifestation]."
 
 Write like you're having coffee with them, telling them the truth they need to hear.`;
 
