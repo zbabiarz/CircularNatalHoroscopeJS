@@ -235,8 +235,8 @@ Your wound becomes your superpower:
 
 **Journal / Reflection Prompts**
 
-- [Question 1]
-- [Question 2]
+- [Deep reflection question 1]
+- [Deep reflection question 2]
 
 CRITICAL VOICE REQUIREMENTS:
 - Write like Morgan from "Love, Light & Black Holes"
