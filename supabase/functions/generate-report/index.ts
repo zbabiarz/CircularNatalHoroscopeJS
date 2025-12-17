@@ -163,6 +163,10 @@ IMPORTANT: Provide EXACTLY 2 reflection questions - no more, no less:
 - [Deep reflection question 1]
 - [Deep reflection question 2]
 
+CRITICAL FORMATTING RULE:
+- NEVER use em-dashes (—) or double hyphens (--) anywhere
+- If you would use an em-dash, use a period, comma, parentheses, or rewrite the sentence instead
+
 CRITICAL VOICE REQUIREMENTS:
 - Write like Morgan from "Love, Light & Black Holes"
 - Direct, conversational, NO flowery spiritual language
@@ -241,6 +245,10 @@ IMPORTANT: Provide EXACTLY 2 reflection questions - no more, no less:
 
 - [Deep reflection question 1]
 - [Deep reflection question 2]
+
+CRITICAL FORMATTING RULE:
+- NEVER use em-dashes (—) or double hyphens (--) anywhere
+- If you would use an em-dash, use a period, comma, parentheses, or rewrite the sentence instead
 
 CRITICAL VOICE REQUIREMENTS:
 - Write like Morgan from "Love, Light & Black Holes"
