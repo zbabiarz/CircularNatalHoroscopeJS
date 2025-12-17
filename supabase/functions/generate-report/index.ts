@@ -158,6 +158,8 @@ Your wound becomes your superpower:
 
 **Journal / Reflection Prompts**
 
+IMPORTANT: Provide EXACTLY 2 reflection questions - no more, no less:
+
 - [Deep reflection question 1]
 - [Deep reflection question 2]
 
@@ -234,6 +236,8 @@ Your wound becomes your superpower:
 [3-4 paragraphs about their healing journey]
 
 **Journal / Reflection Prompts**
+
+IMPORTANT: Provide EXACTLY 2 reflection questions - no more, no less:
 
 - [Deep reflection question 1]
 - [Deep reflection question 2]
