@@ -255,3 +255,73 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+@keyframes sparkle-float {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0);
+  }
+}
+
+@keyframes content-reveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.sparkle {
+  position: absolute;
+  font-size: 1.5rem;
+  pointer-events: none;
+  z-index: 10;
+  animation: sparkle-float 1.2s ease-out forwards;
+}
+
+.sparkle-1 {
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  animation-delay: 0.1s;
+}
+
+.sparkle-3 {
+  animation-delay: 0.2s;
+}
+
+.sparkle-4 {
+  animation-delay: 0.3s;
+}
+
+.sparkle-5 {
+  animation-delay: 0.15s;
+}
+
+.sparkle-6 {
+  animation-delay: 0.25s;
+}
+
+.sparkle-reveal {
+  animation: content-reveal 0.8s ease-out forwards;
+}
