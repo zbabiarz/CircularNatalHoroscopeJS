@@ -104,6 +104,7 @@ function Home() {
       const params = new URLSearchParams({
         shadowId: result.shadowId,
         name: result.name,
+        email: result.email,
         chironSign: result.chironSign,
         chironHouse: result.chironHouse,
         chironDegree: result.chironDegree

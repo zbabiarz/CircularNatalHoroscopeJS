@@ -10,9 +10,11 @@ function Result() {
   const [isVisible, setIsVisible] = useState(false)
   const [aiReport, setAiReport] = useState('')
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [pdfSentToWebhook, setPdfSentToWebhook] = useState(false)
   const pdfContentRef = useRef(null)
 
   const name = searchParams.get('name')
+  const email = searchParams.get('email')
   const chironSign = searchParams.get('chironSign')
   const chironHouse = searchParams.get('chironHouse')
   const chironDegree = searchParams.get('chironDegree')
@@ -32,6 +34,99 @@ function Result() {
       localStorage.removeItem('aiReport')
     }
   }, [])
+
+  useEffect(() => {
+    if (aiReport && !pdfSentToWebhook && isVisible) {
+      const sendPdfToWebhook = async () => {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+
+          const collapsibleHeaders = document.querySelectorAll('[data-collapsible-header="true"]')
+          collapsibleHeaders.forEach(header => {
+            const isExpanded = header.getAttribute('data-expanded')
+            if (isExpanded !== 'true') {
+              header.click()
+            }
+          })
+
+          await new Promise(resolve => setTimeout(resolve, 1000))
+
+          const element = pdfContentRef.current
+          if (!element) return
+
+          const originalStyles = []
+          const sparkles = element.querySelectorAll('.sparkle')
+          sparkles.forEach(sparkle => {
+            originalStyles.push(sparkle.style.display)
+            sparkle.style.display = 'none'
+          })
+
+          const opt = {
+            margin: [0.5, 0.5, 0.5, 0.5],
+            filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              backgroundColor: '#f9f2eb',
+              logging: false,
+              removeContainer: true
+            },
+            jsPDF: {
+              unit: 'in',
+              format: 'letter',
+              orientation: 'portrait',
+              compress: true
+            },
+            pagebreak: {
+              mode: ['avoid-all', 'css', 'legacy'],
+              before: '.page-break-before',
+              after: '.page-break-after',
+              avoid: '.no-break'
+            }
+          }
+
+          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob')
+
+          sparkles.forEach((sparkle, index) => {
+            sparkle.style.display = originalStyles[index]
+          })
+
+          const reader = new FileReader()
+          reader.onloadend = async () => {
+            const base64data = reader.result
+
+            await fetch('https://effortlessai.app.n8n.cloud/webhook-test/475b8845-0604-47ab-af7e-fe011922dcdd', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type: 'pdf_report',
+                name: name,
+                email: email,
+                chironSign: chironSign,
+                chironHouse: chironHouse,
+                chironDegree: chironDegree,
+                shadowId: shadowId,
+                pdf: base64data,
+                filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
+                timestamp: new Date().toISOString()
+              })
+            })
+
+            setPdfSentToWebhook(true)
+          }
+          reader.readAsDataURL(pdfBlob)
+        } catch (error) {
+          console.error('Error sending PDF to webhook:', error)
+        }
+      }
+
+      sendPdfToWebhook()
+    }
+  }, [aiReport, isVisible, pdfSentToWebhook, name, email, chironSign, chironHouse, chironDegree, shadowId])
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPdf(true)
