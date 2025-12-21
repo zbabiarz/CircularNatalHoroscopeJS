@@ -169,8 +169,8 @@ function ReportFormatter({ report }) {
             {section.title && (
               <div
                 onClick={() => collapsible && toggleSection(index)}
-                data-collapsible-header={collapsible || undefined}
-                data-expanded={collapsible ? isExpanded : undefined}
+                data-collapsible-header={collapsible ? 'true' : undefined}
+                data-expanded={collapsible ? (isExpanded ? 'true' : 'false') : undefined}
                 className={`p-6 ${collapsible && !isExpanded ? 'pb-6' : 'pb-2'} ${collapsible ? 'hover:opacity-80' : ''}`}
               >
                 <h3 className={`text-xl md:text-2xl font-bold ${style.titleColor} flex items-center justify-between gap-2`}>

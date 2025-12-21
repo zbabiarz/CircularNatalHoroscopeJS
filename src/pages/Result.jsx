@@ -41,12 +41,12 @@ function Result() {
 
       collapsibleHeaders.forEach(header => {
         const isExpanded = header.getAttribute('data-expanded')
-        if (isExpanded === 'false') {
+        if (isExpanded !== 'true') {
           header.click()
         }
       })
 
-      await new Promise(resolve => setTimeout(resolve, 800))
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       const element = pdfContentRef.current
 
