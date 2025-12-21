@@ -39,6 +39,7 @@ function Result() {
     if (aiReport && !pdfSentToWebhook && isVisible) {
       const sendPdfToWebhook = async () => {
         try {
+          console.log('Starting PDF generation for webhook...')
           await new Promise(resolve => setTimeout(resolve, 2000))
 
           const collapsibleHeaders = document.querySelectorAll('[data-collapsible-header="true"]')
@@ -52,7 +53,10 @@ function Result() {
           await new Promise(resolve => setTimeout(resolve, 1000))
 
           const element = pdfContentRef.current
-          if (!element) return
+          if (!element) {
+            console.error('PDF content element not found')
+            return
+          }
 
           const originalStyles = []
           const sparkles = element.querySelectorAll('.sparkle')
@@ -87,7 +91,9 @@ function Result() {
             }
           }
 
+          console.log('Generating PDF blob...')
           const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob')
+          console.log('PDF blob generated successfully')
 
           sparkles.forEach((sparkle, index) => {
             sparkle.style.display = originalStyles[index]
@@ -95,32 +101,42 @@ function Result() {
 
           const reader = new FileReader()
           reader.onloadend = async () => {
-            const base64data = reader.result
+            try {
+              const base64data = reader.result
+              console.log('Sending PDF to webhook...')
 
-            await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                type: 'pdf_report',
-                name: name,
-                email: email,
-                chironSign: chironSign,
-                chironHouse: chironHouse,
-                chironDegree: chironDegree,
-                shadowId: shadowId,
-                pdf: base64data,
-                filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
-                timestamp: new Date().toISOString()
+              const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  type: 'pdf_report',
+                  name: name,
+                  email: email,
+                  chironSign: chironSign,
+                  chironHouse: chironHouse,
+                  chironDegree: chironDegree,
+                  shadowId: shadowId,
+                  pdf: base64data,
+                  filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
+                  timestamp: new Date().toISOString()
+                })
               })
-            })
 
-            setPdfSentToWebhook(true)
+              if (response.ok) {
+                console.log('PDF successfully sent to webhook')
+                setPdfSentToWebhook(true)
+              } else {
+                console.error('Webhook response not OK:', response.status, await response.text())
+              }
+            } catch (webhookError) {
+              console.error('Error sending PDF to webhook:', webhookError)
+            }
           }
           reader.readAsDataURL(pdfBlob)
         } catch (error) {
-          console.error('Error sending PDF to webhook:', error)
+          console.error('Error in PDF generation/sending process:', error)
         }
       }
 
