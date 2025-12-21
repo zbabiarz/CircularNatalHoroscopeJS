@@ -75,7 +75,7 @@ function Home() {
       }
 
       try {
-        const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
+        const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/475b8845-0604-47ab-af7e-fe011922dcdd', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
