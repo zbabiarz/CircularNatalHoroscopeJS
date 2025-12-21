@@ -75,12 +75,13 @@ function Home() {
       }
 
       try {
-        await fetch('https://effortlessai.app.n8n.cloud/webhook-test/475b8845-0604-47ab-af7e-fe011922dcdd', {
+        const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            type: 'form_submission',
             name: result.name,
             email: result.email,
             birthDate: formData.birthDate,
@@ -95,6 +96,11 @@ function Home() {
             timestamp: new Date().toISOString()
           })
         })
+        if (response.ok) {
+          console.log('Form data successfully sent to webhook')
+        } else {
+          console.error('Webhook response not OK:', response.status)
+        }
       } catch (webhookError) {
         console.error('Webhook error:', webhookError)
       }
