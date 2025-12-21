@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
 import html2pdf from 'html2pdf.js'
+import { supabase } from '../lib/supabase'
 
 function Result() {
   const [searchParams] = useSearchParams()
@@ -99,42 +100,57 @@ function Result() {
             sparkle.style.display = originalStyles[index]
           })
 
-          const reader = new FileReader()
-          reader.onloadend = async () => {
-            try {
-              const base64data = reader.result
-              console.log('Sending PDF to webhook...')
+          try {
+            const filename = `${name.replace(/\s+/g, '-')}-${Date.now()}-chiron-shadow-report.pdf`
+            const filePath = `reports/${filename}`
 
-              const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  type: 'pdf_report',
-                  name: name,
-                  email: email,
-                  chironSign: chironSign,
-                  chironHouse: chironHouse,
-                  chironDegree: chironDegree,
-                  shadowId: shadowId,
-                  pdf: base64data,
-                  filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
-                  timestamp: new Date().toISOString()
-                })
+            console.log('Uploading PDF to Supabase Storage...')
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('pdfs')
+              .upload(filePath, pdfBlob, {
+                contentType: 'application/pdf',
+                upsert: false
               })
 
-              if (response.ok) {
-                console.log('PDF successfully sent to webhook')
-                setPdfSentToWebhook(true)
-              } else {
-                console.error('Webhook response not OK:', response.status, await response.text())
-              }
-            } catch (webhookError) {
-              console.error('Error sending PDF to webhook:', webhookError)
+            if (uploadError) {
+              console.error('Error uploading PDF:', uploadError)
+              throw uploadError
             }
+
+            console.log('PDF uploaded successfully, getting public URL...')
+            const { data: { publicUrl } } = supabase.storage
+              .from('pdfs')
+              .getPublicUrl(filePath)
+
+            console.log('Sending PDF URL to webhook...')
+            const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type: 'pdf_report',
+                name: name,
+                email: email,
+                chironSign: chironSign,
+                chironHouse: chironHouse,
+                chironDegree: chironDegree,
+                shadowId: shadowId,
+                pdfUrl: publicUrl,
+                filename: filename,
+                timestamp: new Date().toISOString()
+              })
+            })
+
+            if (response.ok) {
+              console.log('PDF URL successfully sent to webhook')
+              setPdfSentToWebhook(true)
+            } else {
+              console.error('Webhook response not OK:', response.status, await response.text())
+            }
+          } catch (webhookError) {
+            console.error('Error sending PDF to webhook:', webhookError)
           }
-          reader.readAsDataURL(pdfBlob)
         } catch (error) {
           console.error('Error in PDF generation/sending process:', error)
         }
