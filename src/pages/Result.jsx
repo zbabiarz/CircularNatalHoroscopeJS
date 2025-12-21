@@ -97,7 +97,7 @@ function Result() {
           reader.onloadend = async () => {
             const base64data = reader.result
 
-            await fetch('https://effortlessai.app.n8n.cloud/webhook-test/475b8845-0604-47ab-af7e-fe011922dcdd', {
+            await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
