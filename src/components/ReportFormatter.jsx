@@ -164,11 +164,13 @@ function ReportFormatter({ report }) {
         return (
           <div
             key={index}
-            className={`${style.bg} ${style.border} rounded-lg transition-all duration-300 hover:shadow-md ${collapsible ? 'cursor-pointer' : ''}`}
+            className={`${style.bg} ${style.border} rounded-lg transition-all duration-300 hover:shadow-md ${collapsible ? 'cursor-pointer' : ''} no-break mb-4`}
           >
             {section.title && (
               <div
                 onClick={() => collapsible && toggleSection(index)}
+                data-collapsible-header={collapsible || undefined}
+                data-expanded={collapsible ? isExpanded : undefined}
                 className={`p-6 ${collapsible && !isExpanded ? 'pb-6' : 'pb-2'} ${collapsible ? 'hover:opacity-80' : ''}`}
               >
                 <h3 className={`text-xl md:text-2xl font-bold ${style.titleColor} flex items-center justify-between gap-2`}>
@@ -186,7 +188,7 @@ function ReportFormatter({ report }) {
                   </span>
                   {collapsible && (
                     <svg
-                      className={`w-6 h-6 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+                      className={`w-6 h-6 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''} print:hidden`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

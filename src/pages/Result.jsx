@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
+import html2pdf from 'html2pdf.js'
 
 function Result() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
   const [aiReport, setAiReport] = useState('')
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const pdfContentRef = useRef(null)
 
   const name = searchParams.get('name')
   const chironSign = searchParams.get('chironSign')
@@ -30,45 +33,136 @@ function Result() {
     }
   }, [])
 
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPdf(true)
+
+    try {
+      const collapsibleHeaders = document.querySelectorAll('[data-collapsible-header="true"]')
+
+      collapsibleHeaders.forEach(header => {
+        const isExpanded = header.getAttribute('data-expanded')
+        if (isExpanded === 'false') {
+          header.click()
+        }
+      })
+
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      const element = pdfContentRef.current
+
+      if (!element) {
+        throw new Error('PDF content not found')
+      }
+
+      const originalStyles = []
+      const sparkles = element.querySelectorAll('.sparkle')
+      sparkles.forEach(sparkle => {
+        originalStyles.push(sparkle.style.display)
+        sparkle.style.display = 'none'
+      })
+
+      const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          backgroundColor: '#f9f2eb',
+          logging: false,
+          removeContainer: true
+        },
+        jsPDF: {
+          unit: 'in',
+          format: 'letter',
+          orientation: 'portrait',
+          compress: true
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          before: '.page-break-before',
+          after: '.page-break-after',
+          avoid: '.no-break'
+        }
+      }
+
+      await html2pdf().set(opt).from(element).save()
+
+      sparkles.forEach((sparkle, index) => {
+        sparkle.style.display = originalStyles[index]
+      })
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('There was an error generating the PDF. Please try again.')
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="max-w-3xl w-full">
-        <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <div className="flex justify-center mb-4">
-            <img
-              src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
-              alt="Shadow Work Astro Quiz Logo"
-              className="w-32 h-32 subtle-pulse"
-            />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-brown mb-2">
-            {name}'s Chiron Shadow
-          </h1>
-          <p className="text-xl text-magenta font-semibold">
-            {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
-          </p>
-          <div className="mt-4 text-brown/70">
-            <p className="text-base">
-              Chiron in {chironSign}
-              {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
-              {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}°`}
+        <div ref={pdfContentRef} className="pdf-content">
+          <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+            <div className="flex justify-center mb-4">
+              <img
+                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
+                alt="Shadow Work Astro Quiz Logo"
+                className="w-32 h-32 subtle-pulse"
+              />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-brown mb-2">
+              {name}'s Chiron Shadow
+            </h1>
+            <p className="text-xl text-magenta font-semibold">
+              {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
             </p>
-          </div>
-        </div>
-        
-        <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <div className="max-w-none">
-            {aiReport ? (
-              <ReportFormatter report={aiReport} />
-            ) : (
-              <p className="text-brown/90 leading-relaxed whitespace-pre-line">
-                {shadowData.description}
+            <div className="mt-4 text-brown/70">
+              <p className="text-base">
+                Chiron in {chironSign}
+                {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
+                {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}°`}
               </p>
-            )}
+            </div>
+          </div>
+
+          <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+            <div className="max-w-none">
+              {aiReport ? (
+                <ReportFormatter report={aiReport} />
+              ) : (
+                <p className="text-brown/90 leading-relaxed whitespace-pre-line">
+                  {shadowData.description}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-        
-        <div className={`text-center transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+
+        <div className={`flex gap-4 justify-center flex-wrap transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPdf}
+            className="bg-rose hover:bg-rose/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF Report
+              </>
+            )}
+          </button>
           <button
             onClick={() => navigate('/')}
             className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"

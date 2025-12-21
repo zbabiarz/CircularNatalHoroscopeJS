@@ -325,3 +325,50 @@ body {
 .sparkle-reveal {
   animation: content-reveal 0.8s ease-out forwards;
 }
+
+.pdf-content {
+  position: relative;
+}
+
+.pdf-content .sparkle {
+  display: none !important;
+}
+
+@media print {
+  .print:hidden {
+    display: none !important;
+  }
+
+  .pdf-content {
+    background-color: #f9f2eb;
+    padding: 20px;
+  }
+
+  .sparkle {
+    display: none !important;
+  }
+
+  body {
+    background-color: #f9f2eb;
+  }
+
+  .no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .page-break-before {
+    page-break-before: always;
+    break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+    break-after: always;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
