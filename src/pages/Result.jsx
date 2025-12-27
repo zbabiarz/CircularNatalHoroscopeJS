@@ -123,10 +123,12 @@ function Result() {
               .getPublicUrl(filePath)
 
             console.log('Sending PDF URL to webhook...')
-            const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/f99dc2b5-b950-4752-ab9b-cbac9d60da0f', {
+            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-pdf-webhook`
+            const response = await fetch(apiUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
               },
               body: JSON.stringify({
                 type: 'pdf_report',
