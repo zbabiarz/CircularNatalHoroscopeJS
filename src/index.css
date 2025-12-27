@@ -328,10 +328,6 @@ body {
 
 .pdf-content {
   position: relative;
-  background: #f9f2eb;
-  padding: 40px;
-  max-width: 8.5in;
-  margin: 0 auto;
 }
 
 .pdf-content .sparkle {
@@ -341,60 +337,6 @@ body {
 .pdf-content .pdf-section {
   page-break-inside: avoid;
   break-inside: avoid;
-  margin-bottom: 20px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  border-left: 4px solid;
-}
-
-.pdf-content .pdf-header {
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(219, 39, 119, 0.2);
-}
-
-.pdf-content .pdf-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #8b4513;
-  margin-bottom: 8px;
-}
-
-.pdf-content .pdf-subtitle {
-  font-size: 24px;
-  font-weight: 600;
-  color: #db2777;
-  margin-bottom: 12px;
-}
-
-.pdf-content .pdf-meta {
-  font-size: 14px;
-  color: rgba(139, 69, 19, 0.7);
-}
-
-.pdf-content .pdf-section h3 {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 16px;
-  color: #8b4513;
-}
-
-.pdf-content .pdf-section p {
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 12px;
-  color: rgba(139, 69, 19, 0.9);
-}
-
-.pdf-content .pdf-section ul,
-.pdf-content .pdf-section li {
-  line-height: 1.6;
-}
-
-.pdf-content .pdf-report-content {
-  display: block;
 }
 
 .pdf-content .transition-all,
