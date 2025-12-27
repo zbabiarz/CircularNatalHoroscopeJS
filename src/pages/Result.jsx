@@ -123,7 +123,7 @@ function Result() {
               .getPublicUrl(filePath)
 
             console.log('Sending PDF URL to webhook...')
-            const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/06da12bd-59c3-429b-b922-344bbb94d6ed', {
+            const response = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/f99dc2b5-b950-4752-ab9b-cbac9d60da0f', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
