@@ -164,7 +164,7 @@ function ReportFormatter({ report }) {
         return (
           <div
             key={index}
-            className={`${style.bg} ${style.border} rounded-lg transition-all duration-300 hover:shadow-md ${collapsible ? 'cursor-pointer' : ''} no-break mb-4`}
+            className={`${style.bg} ${style.border} rounded-lg transition-all duration-300 hover:shadow-md ${collapsible ? 'cursor-pointer' : ''} pdf-section mb-6`}
           >
             {section.title && (
               <div

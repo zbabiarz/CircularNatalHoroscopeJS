@@ -43,21 +43,23 @@ function Result() {
           console.log('Starting PDF generation for webhook...')
           await new Promise(resolve => setTimeout(resolve, 2000))
 
-          const collapsibleHeaders = document.querySelectorAll('[data-collapsible-header="true"]')
+          const element = pdfContentRef.current
+          if (!element) {
+            console.error('PDF content element not found')
+            return
+          }
+
+          const collapsibleHeaders = element.querySelectorAll('[data-collapsible-header="true"]')
+          const originalExpanded = []
           collapsibleHeaders.forEach(header => {
+            originalExpanded.push(header.getAttribute('data-expanded'))
             const isExpanded = header.getAttribute('data-expanded')
             if (isExpanded !== 'true') {
               header.click()
             }
           })
 
-          await new Promise(resolve => setTimeout(resolve, 1000))
-
-          const element = pdfContentRef.current
-          if (!element) {
-            console.error('PDF content element not found')
-            return
-          }
+          await new Promise(resolve => setTimeout(resolve, 500))
 
           const originalStyles = []
           const sparkles = element.querySelectorAll('.sparkle')
@@ -67,16 +69,16 @@ function Result() {
           })
 
           const opt = {
-            margin: [0.5, 0.5, 0.5, 0.5],
+            margin: [0.3, 0.3, 0.3, 0.3],
             filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg', quality: 0.95 },
             html2canvas: {
               scale: 2,
               useCORS: true,
               letterRendering: true,
               backgroundColor: '#f9f2eb',
               logging: false,
-              removeContainer: true
+              windowWidth: 1200
             },
             jsPDF: {
               unit: 'in',
@@ -85,10 +87,8 @@ function Result() {
               compress: true
             },
             pagebreak: {
-              mode: ['avoid-all', 'css', 'legacy'],
-              before: '.page-break-before',
-              after: '.page-break-after',
-              avoid: '.no-break'
+              mode: ['css', 'legacy'],
+              avoid: '.pdf-section'
             }
           }
 
@@ -98,6 +98,12 @@ function Result() {
 
           sparkles.forEach((sparkle, index) => {
             sparkle.style.display = originalStyles[index]
+          })
+
+          collapsibleHeaders.forEach((header, index) => {
+            if (originalExpanded[index] === 'false') {
+              header.click()
+            }
           })
 
           try {
@@ -233,22 +239,22 @@ function Result() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
       <div className="max-w-3xl w-full">
         <div ref={pdfContentRef} className="pdf-content">
-          <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <div className="pdf-header">
             <div className="flex justify-center mb-4">
               <img
                 src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
                 alt="Shadow Work Astro Quiz Logo"
-                className="w-32 h-32 subtle-pulse"
+                className="w-32 h-32"
               />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-brown mb-2">
+            <h1 className="pdf-title">
               {name}'s Chiron Shadow
             </h1>
-            <p className="text-xl text-magenta font-semibold">
+            <p className="pdf-subtitle">
               {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
             </p>
-            <div className="mt-4 text-brown/70">
-              <p className="text-base">
+            <div className="pdf-meta">
+              <p>
                 Chiron in {chironSign}
                 {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
                 {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}°`}
@@ -256,16 +262,16 @@ function Result() {
             </div>
           </div>
 
-          <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-            <div className="max-w-none">
-              {aiReport ? (
-                <ReportFormatter report={aiReport} />
-              ) : (
+          <div className="pdf-report-content">
+            {aiReport ? (
+              <ReportFormatter report={aiReport} />
+            ) : (
+              <div className="pdf-section" style={{ borderColor: '#db2777' }}>
                 <p className="text-brown/90 leading-relaxed whitespace-pre-line">
                   {shadowData.description}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
