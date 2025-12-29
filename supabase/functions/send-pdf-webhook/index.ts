@@ -18,7 +18,7 @@ Deno.serve(async (req: Request) => {
     const payload = await req.json();
 
     console.log('Forwarding PDF data to webhook...');
-    const webhookResponse = await fetch('https://effortlessai.app.n8n.cloud/webhook-test/f99dc2b5-b950-4752-ab9b-cbac9d60da0f', {
+    const webhookResponse = await fetch('https://effortlessai.app.n8n.cloud/webhook/f99dc2b5-b950-4752-ab9b-cbac9d60da0f', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
