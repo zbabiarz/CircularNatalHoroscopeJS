@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
-import html2pdf from 'html2pdf.js'
 import { supabase } from '../lib/supabase'
 
 function Result() {
@@ -43,121 +42,58 @@ function Result() {
           console.log('Starting PDF generation for webhook...')
           await new Promise(resolve => setTimeout(resolve, 2000))
 
-          const element = pdfContentRef.current
-          if (!element) {
-            console.error('PDF content element not found')
-            return
-          }
-
-          const collapsibleHeaders = element.querySelectorAll('[data-collapsible-header="true"]')
-          const originalExpanded = []
-          collapsibleHeaders.forEach(header => {
-            originalExpanded.push(header.getAttribute('data-expanded'))
-            const isExpanded = header.getAttribute('data-expanded')
-            if (isExpanded !== 'true') {
-              header.click()
-            }
-          })
-
-          await new Promise(resolve => setTimeout(resolve, 500))
-
-          const originalStyles = []
-          const sparkles = element.querySelectorAll('.sparkle')
-          sparkles.forEach(sparkle => {
-            originalStyles.push(sparkle.style.display)
-            sparkle.style.display = 'none'
-          })
-
-          const opt = {
-            margin: [0.3, 0.3, 0.3, 0.3],
-            filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              letterRendering: true,
-              backgroundColor: '#f9f2eb',
-              logging: false,
-              windowWidth: 1200
+          console.log('Calling generate-pdf Edge Function...')
+          const pdfApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`
+          const pdfResponse = await fetch(pdfApiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
             },
-            jsPDF: {
-              unit: 'in',
-              format: 'letter',
-              orientation: 'portrait',
-              compress: true
-            },
-            pagebreak: {
-              mode: ['css', 'legacy'],
-              avoid: '.pdf-section'
-            }
-          }
-
-          console.log('Generating PDF blob...')
-          const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob')
-          console.log('PDF blob generated successfully')
-
-          sparkles.forEach((sparkle, index) => {
-            sparkle.style.display = originalStyles[index]
-          })
-
-          collapsibleHeaders.forEach((header, index) => {
-            if (originalExpanded[index] === 'false') {
-              header.click()
-            }
-          })
-
-          try {
-            const filename = `${name.replace(/\s+/g, '-')}-${Date.now()}-chiron-shadow-report.pdf`
-            const filePath = `reports/${filename}`
-
-            console.log('Uploading PDF to Supabase Storage...')
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('pdfs')
-              .upload(filePath, pdfBlob, {
-                contentType: 'application/pdf',
-                upsert: false
-              })
-
-            if (uploadError) {
-              console.error('Error uploading PDF:', uploadError)
-              throw uploadError
-            }
-
-            console.log('PDF uploaded successfully, getting public URL...')
-            const { data: { publicUrl } } = supabase.storage
-              .from('pdfs')
-              .getPublicUrl(filePath)
-
-            console.log('Sending PDF URL to webhook...')
-            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-pdf-webhook`
-            const response = await fetch(apiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-              },
-              body: JSON.stringify({
-                type: 'pdf_report',
-                name: name,
-                email: email,
-                chironSign: chironSign,
-                chironHouse: chironHouse,
-                chironDegree: chironDegree,
-                shadowId: shadowId,
-                pdfUrl: publicUrl,
-                filename: filename,
-                timestamp: new Date().toISOString()
-              })
+            body: JSON.stringify({
+              name: name,
+              chironSign: chironSign,
+              chironHouse: chironHouse,
+              chironDegree: parseFloat(chironDegree),
+              archetype: shadowData.archetype,
+              report: aiReport
             })
+          })
 
-            if (response.ok) {
-              console.log('PDF URL successfully sent to webhook')
-              setPdfSentToWebhook(true)
-            } else {
-              console.error('Webhook response not OK:', response.status, await response.text())
-            }
-          } catch (webhookError) {
-            console.error('Error sending PDF to webhook:', webhookError)
+          if (!pdfResponse.ok) {
+            throw new Error(`PDF generation failed: ${await pdfResponse.text()}`)
+          }
+
+          const { url: publicUrl, fileName } = await pdfResponse.json()
+          console.log('PDF generated successfully:', publicUrl)
+
+          console.log('Sending PDF URL to webhook...')
+          const webhookApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-pdf-webhook`
+          const webhookResponse = await fetch(webhookApiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              type: 'pdf_report',
+              name: name,
+              email: email,
+              chironSign: chironSign,
+              chironHouse: chironHouse,
+              chironDegree: chironDegree,
+              shadowId: shadowId,
+              pdfUrl: publicUrl,
+              filename: fileName,
+              timestamp: new Date().toISOString()
+            })
+          })
+
+          if (webhookResponse.ok) {
+            console.log('PDF URL successfully sent to webhook')
+            setPdfSentToWebhook(true)
+          } else {
+            console.error('Webhook response not OK:', webhookResponse.status, await webhookResponse.text())
           }
         } catch (error) {
           console.error('Error in PDF generation/sending process:', error)
@@ -166,67 +102,43 @@ function Result() {
 
       sendPdfToWebhook()
     }
-  }, [aiReport, isVisible, pdfSentToWebhook, name, email, chironSign, chironHouse, chironDegree, shadowId])
+  }, [aiReport, isVisible, pdfSentToWebhook, name, email, chironSign, chironHouse, chironDegree, shadowId, shadowData.archetype])
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPdf(true)
 
     try {
-      const collapsibleHeaders = document.querySelectorAll('[data-collapsible-header="true"]')
-
-      collapsibleHeaders.forEach(header => {
-        const isExpanded = header.getAttribute('data-expanded')
-        if (isExpanded !== 'true') {
-          header.click()
-        }
+      console.log('Calling generate-pdf Edge Function...')
+      const pdfApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`
+      const pdfResponse = await fetch(pdfApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          name: name,
+          chironSign: chironSign,
+          chironHouse: chironHouse,
+          chironDegree: parseFloat(chironDegree),
+          archetype: shadowData.archetype,
+          report: aiReport
+        })
       })
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      const element = pdfContentRef.current
-
-      if (!element) {
-        throw new Error('PDF content not found')
+      if (!pdfResponse.ok) {
+        throw new Error(`PDF generation failed: ${await pdfResponse.text()}`)
       }
 
-      const originalStyles = []
-      const sparkles = element.querySelectorAll('.sparkle')
-      sparkles.forEach(sparkle => {
-        originalStyles.push(sparkle.style.display)
-        sparkle.style.display = 'none'
-      })
+      const { url: pdfUrl } = await pdfResponse.json()
+      console.log('PDF generated successfully:', pdfUrl)
 
-      const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          backgroundColor: '#f9f2eb',
-          logging: false,
-          removeContainer: true
-        },
-        jsPDF: {
-          unit: 'in',
-          format: 'letter',
-          orientation: 'portrait',
-          compress: true
-        },
-        pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'],
-          before: '.page-break-before',
-          after: '.page-break-after',
-          avoid: '.no-break'
-        }
-      }
-
-      await html2pdf().set(opt).from(element).save()
-
-      sparkles.forEach((sparkle, index) => {
-        sparkle.style.display = originalStyles[index]
-      })
+      const link = document.createElement('a')
+      link.href = pdfUrl
+      link.download = `${name.replace(/\s+/g, '-')}-chiron-shadow-report.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } catch (error) {
       console.error('Error generating PDF:', error)
       alert('There was an error generating the PDF. Please try again.')
