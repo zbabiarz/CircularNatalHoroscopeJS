@@ -166,17 +166,10 @@ function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
-          <div className="flex justify-center mb-4">
-            <img
-              src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
-              alt="Shadow Work Astro Quiz Logo"
-              className="w-32 h-32 shimmer"
-            />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5)' }}>
             Shadow Work Astro Reading
           </h1>
-          <p className="text-lg text-brown/80">
+          <p className="text-lg text-brown/80" style={{ textShadow: '0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.4)' }}>
             Discover your Chiron placement and unlock deeper insights into your healing journey
           </p>
         </div>
