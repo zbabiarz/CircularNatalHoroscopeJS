@@ -36,7 +36,7 @@ uniform vec3 iResolution;
 #define TUNNEL_LAYERS 96
 #define RING_POINTS 128
 #define POINT_SIZE 1.8
-#define SPEED 0.7
+#define SPEED 0.35
 
 float sq(float x){ return x*x; }
 
@@ -163,7 +163,7 @@ export default function TunnelShowcase() {
     time *= 0.001;
     const delta = time - (lastTimeRef.current || time);
     lastTimeRef.current = time;
-    ctxRef.current.material.uniforms.iTime.value += delta * 0.5;
+    ctxRef.current.material.uniforms.iTime.value += delta * 0.3;
     ctxRef.current.renderer.render(ctxRef.current.scene, ctxRef.current.camera);
   }, []);
 
@@ -238,7 +238,7 @@ export function TunnelTheme() {
     time *= 0.001;
     const delta = time - (lastTimeRef.current || time);
     lastTimeRef.current = time;
-    ctxRef.current.material.uniforms.iTime.value += delta * 0.5;
+    ctxRef.current.material.uniforms.iTime.value += delta * 0.3;
     ctxRef.current.renderer.render(ctxRef.current.scene, ctxRef.current.camera);
   }, []);
 
