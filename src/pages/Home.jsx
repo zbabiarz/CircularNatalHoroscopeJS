@@ -166,10 +166,10 @@ function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5)' }}>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5)' }}>
             Shadow Work Astro Reading
           </h1>
-          <p className="text-lg text-brown/80" style={{ textShadow: '0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.4)' }}>
+          <p className="text-lg text-white" style={{ textShadow: '0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.4)' }}>
             Discover your Chiron placement and unlock deeper insights into your healing journey
           </p>
         </div>
@@ -178,7 +178,7 @@ function Home() {
           <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
         </div>
         
-        <footer className="mt-8 text-center text-sm text-brown/60">
+        <footer className="mt-8 text-center text-sm text-white">
           This insight is intended to support your personal growth and healing journey.
         </footer>
       </div>
