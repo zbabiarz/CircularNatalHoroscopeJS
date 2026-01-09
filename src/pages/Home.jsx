@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import MysticalLoader from '../components/MysticalLoader'
+import SparkleImage from '../components/SparkleImage'
 import { GradientMesh } from '../components/ui/gradient-mesh'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
@@ -178,6 +179,13 @@ function Home() {
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
           <div className="backdrop-blur-md bg-black/40 rounded-2xl p-6 mb-8 border border-white/10">
+            <div className="flex justify-center mb-6">
+              <SparkleImage
+                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
+                alt="Shadow Work Astro"
+                className="w-32 h-32 md:w-40 md:h-40"
+              />
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
               Shadow Work Astro Reading
             </h1>
