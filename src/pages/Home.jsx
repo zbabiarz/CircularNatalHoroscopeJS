@@ -166,20 +166,24 @@ function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5)' }}>
-            Shadow Work Astro Reading
-          </h1>
-          <p className="text-lg text-white" style={{ textShadow: '0 0 8px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 255, 255, 0.4)' }}>
-            Discover your Chiron placement and unlock deeper insights into your healing journey
-          </p>
+          <div className="backdrop-blur-md bg-black/40 rounded-2xl p-6 mb-8 border border-white/10">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
+              Shadow Work Astro Reading
+            </h1>
+            <p className="text-lg text-white" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
+              Discover your Chiron placement and unlock deeper insights into your healing journey
+            </p>
+          </div>
         </div>
-        
+
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30">
           <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
         </div>
-        
-        <footer className="mt-8 text-center text-sm text-white">
-          This insight is intended to support your personal growth and healing journey.
+
+        <footer className="mt-8 text-center text-sm backdrop-blur-md bg-black/40 rounded-xl p-4 border border-white/10">
+          <span className="text-white" style={{ textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)' }}>
+            This insight is intended to support your personal growth and healing journey.
+          </span>
         </footer>
       </div>
     </div>
