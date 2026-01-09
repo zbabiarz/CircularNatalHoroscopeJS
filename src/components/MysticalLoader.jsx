@@ -1,6 +1,42 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
-function MysticalLoader({ message = "Calculating your celestial coordinates..." }) {
+const loadingMessages = [
+  {
+    lines: ['Your wounds are your wisdom.', 'Your pain is your power.']
+  },
+  {
+    lines: [
+      'Your Chart Is Loading',
+      'This takes about a minute.',
+      "Which is honestly way less time than you've spent wondering \"why am I like this?\""
+    ]
+  },
+  {
+    lines: [
+      'Almost there…',
+      'Your chart is syncing.',
+      'Your Chiron placement is being calculated.',
+      'Your shadow is about to get a name.'
+    ]
+  },
+  {
+    lines: ['Hang tight.', 'This is where the real clarity starts.']
+  }
+]
+
+function MysticalLoader() {
+  const [messageIndex, setMessageIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const currentMessage = loadingMessages[messageIndex]
+
   return (
     <div className="fixed inset-0 bg-cream/95 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="text-center">
@@ -38,18 +74,22 @@ function MysticalLoader({ message = "Calculating your celestial coordinates..." 
           </div>
         </div>
 
-        <div className="space-y-3">
-          <h3 className="text-2xl font-bold text-magenta animate-fade-in">
-            {message}
-          </h3>
+        <div className="space-y-3 max-w-lg mx-auto px-4">
+          <div className="min-h-[120px] flex flex-col justify-center">
+            {currentMessage.lines.map((line, index) => (
+              <p
+                key={index}
+                className={`${index === 0 ? 'text-xl md:text-2xl font-bold text-magenta mb-2' : 'text-base md:text-lg text-brown/80'} animate-fade-in`}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
           <div className="flex justify-center gap-1">
             <span className="w-2 h-2 bg-magenta rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
             <span className="w-2 h-2 bg-magenta rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <span className="w-2 h-2 bg-magenta rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <p className="text-brown/60 text-sm animate-fade-in-delayed">
-            Channeling cosmic wisdom...
-          </p>
         </div>
       </div>
     </div>

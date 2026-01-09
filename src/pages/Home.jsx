@@ -8,16 +8,12 @@ import { supabase } from '../lib/supabase'
 function Home() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [loadingMessage, setLoadingMessage] = useState('Calculating your celestial coordinates...')
 
   const handleSubmit = async (formData) => {
     setIsSubmitting(true)
-    setLoadingMessage('Calculating your celestial coordinates...')
 
     try {
       const result = await calculateChironData(formData)
-
-      setLoadingMessage('Channeling your personalized shadow wisdom...')
 
       let aiReport = ''
 
@@ -127,7 +123,7 @@ function Home() {
 
   return (
     <>
-      {isSubmitting && <MysticalLoader message={loadingMessage} />}
+      {isSubmitting && <MysticalLoader />}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
