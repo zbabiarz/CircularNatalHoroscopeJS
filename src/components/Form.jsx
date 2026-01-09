@@ -323,15 +323,11 @@ function Form({ onSubmit, isSubmitting }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0-10a9 9 0 110 18 9 9 0 010-18z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-brown mb-2">Birth Time Not Provided</h3>
+              <h3 className="text-xl font-bold text-brown mb-2">Don't know your exact birth time?</h3>
             </div>
 
             <p className="text-brown/70 mb-6 text-center">
-              Your results will still be valid, but without your birth time, we won't be able to calculate your exact house placements. This means some insights will be less specific.
-            </p>
-
-            <p className="text-sm text-brown/60 mb-6 text-center italic">
-              Would you like to continue without your birth time?
+              That's ok! You'll still discover your shadow medicine, it just won't be as detailed.
             </p>
 
             <div className="flex gap-3">
