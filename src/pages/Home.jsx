@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import MysticalLoader from '../components/MysticalLoader'
 import AnimatedBackground from '../components/AnimatedBackground'
-import DiscoBall from '../components/DiscoBall'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
 
@@ -168,7 +167,6 @@ function Home() {
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
           <div className="backdrop-blur-md bg-black/40 rounded-2xl p-6 mb-8 border border-white/10">
-            <DiscoBall />
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
               Shadow Work Astro Reading
             </h1>
