@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import MysticalLoader from '../components/MysticalLoader'
 import SparkleImage from '../components/SparkleImage'
-import { GradientMesh } from '../components/ui/gradient-mesh'
+import TunnelShowcase from '../components/ui/tunnel-hero'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
 
@@ -162,18 +162,7 @@ function Home() {
 
   return (
     <>
-      <div className="fixed inset-0 -z-10">
-        <GradientMesh
-          colors={["#8d1246", "#c6beba", "#382a25"]}
-          distortion={4}
-          swirl={0.3}
-          speed={0.5}
-          waveAmp={0.08}
-          waveFreq={8}
-          waveSpeed={0.15}
-          grain={0.04}
-        />
-      </div>
+      <TunnelShowcase />
       {isSubmitting && <MysticalLoader />}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
