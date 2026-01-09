@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
+import ShaderAnimation from '../components/ui/shader-animation'
 import { supabase } from '../lib/supabase'
 
 function Result() {
@@ -224,7 +225,9 @@ function Result() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+    <>
+      <ShaderAnimation />
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
       <div className="max-w-3xl w-full">
         <div ref={pdfContentRef} className="pdf-content">
           <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
@@ -355,6 +358,7 @@ function Result() {
         </footer>
       </div>
     </div>
+    </>
   )
 }
 
