@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
-import ShaderAnimation from '../components/ui/shader-animation'
+import TurbulentFlow from '../components/ui/turbulent-flow'
 import { supabase } from '../lib/supabase'
 
 function Result() {
@@ -243,7 +243,7 @@ function Result() {
 
   return (
     <>
-      <ShaderAnimation />
+      <TurbulentFlow />
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
       <div className="max-w-3xl w-full">
         <div ref={pdfContentRef} className="pdf-content">
