@@ -69,17 +69,12 @@ function Form({ onSubmit, isSubmitting }) {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (!formData.name || !formData.email || !formData.birthDate) {
-      alert('Please fill in all required fields (name, email, and birth date)')
+    if (!formData.name || !formData.email || !formData.birthDate || !formData.birthLocation) {
+      alert('Please fill in all required fields (name, email, birth date, and birth location)')
       return
     }
 
-    if (formData.birthTime && !formData.birthLocation) {
-      alert('If you provide birth time, please also select a location from the dropdown.')
-      return
-    }
-
-    if (formData.birthTime && !formData.birthCoordinates) {
+    if (!formData.birthCoordinates) {
       alert('Please select your birth location from the dropdown suggestions.')
       return
     }
@@ -211,7 +206,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
-          Birth Location <span className="text-brown/40">(Optional)</span>
+          Birth Location <span className="text-magenta">*</span>
         </label>
         {isLoaded && apiStatus === 'loaded' ? (
           <Autocomplete
@@ -251,7 +246,7 @@ function Form({ onSubmit, isSubmitting }) {
         <p className="text-xs text-brown/60 mt-1">
           {formData.birthCoordinates
             ? `✓ Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
-            : 'Start typing and select your birth city from the dropdown'
+            : 'Required - start typing and select your birth city from the dropdown'
           }
         </p>
       </div>
