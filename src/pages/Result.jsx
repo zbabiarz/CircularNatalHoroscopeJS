@@ -19,6 +19,10 @@ function Result() {
   const chironHouse = searchParams.get('chironHouse')
   const chironDegree = searchParams.get('chironDegree')
   const shadowId = searchParams.get('shadowId')
+  const resultId = searchParams.get('resultId')
+
+  const [reportStatus, setReportStatus] = useState('pending')
+  const [isLoadingReport, setIsLoadingReport] = useState(true)
 
   const shadowData = shadowMap[shadowId] || {
     archetype: 'Unknown',
@@ -28,12 +32,84 @@ function Result() {
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100)
 
-    const storedReport = localStorage.getItem('aiReport')
-    if (storedReport) {
-      setAiReport(storedReport)
-      localStorage.removeItem('aiReport')
+    const loadReport = async () => {
+      const storedReport = localStorage.getItem('aiReport')
+      if (storedReport && storedReport.length > 100) {
+        setAiReport(storedReport)
+        setReportStatus('completed')
+        setIsLoadingReport(false)
+        localStorage.removeItem('aiReport')
+        return
+      }
+
+      if (resultId) {
+        try {
+          const { data, error } = await supabase
+            .from('shadow_work_results')
+            .select('ai_report, ai_report_status, ai_report_error')
+            .eq('id', resultId)
+            .single()
+
+          if (!error && data) {
+            if (data.ai_report) {
+              setAiReport(data.ai_report)
+              setReportStatus(data.ai_report_status || 'completed')
+              setIsLoadingReport(false)
+            } else if (data.ai_report_status === 'failed') {
+              setReportStatus('failed')
+              setIsLoadingReport(false)
+            } else {
+              setReportStatus(data.ai_report_status || 'pending')
+              setIsLoadingReport(true)
+            }
+          } else {
+            setIsLoadingReport(false)
+          }
+        } catch (err) {
+          console.error('Error loading report from database:', err)
+          setIsLoadingReport(false)
+        }
+      } else {
+        setIsLoadingReport(false)
+      }
     }
+
+    loadReport()
   }, [])
+
+  useEffect(() => {
+    if (!resultId || !isLoadingReport || reportStatus !== 'pending') {
+      return
+    }
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('shadow_work_results')
+          .select('ai_report, ai_report_status, ai_report_error')
+          .eq('id', resultId)
+          .single()
+
+        if (!error && data) {
+          if (data.ai_report) {
+            setAiReport(data.ai_report)
+            setReportStatus(data.ai_report_status || 'completed')
+            setIsLoadingReport(false)
+          } else if (data.ai_report_status === 'failed') {
+            setReportStatus('failed')
+            setIsLoadingReport(false)
+          } else if (data.ai_report_status !== 'pending') {
+            setReportStatus(data.ai_report_status)
+            setIsLoadingReport(false)
+          }
+        }
+      } catch (err) {
+        console.error('Error polling report status:', err)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
+  }, [resultId, isLoadingReport, reportStatus])
 
   useEffect(() => {
     if (aiReport && !pdfSentToWebhook && isVisible) {
@@ -176,7 +252,19 @@ function Result() {
 
           <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             <div className="max-w-none">
-              {aiReport ? (
+              {isLoadingReport ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-magenta mb-4"></div>
+                  <p className="text-brown/80 text-lg mb-2">Generating your personalized report...</p>
+                  <p className="text-brown/60 text-sm">This may take up to 3 minutes</p>
+                </div>
+              ) : reportStatus === 'failed' ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="text-rose text-5xl mb-4">⚠️</div>
+                  <p className="text-brown/80 text-lg mb-2">Unable to generate your report</p>
+                  <p className="text-brown/60 text-sm">Please try refreshing the page or contact support</p>
+                </div>
+              ) : aiReport ? (
                 <ReportFormatter report={aiReport} />
               ) : (
                 <p className="text-brown/90 leading-relaxed whitespace-pre-line">
@@ -190,7 +278,7 @@ function Result() {
         <div className={`flex gap-4 justify-center flex-wrap transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
           <button
             onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf}
+            disabled={isGeneratingPdf || isLoadingReport || !aiReport}
             className="bg-rose hover:bg-rose/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
             {isGeneratingPdf ? (

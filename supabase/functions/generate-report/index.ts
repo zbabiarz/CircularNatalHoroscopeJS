@@ -13,11 +13,63 @@ interface RequestBody {
   chironDegree: number;
 }
 
+const REQUIRED_SECTIONS = [
+  '**Archetype:**',
+  '**Theme:**',
+  '**Chiron\'s Story**',
+  '**Core Wound**',
+  '**How It Feels**',
+  '**Shadow Patterns**',
+  '**Your Medicine**',
+  '**Your Invitation**',
+  '**Journal / Reflection Prompts**'
+];
+
+const MIN_REPORT_LENGTH = 3000;
+
+function validateReport(report: string): { isValid: boolean; status: string; missingSections: string[]; length: number } {
+  if (!report || typeof report !== 'string') {
+    return {
+      isValid: false,
+      status: 'failed',
+      missingSections: REQUIRED_SECTIONS,
+      length: 0
+    };
+  }
+
+  const reportLength = report.trim().length;
+  const missingSections: string[] = [];
+
+  for (const section of REQUIRED_SECTIONS) {
+    if (!report.includes(section)) {
+      missingSections.push(section);
+    }
+  }
+
+  let status = 'completed';
+  let isValid = true;
+
+  if (missingSections.length > 0) {
+    status = 'partial';
+    isValid = false;
+  } else if (reportLength < MIN_REPORT_LENGTH) {
+    status = 'partial';
+    isValid = false;
+  }
+
+  return {
+    isValid,
+    status,
+    missingSections,
+    length: reportLength
+  };
+}
+
 async function pollRunStatus(
   apiKey: string,
   threadId: string,
   runId: string,
-  maxWaitTime = 90000
+  maxWaitTime = 180000
 ): Promise<any> {
   const startTime = Date.now();
   let pollInterval = 500;
@@ -65,7 +117,7 @@ async function pollRunStatus(
     }
   );
 
-  throw new Error("Assistant run timed out after 90 seconds");
+  throw new Error("Assistant run timed out after 180 seconds");
 }
 
 Deno.serve(async (req: Request) => {
@@ -434,6 +486,8 @@ Write like you're having coffee with them, telling them the truth they need to h
 
     const report = textContent.text.value;
 
+    const validation = validateReport(report);
+
     try {
       await fetch(`https://api.openai.com/v1/threads/${threadId}`, {
         method: "DELETE",
@@ -447,7 +501,13 @@ Write like you're having coffee with them, telling them the truth they need to h
     }
 
     return new Response(
-      JSON.stringify({ report }),
+      JSON.stringify({
+        report,
+        status: validation.status,
+        isValid: validation.isValid,
+        length: validation.length,
+        missingSections: validation.missingSections
+      }),
       {
         headers: {
           ...corsHeaders,

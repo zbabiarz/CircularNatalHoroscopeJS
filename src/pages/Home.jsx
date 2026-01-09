@@ -15,43 +15,7 @@ function Home() {
     try {
       const result = await calculateChironData(formData)
 
-      let aiReport = ''
-
-      try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 120000)
-
-        const reportResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-report`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              name: result.name,
-              chironSign: result.chironSign,
-              chironHouse: result.chironHouse,
-              chironDegree: result.chironDegree
-            }),
-            signal: controller.signal
-          }
-        )
-
-        clearTimeout(timeoutId)
-
-        if (reportResponse.ok) {
-          const reportData = await reportResponse.json()
-          aiReport = reportData.report
-        } else {
-          console.error('Failed to generate AI report:', await reportResponse.text())
-        }
-      } catch (reportError) {
-        console.error('Error generating AI report:', reportError)
-      }
-
-      const { error: dbError } = await supabase
+      const { data: dbData, error: dbError } = await supabase
         .from('shadow_work_results')
         .insert({
           name: result.name,
@@ -63,11 +27,82 @@ function Home() {
           chiron_degree: result.chironDegree,
           chiron_house: result.chironHouse === 'Unknown' ? null : result.chironHouse,
           shadow_id: result.shadowId,
-          shadow_text: result.shadowText
+          shadow_text: result.shadowText,
+          ai_report_status: 'pending'
         })
+        .select()
+        .single()
 
       if (dbError) {
         console.error('Database error:', dbError)
+      }
+
+      const resultId = dbData?.id
+
+      let aiReport = ''
+      let reportStatus = 'pending'
+
+      if (resultId) {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 200000)
+
+          const reportResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-report`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: result.name,
+                chironSign: result.chironSign,
+                chironHouse: result.chironHouse,
+                chironDegree: result.chironDegree
+              }),
+              signal: controller.signal
+            }
+          )
+
+          clearTimeout(timeoutId)
+
+          if (reportResponse.ok) {
+            const reportData = await reportResponse.json()
+            aiReport = reportData.report
+            reportStatus = reportData.status || 'completed'
+
+            await supabase
+              .from('shadow_work_results')
+              .update({
+                ai_report: aiReport,
+                ai_report_status: reportStatus
+              })
+              .eq('id', resultId)
+          } else {
+            console.error('Failed to generate AI report:', await reportResponse.text())
+            reportStatus = 'failed'
+
+            await supabase
+              .from('shadow_work_results')
+              .update({
+                ai_report_status: 'failed',
+                ai_report_error: 'Failed to generate report'
+              })
+              .eq('id', resultId)
+          }
+        } catch (reportError) {
+          console.error('Error generating AI report:', reportError)
+          reportStatus = 'failed'
+
+          await supabase
+            .from('shadow_work_results')
+            .update({
+              ai_report_status: 'failed',
+              ai_report_error: reportError.message || 'Unknown error'
+            })
+            .eq('id', resultId)
+        }
       }
 
       try {
@@ -89,6 +124,7 @@ function Home() {
             chironHouse: result.chironHouse,
             shadowId: result.shadowId,
             aiReport: aiReport,
+            reportStatus: reportStatus,
             timestamp: new Date().toISOString()
           })
         })
@@ -109,7 +145,8 @@ function Home() {
         email: result.email,
         chironSign: result.chironSign,
         chironHouse: result.chironHouse,
-        chironDegree: result.chironDegree
+        chironDegree: result.chironDegree,
+        resultId: resultId || ''
       })
 
       navigate(`/result?${params.toString()}`)
