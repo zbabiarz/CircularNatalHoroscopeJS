@@ -62,6 +62,11 @@ function Result() {
             } else {
               setReportStatus(data.ai_report_status || 'pending')
               setIsLoadingReport(true)
+
+              setTimeout(() => {
+                setIsLoadingReport(false)
+                setReportStatus('timeout')
+              }, 30000)
             }
           } else {
             setIsLoadingReport(false)
@@ -83,7 +88,19 @@ function Result() {
       return
     }
 
+    let attempts = 0
+    const maxAttempts = 10
+
     const pollInterval = setInterval(async () => {
+      attempts++
+
+      if (attempts >= maxAttempts) {
+        setIsLoadingReport(false)
+        setReportStatus('timeout')
+        clearInterval(pollInterval)
+        return
+      }
+
       try {
         const { data, error } = await supabase
           .from('shadow_work_results')
@@ -113,7 +130,7 @@ function Result() {
   }, [resultId, isLoadingReport, reportStatus])
 
   useEffect(() => {
-    if (aiReport && !pdfSentToWebhook && isVisible) {
+    if (aiReport && !pdfSentToWebhook && isVisible && !isLoadingReport) {
       const sendPdfToWebhook = async () => {
         try {
           console.log('Starting PDF generation for webhook...')
@@ -179,7 +196,7 @@ function Result() {
 
       sendPdfToWebhook()
     }
-  }, [aiReport, isVisible, pdfSentToWebhook, name, email, chironSign, chironHouse, chironDegree, shadowId, shadowData.archetype])
+  }, [aiReport, isVisible, pdfSentToWebhook, isLoadingReport, name, email, chironSign, chironHouse, chironDegree, shadowId, shadowData.archetype])
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPdf(true)
@@ -199,7 +216,7 @@ function Result() {
           chironHouse: chironHouse,
           chironDegree: parseFloat(chironDegree),
           archetype: shadowData.archetype,
-          report: aiReport
+          report: aiReport || shadowData.description
         })
       })
 
@@ -259,13 +276,7 @@ function Result() {
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-magenta mb-4"></div>
                   <p className="text-brown/80 text-lg mb-2">Generating your personalized report...</p>
-                  <p className="text-brown/60 text-sm">This may take up to 3 minutes</p>
-                </div>
-              ) : reportStatus === 'failed' ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="text-rose text-5xl mb-4">⚠️</div>
-                  <p className="text-brown/80 text-lg mb-2">Unable to generate your report</p>
-                  <p className="text-brown/60 text-sm">Please try refreshing the page or contact support</p>
+                  <p className="text-brown/60 text-sm">This may take up to 30 seconds</p>
                 </div>
               ) : aiReport ? (
                 <ReportFormatter report={aiReport} />
@@ -281,7 +292,7 @@ function Result() {
         <div className={`flex gap-4 justify-center flex-wrap transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
           <button
             onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf || isLoadingReport || !aiReport}
+            disabled={isGeneratingPdf || isLoadingReport}
             className="bg-rose hover:bg-rose/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
             {isGeneratingPdf ? (
