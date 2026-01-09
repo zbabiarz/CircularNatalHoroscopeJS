@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import { gsap } from 'gsap';
 
 export const Component = ({ children }) => {
   const mountRef = useRef(null);
@@ -254,68 +253,9 @@ export const Component = ({ children }) => {
     rendererRef.current = renderer;
     materialRef.current = material;
 
-    const tl = gsap.timeline({ repeat: -1 });
-
-    tl.to(material.uniforms.u_turbulence, {
-      value: 1.2,
-      duration: 6,
-      ease: "sine.inOut"
-    })
-    .to(material.uniforms.u_noise_scale, {
-      value: 6.0,
-      duration: 8,
-      ease: "power2.inOut"
-    }, 0)
-    .to(material.uniforms.u_distortion, {
-      value: 0.25,
-      duration: 7,
-      ease: "power1.inOut"
-    }, 1)
-    .to(material.uniforms.u_sharpness, {
-      value: 1.8,
-      duration: 5,
-      ease: "power2.inOut"
-    }, 2)
-    .to(material.uniforms.u_turbulence, {
-      value: 0.4,
-      duration: 9,
-      ease: "sine.inOut"
-    })
-    .to(material.uniforms.u_noise_scale, {
-      value: 2.5,
-      duration: 10,
-      ease: "power2.inOut"
-    }, "-=4")
-    .to(material.uniforms.u_distortion, {
-      value: 0.08,
-      duration: 8,
-      ease: "power1.inOut"
-    }, "-=6")
-    .to(material.uniforms.u_sharpness, {
-      value: 1.0,
-      duration: 7,
-      ease: "power2.inOut"
-    }, "-=5");
-
-    let mouseX = 0;
-    let mouseY = 0;
-
-    const handleMouseMove = (event) => {
-      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      const mouseInfluence = Math.sqrt(mouseX * mouseX + mouseY * mouseY) * 0.3;
-      material.uniforms.u_turbulence.value += mouseInfluence * 0.1;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
     const animate = () => {
-      timeRef.current += 0.008;
+      timeRef.current += 0.01;
       material.uniforms.u_time.value = timeRef.current;
-
-      const breathe = Math.sin(timeRef.current * 0.5) * 0.1;
-      material.uniforms.u_sharpness.value += breathe;
 
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
@@ -335,8 +275,6 @@ export const Component = ({ children }) => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      tl.kill();
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
       }
