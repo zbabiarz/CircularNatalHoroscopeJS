@@ -172,7 +172,7 @@ function Home() {
               <SparkleImage
                 src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
                 alt="Shadow Work Astro"
-                className="w-32 h-32 md:w-40 md:h-40"
+                className="w-16 h-16 md:w-20 md:h-20"
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
