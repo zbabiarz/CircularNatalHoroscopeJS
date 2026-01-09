@@ -12,6 +12,11 @@ function Form({ onSubmit, isSubmitting }) {
     birthLocation: '',
     birthCoordinates: null
   })
+  const [timeComponents, setTimeComponents] = useState({
+    hour: '',
+    minute: '',
+    period: 'AM'
+  })
   const [apiStatus, setApiStatus] = useState('loading')
   const [showBirthTimeWarning, setShowBirthTimeWarning] = useState(false)
 
@@ -64,6 +69,34 @@ function Form({ onSubmit, isSubmitting }) {
       birthLocation: e.target.value,
       birthCoordinates: null
     })
+  }
+
+  const handleTimeChange = (field, value) => {
+    const newTimeComponents = {
+      ...timeComponents,
+      [field]: value
+    }
+    setTimeComponents(newTimeComponents)
+
+    // Convert to 24-hour format if we have all components
+    if (newTimeComponents.hour && newTimeComponents.minute) {
+      let hour24 = parseInt(newTimeComponents.hour)
+      if (newTimeComponents.period === 'PM' && hour24 !== 12) {
+        hour24 += 12
+      } else if (newTimeComponents.period === 'AM' && hour24 === 12) {
+        hour24 = 0
+      }
+      const time24 = `${hour24.toString().padStart(2, '0')}:${newTimeComponents.minute}`
+      setFormData({
+        ...formData,
+        birthTime: time24
+      })
+    } else {
+      setFormData({
+        ...formData,
+        birthTime: ''
+      })
+    }
   }
 
   const handleSubmit = (e) => {
@@ -188,17 +221,39 @@ function Form({ onSubmit, isSubmitting }) {
           </div>
 
           <div>
-            <label htmlFor="birthTime" className="block text-sm font-semibold text-brown mb-2">
+            <label className="block text-sm font-semibold text-brown mb-2">
               Birth Time <span className="text-brown/40">(Optional)</span>
             </label>
-            <input
-              type="time"
-              id="birthTime"
-              name="birthTime"
-              value={formData.birthTime}
-              onChange={handleChange}
-              className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
-            />
+            <div className="grid grid-cols-3 gap-2">
+              <select
+                value={timeComponents.hour}
+                onChange={(e) => handleTimeChange('hour', e.target.value)}
+                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              >
+                <option value="">Hour</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(hour => (
+                  <option key={hour} value={hour}>{hour}</option>
+                ))}
+              </select>
+              <select
+                value={timeComponents.minute}
+                onChange={(e) => handleTimeChange('minute', e.target.value)}
+                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              >
+                <option value="">Min</option>
+                {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(min => (
+                  <option key={min} value={min}>{min}</option>
+                ))}
+              </select>
+              <select
+                value={timeComponents.period}
+                onChange={(e) => handleTimeChange('period', e.target.value)}
+                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              >
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
           </div>
         </div>
         <p className="text-xs text-brown/60 mt-1">Optional - needed for house placement accuracy</p>
