@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Form from '../components/Form'
 import MysticalLoader from '../components/MysticalLoader'
+import AnimatedBackground from '../components/AnimatedBackground'
 import { calculateChironData } from '../utils/astroUtils'
 import { supabase } from '../lib/supabase'
 
@@ -160,8 +161,9 @@ function Home() {
 
   return (
     <>
+      <AnimatedBackground />
       {isSubmitting && <MysticalLoader />}
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
         <div className="text-center mb-8 fade-in">
           <div className="flex justify-center mb-4">

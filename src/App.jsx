@@ -5,7 +5,7 @@ import Result from './pages/Result'
 
 function App() {
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/result" element={<Result />} />

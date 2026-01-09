@@ -12,6 +12,9 @@ export default {
         magenta: '#8d1246',
         rose: '#c6beba',
       },
+      transitionDuration: {
+        '2000': '2000ms',
+      },
     },
   },
   plugins: [],
