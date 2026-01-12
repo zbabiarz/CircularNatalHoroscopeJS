@@ -178,8 +178,11 @@ function Home() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
               Shadow Work Astro Reading
             </h1>
-            <p className="text-lg text-white" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              Discover your Chiron placement and unlock deeper insights into your healing journey
+            <p className="text-lg text-white mb-4" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
+              Your deepest shadow was written in the stars when you were born. Astrology points to it through your Chiron placement, and how to alchemize it.
+            </p>
+            <p className="text-base text-white/90" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
+              No quizzes. No guesswork. Just an instant astro report.
             </p>
           </div>
         </div>
