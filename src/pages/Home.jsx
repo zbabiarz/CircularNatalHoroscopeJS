@@ -176,7 +176,7 @@ function Home() {
               />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
-              Shadow Work Astro Reading
+              Your Shadow Medicine
             </h1>
             <p className="text-lg text-white mb-4" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               Your deepest shadow was written in the stars when you were born. Astrology points to it through your Chiron placement, and how to alchemize it.
