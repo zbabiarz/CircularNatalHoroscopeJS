@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
+import SparkleImage from '../components/SparkleImage'
 import TurbulentFlow from '../components/ui/turbulent-flow'
 import { supabase } from '../lib/supabase'
 
@@ -249,10 +250,10 @@ function Result() {
         <div ref={pdfContentRef} className="pdf-content">
           <div className={`text-center mb-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             <div className="flex justify-center mb-4">
-              <img
-                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/692dea5973043ab3e50866e2.png"
+              <SparkleImage
+                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
                 alt="Shadow Work Astro Quiz Logo"
-                className="w-32 h-32 subtle-pulse"
+                className="w-32 h-32"
               />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
