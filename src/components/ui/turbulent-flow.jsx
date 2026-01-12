@@ -3,24 +3,23 @@ import * as THREE from 'three';
 
 export const Component = ({ children }) => {
   const mountRef = useRef(null);
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const materialRef = useRef(null);
-  const timeRef = useRef(0);
+  const animationIdRef = useRef(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const clock = new THREE.Clock();
+
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: false,
       alpha: true,
       powerPreference: "high-performance"
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(1);
     mountRef.current.appendChild(renderer.domElement);
 
     const vertexShader = `
@@ -121,7 +120,7 @@ export const Component = ({ children }) => {
         float amplitude = 0.5;
         float frequency = 0.6;
 
-        for(int i = 0; i < 6; i++) {
+        for(int i = 0; i < 3; i++) {
           value += amplitude * snoise(p * frequency);
           amplitude *= 0.5;
           frequency *= 2.0;
@@ -134,7 +133,7 @@ export const Component = ({ children }) => {
         float amplitude = 1.0;
         float frequency = 0.4;
 
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 3; i++) {
           t += abs(snoise(p * frequency)) * amplitude;
           amplitude *= 0.5;
           frequency *= 2.0;
@@ -217,9 +216,8 @@ export const Component = ({ children }) => {
         finalColor += mix(color1, color2, 0.5) * interaction2;
         finalColor += mix(color3, color4, 0.6) * interaction3;
 
-        float noiseDetail = fbm(vec3(uv * 15.0, time * 0.1)) * 0.5;
-        float microTurbulence = turbulence(vec3(uv * 25.0, time * 0.05)) * 0.8;
-        finalColor += (microTurbulence * noiseDetail) * 0.5;
+        float noiseDetail = snoise(vec3(uv * 8.0, time * 0.1)) * 0.15;
+        finalColor += noiseDetail;
 
         finalColor = pow(finalColor, vec3(0.9));
         finalColor *= 1.2;
@@ -249,31 +247,28 @@ export const Component = ({ children }) => {
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-    materialRef.current = material;
-
     const animate = () => {
-      timeRef.current += 0.01;
-      material.uniforms.u_time.value = timeRef.current;
-
+      material.uniforms.u_time.value = clock.getElapsedTime();
       renderer.render(scene, camera);
-      requestAnimationFrame(animate);
+      animationIdRef.current = requestAnimationFrame(animate);
     };
+
+    clock.start();
     animate();
 
     const handleResize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       material.uniforms.u_resolution.value.set(width, height);
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
       window.removeEventListener('resize', handleResize);
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement);
