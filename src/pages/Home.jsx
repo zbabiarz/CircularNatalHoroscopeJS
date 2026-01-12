@@ -184,7 +184,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30">
+        <div className="backdrop-blur-md bg-white/70 rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30">
           <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
         </div>
 
