@@ -19,7 +19,7 @@ export const Component = ({ children }) => {
     });
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mountRef.current.appendChild(renderer.domElement);
 
     const vertexShader = `
@@ -33,11 +33,17 @@ export const Component = ({ children }) => {
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
-      uniform float u_noise_scale;
-      uniform float u_distortion;
-      uniform float u_turbulence;
-      uniform float u_sharpness;
       varying vec2 vUv;
+
+      #define PI 3.14159265359
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+
+      float hash3(vec3 p) {
+        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+      }
 
       vec3 mod289(vec3 x) {
         return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -118,9 +124,8 @@ export const Component = ({ children }) => {
       float fbm(vec3 p) {
         float value = 0.0;
         float amplitude = 0.5;
-        float frequency = 0.6;
-
-        for(int i = 0; i < 3; i++) {
+        float frequency = 1.0;
+        for(int i = 0; i < 5; i++) {
           value += amplitude * snoise(p * frequency);
           amplitude *= 0.5;
           frequency *= 2.0;
@@ -128,105 +133,154 @@ export const Component = ({ children }) => {
         return value;
       }
 
-      float turbulence(vec3 p) {
-        float t = 0.0;
-        float amplitude = 1.0;
-        float frequency = 0.4;
+      float stars(vec2 uv, float time) {
+        float stars = 0.0;
 
-        for(int i = 0; i < 3; i++) {
-          t += abs(snoise(p * frequency)) * amplitude;
-          amplitude *= 0.5;
-          frequency *= 2.0;
+        for(float i = 0.0; i < 4.0; i++) {
+          vec2 gridUv = uv * (50.0 + i * 30.0);
+          vec2 gridId = floor(gridUv);
+          vec2 gridFract = fract(gridUv);
+
+          float h = hash(gridId + i * 100.0);
+
+          if(h > 0.96) {
+            vec2 starPos = vec2(hash(gridId + vec2(1.0, 0.0)), hash(gridId + vec2(0.0, 1.0)));
+            float d = length(gridFract - starPos);
+
+            float twinkle = sin(time * (2.0 + h * 4.0) + h * 100.0) * 0.5 + 0.5;
+            float brightness = h * 0.7 + 0.3;
+            float size = 0.02 + h * 0.03;
+
+            float star = smoothstep(size, 0.0, d) * brightness * (0.5 + twinkle * 0.5);
+            stars += star;
+          }
         }
-        return t;
+
+        return stars;
       }
 
-      vec2 curl(vec2 p, float time) {
-        float eps = 0.01;
-        float n1 = snoise(vec3(p.x, p.y + eps, time));
-        float n2 = snoise(vec3(p.x, p.y - eps, time));
-        float n3 = snoise(vec3(p.x + eps, p.y, time));
-        float n4 = snoise(vec3(p.x - eps, p.y, time));
+      float bigStars(vec2 uv, float time) {
+        float stars = 0.0;
 
-        return vec2(n1 - n2, n4 - n3) / (2.0 * eps);
+        vec2 gridUv = uv * 15.0;
+        vec2 gridId = floor(gridUv);
+        vec2 gridFract = fract(gridUv);
+
+        float h = hash(gridId);
+
+        if(h > 0.92) {
+          vec2 starPos = vec2(hash(gridId + vec2(1.0, 0.0)), hash(gridId + vec2(0.0, 1.0)));
+          float d = length(gridFract - starPos);
+
+          float twinkle = sin(time * 1.5 + h * 50.0) * 0.3 + 0.7;
+
+          float core = smoothstep(0.04, 0.0, d);
+          float glow = smoothstep(0.15, 0.0, d) * 0.3;
+
+          float rays = 0.0;
+          for(float a = 0.0; a < 4.0; a++) {
+            float angle = a * PI * 0.5;
+            vec2 dir = vec2(cos(angle), sin(angle));
+            float rayD = abs(dot(gridFract - starPos, dir));
+            float perpD = length((gridFract - starPos) - dir * dot(gridFract - starPos, dir));
+            rays += smoothstep(0.02, 0.0, perpD) * smoothstep(0.2, 0.0, rayD) * 0.3;
+          }
+
+          stars = (core + glow + rays) * twinkle;
+        }
+
+        return stars;
+      }
+
+      vec3 nebula(vec2 uv, float time) {
+        vec3 color = vec3(0.0);
+
+        float n1 = fbm(vec3(uv * 2.0, time * 0.05));
+        float n2 = fbm(vec3(uv * 3.0 + 100.0, time * 0.03));
+        float n3 = fbm(vec3(uv * 1.5 + 200.0, time * 0.04));
+
+        vec3 pink = vec3(0.8, 0.2, 0.5);
+        vec3 blue = vec3(0.1, 0.3, 0.8);
+        vec3 cyan = vec3(0.1, 0.6, 0.7);
+        vec3 orange = vec3(0.9, 0.4, 0.1);
+
+        color += pink * smoothstep(0.0, 0.6, n1) * 0.4;
+        color += blue * smoothstep(-0.2, 0.5, n2) * 0.5;
+        color += cyan * smoothstep(0.1, 0.7, n3) * 0.3;
+        color += orange * smoothstep(0.2, 0.8, n1 * n2) * 0.2;
+
+        return color;
+      }
+
+      vec3 galaxy(vec2 uv, vec2 center, float time, float size, float rotation) {
+        vec2 p = uv - center;
+
+        float angle = atan(p.y, p.x) + rotation;
+        float dist = length(p);
+
+        float spiral = sin(angle * 2.0 - dist * 15.0 / size + time * 0.2) * 0.5 + 0.5;
+
+        float core = exp(-dist * 8.0 / size);
+        float arms = spiral * exp(-dist * 4.0 / size) * smoothstep(size * 0.8, size * 0.1, dist);
+
+        float galaxy = core * 0.8 + arms * 0.4;
+
+        vec3 coreColor = vec3(1.0, 0.9, 0.7);
+        vec3 armColor = vec3(0.4, 0.5, 0.9);
+
+        return mix(armColor, coreColor, core) * galaxy;
       }
 
       void main() {
         vec2 uv = vUv;
-        vec2 st = gl_FragCoord.xy / u_resolution.xy;
+        vec2 st = (gl_FragCoord.xy - u_resolution.xy * 0.5) / min(u_resolution.x, u_resolution.y);
 
-        float time = u_time * 0.5;
-        vec3 pos = vec3(uv * u_noise_scale * 1.5, time * 0.1);
+        float time = u_time * 0.3;
 
-        float turb1 = turbulence(pos) * u_turbulence;
-        float turb2 = turbulence(pos * 1.7 + vec3(100.0, 50.0, time * 0.3)) * u_turbulence * 0.3;
-        float turb3 = fbm(pos * 0.8 + vec3(200.0, 100.0, time * 0.15)) * u_turbulence * 0.5;
+        vec3 color = vec3(0.01, 0.01, 0.03);
 
-        vec2 curlForce = curl(uv * 2.0, time * 0.5) * 0.25;
+        vec3 nebulaColor = nebula(uv, time);
+        color += nebulaColor * 0.6;
 
-        vec2 distortion = vec2(turb1 + turb2, turb2 + turb3) * u_distortion + curlForce;
-        vec2 distortedUV = uv + distortion;
+        color += galaxy(st, vec2(0.2, 0.15), time, 0.25, time * 0.1) * 0.4;
+        color += galaxy(st, vec2(-0.3, -0.2), time, 0.15, -time * 0.08 + 1.0) * 0.25;
+        color += galaxy(st, vec2(0.35, -0.25), time, 0.12, time * 0.05 + 2.0) * 0.2;
 
-        vec2 center1 = vec2(
-          0.5 + sin(time * 0.4) * 0.3 + turb1 * 0.2,
-          0.75 + cos(time * 0.3) * 0.2 + turb2 * 0.3
-        );
-        vec2 center2 = vec2(
-          0.75 + sin(time * 0.35) * 0.25 + turb2 * 0.8,
-          0.65 + cos(time * 0.45) * 0.3 + turb3 * 0.61
-        );
-        vec2 center3 = vec2(
-          0.6 + sin(time * 0.5) * 0.2 + turb3 * 0.12,
-          0.25 + cos(time * 0.4) * 0.28 + turb1 * 0.09
-        );
-        vec2 center4 = vec2(
-          0.15 + sin(time * 0.25) * 0.35 + turb1 * 0.11,
-          0.8 + cos(time * 0.55) * 0.22 + turb2 * 0.08
-        );
+        float starField = stars(uv, time);
+        color += vec3(starField) * vec3(1.0, 0.95, 0.9);
 
-        float dist1 = length(distortedUV - center1);
-        float dist2 = length(distortedUV - center2);
-        float dist3 = length(distortedUV - center3);
-        float dist4 = length(distortedUV - center4);
+        float brightStars = bigStars(uv, time);
+        color += vec3(brightStars) * vec3(0.9, 0.95, 1.0);
 
-        float sharp = u_sharpness;
-        float grad1 = 1.0 - smoothstep(0.0, 0.6 - turb1 * 0.2, dist1);
-        float grad2 = 1.0 - smoothstep(0.0, 0.5 - turb2 * 0.15, dist2);
-        float grad3 = 1.0 - smoothstep(0.0, 0.55 - turb3 * 0.18, dist3);
-        float grad4 = 1.0 - smoothstep(0.0, 0.45 - turb1 * 0.12, dist4);
+        float dust = fbm(vec3(uv * 5.0, time * 0.02)) * 0.5 + 0.5;
+        color *= 0.8 + dust * 0.4;
 
-        vec3 color1 = vec3(1.0, 0.25, 0.05);
-        vec3 color2 = vec3(0.0, 0.8, 0.95);
-        vec3 color3 = vec3(0.7, 0.1, 0.8);
-        vec3 color4 = vec3(0.9, 0.2, 0.5);
-        vec3 color5 = vec3(1.0, 0.7, 0.0);
+        float shootingStar = 0.0;
+        float shootTime = mod(time * 0.5, 4.0);
+        if(shootTime < 0.5) {
+          vec2 shootStart = vec2(0.8, 0.9);
+          vec2 shootEnd = vec2(0.2, 0.4);
+          vec2 shootPos = mix(shootStart, shootEnd, shootTime * 2.0);
+          vec2 shootDir = normalize(shootEnd - shootStart);
 
-        vec3 finalColor = vec3(0.02, 0.02, 0.01);
+          float along = dot(uv - shootStart, shootDir);
+          float perp = length((uv - shootStart) - shootDir * along);
 
-        finalColor += color1 * grad1 * (0.9 + turb1 * 0.3);
-        finalColor += color2 * grad2 * (0.8 + turb2 * 0.4);
-        finalColor += color3 * grad3 * (0.7 + turb3 * 0.3);
-        finalColor += color4 * grad4 * (0.6 + turb1 * 0.2);
+          float trail = smoothstep(0.02, 0.0, perp) *
+                        smoothstep(0.0, 0.1, along) *
+                        smoothstep(shootTime * 2.0 + 0.2, shootTime * 2.0 - 0.1, along);
 
-        float interaction1 = grad1 * grad2 * 0.7;
-        float interaction2 = grad2 * grad3 * 0.93;
-        float interaction3 = grad3 * grad4 * 0.35;
+          shootingStar = trail * (1.0 - shootTime * 2.0);
+        }
+        color += vec3(shootingStar) * vec3(1.0, 0.9, 0.8);
 
-        finalColor += color5 * interaction1;
-        finalColor += mix(color1, color2, 0.5) * interaction2;
-        finalColor += mix(color3, color4, 0.6) * interaction3;
+        float vignette = 1.0 - length(uv - 0.5) * 0.8;
+        vignette = smoothstep(0.0, 1.0, vignette);
+        color *= vignette;
 
-        float noiseDetail = snoise(vec3(uv * 8.0, time * 0.1)) * 0.15;
-        finalColor += noiseDetail;
+        color = pow(color, vec3(0.9));
 
-        finalColor = pow(finalColor, vec3(0.9));
-        finalColor *= 1.2;
-
-        float vignette = 1.0 - length(uv - 0.5) * 1.75;
-        vignette = smoothstep(0.11, 1.0, vignette);
-        finalColor *= vignette;
-
-        gl_FragColor = vec4(finalColor, 1.0);
+        gl_FragColor = vec4(color, 1.0);
       }
     `;
 
@@ -235,11 +289,7 @@ export const Component = ({ children }) => {
       fragmentShader,
       uniforms: {
         u_time: { value: 0 },
-        u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-        u_noise_scale: { value: 4.0 },
-        u_distortion: { value: 0.15 },
-        u_turbulence: { value: 0.8 },
-        u_sharpness: { value: 1.4 }
+        u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
       }
     });
 
