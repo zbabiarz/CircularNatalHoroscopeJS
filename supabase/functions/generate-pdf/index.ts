@@ -248,6 +248,34 @@ Deno.serve(async (req: Request) => {
       yPosition += 5;
     }
 
+    if (yPosition > pageHeight - 50) {
+      doc.addPage();
+      doc.setFillColor(249, 242, 235);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+      yPosition = margin;
+    }
+
+    yPosition += 10;
+
+    const buttonWidth = 50;
+    const buttonHeight = 12;
+    const buttonX = (pageWidth - buttonWidth) / 2;
+    const buttonY = yPosition;
+
+    doc.setFillColor(219, 39, 119);
+    doc.roundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 3, 3, 'F');
+
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    const buttonText = "Shadow Course";
+    const buttonTextWidth = doc.getTextWidth(buttonText);
+    const buttonTextX = buttonX + (buttonWidth - buttonTextWidth) / 2;
+    const buttonTextY = buttonY + 8;
+    doc.text(buttonText, buttonTextX, buttonTextY);
+
+    doc.link(buttonX, buttonY, buttonWidth, buttonHeight, { url: '#' });
+
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
 
