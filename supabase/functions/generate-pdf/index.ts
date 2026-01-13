@@ -67,6 +67,41 @@ function wrapText(doc: any, text: string, maxWidth: number): string[] {
   return lines;
 }
 
+async function fetchImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    return btoa(binary);
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    return null;
+  }
+}
+
+async function loadCinzelDecorativeFont(): Promise<string | null> {
+  try {
+    const fontUrl = "https://fonts.gstatic.com/s/cinzeldecorative/v18/daaCSScvJGqLYhG8nNt8KPPswUAPni7TTMw.ttf";
+    const response = await fetch(fontUrl);
+    if (!response.ok) return null;
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+      binary += String.fromCharCode(uint8Array[i]);
+    }
+    return btoa(binary);
+  } catch (error) {
+    console.error("Error loading font:", error);
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -85,12 +120,25 @@ Deno.serve(async (req: Request) => {
 
     const { name, chironSign, chironHouse, chironDegree, archetype, report }: RequestBody = await req.json();
 
-    // Create PDF
+    const discoBallUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png";
+    const secondImageUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69666558aa336f1cfdb9fa71.webp";
+
+    const [discoBallBase64, secondImageBase64, fontBase64] = await Promise.all([
+      fetchImageAsBase64(discoBallUrl),
+      fetchImageAsBase64(secondImageUrl),
+      loadCinzelDecorativeFont()
+    ]);
+
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'letter'
     });
+
+    if (fontBase64) {
+      doc.addFileToVFS("CinzelDecorative-Regular.ttf", fontBase64);
+      doc.addFont("CinzelDecorative-Regular.ttf", "CinzelDecorative", "normal");
+    }
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -98,43 +146,64 @@ Deno.serve(async (req: Request) => {
     const maxWidth = pageWidth - (margin * 2);
     let yPosition = margin;
 
-    // Background color
     doc.setFillColor(249, 242, 235);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    // Title
-    doc.setFontSize(24);
-    doc.setTextColor(139, 69, 19);
-    doc.setFont('helvetica', 'bold');
+    if (discoBallBase64) {
+      const imgWidth = 30;
+      const imgHeight = 30;
+      const imgX = (pageWidth - imgWidth) / 2;
+      doc.addImage(`data:image/png;base64,${discoBallBase64}`, 'PNG', imgX, yPosition, imgWidth, imgHeight);
+      yPosition += imgHeight + 5;
+    }
+
+    if (secondImageBase64) {
+      const imgWidth = 60;
+      const imgHeight = 20;
+      const imgX = (pageWidth - imgWidth) / 2;
+      doc.addImage(`data:image/webp;base64,${secondImageBase64}`, 'WEBP', imgX, yPosition, imgWidth, imgHeight);
+      yPosition += imgHeight + 8;
+    }
+
+    const useCinzel = fontBase64 !== null;
+
+    doc.setFontSize(26);
+    doc.setTextColor(0, 0, 0);
+    if (useCinzel) {
+      doc.setFont('CinzelDecorative', 'normal');
+    } else {
+      doc.setFont('helvetica', 'bold');
+    }
     const titleText = `${name}'s Chiron Shadow`;
     const titleWidth = doc.getTextWidth(titleText);
     doc.text(titleText, (pageWidth - titleWidth) / 2, yPosition);
     yPosition += 10;
 
-    // Archetype
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.setTextColor(219, 39, 119);
-    doc.setFont('helvetica', 'normal');
+    if (useCinzel) {
+      doc.setFont('CinzelDecorative', 'normal');
+    } else {
+      doc.setFont('helvetica', 'normal');
+    }
     const archetypeText = archetype.startsWith('The ') ? archetype : `The ${archetype}`;
     const archetypeWidth = doc.getTextWidth(archetypeText);
     doc.text(archetypeText, (pageWidth - archetypeWidth) / 2, yPosition);
     yPosition += 8;
 
-    // Placement info
-    doc.setFontSize(11);
-    doc.setTextColor(139, 69, 19, 0.7 * 255);
+    doc.setFontSize(13);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
     const placementText = `Chiron in ${chironSign}${chironHouse ? ` in the ${chironHouse}` : ''} at ${chironDegree.toFixed(2)}°`;
     const placementWidth = doc.getTextWidth(placementText);
     doc.text(placementText, (pageWidth - placementWidth) / 2, yPosition);
     yPosition += 12;
 
-    // Parse and add report sections
     const { sections } = parseMarkdownToText(report);
 
-    doc.setTextColor(139, 69, 19);
+    doc.setTextColor(0, 0, 0);
 
     for (const section of sections) {
-      // Check if we need a new page
       if (yPosition > pageHeight - 40) {
         doc.addPage();
         doc.setFillColor(249, 242, 235);
@@ -142,14 +211,16 @@ Deno.serve(async (req: Request) => {
         yPosition = margin;
       }
 
-      // Section title
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      if (useCinzel) {
+        doc.setFont('CinzelDecorative', 'normal');
+      } else {
+        doc.setFont('helvetica', 'bold');
+      }
       doc.text(section.title, margin, yPosition);
       yPosition += 7;
 
-      // Section content
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
 
       for (const contentLine of section.content) {
@@ -168,7 +239,7 @@ Deno.serve(async (req: Request) => {
           const xPos = margin + (isBullet && i === 0 ? 0 : isBullet ? 5 : 0);
           const lineText = isBullet && i === 0 ? `• ${wrappedLines[i]}` : wrappedLines[i];
           doc.text(lineText, xPos, yPosition);
-          yPosition += 5;
+          yPosition += 5.5;
         }
 
         yPosition += 2;
@@ -177,11 +248,9 @@ Deno.serve(async (req: Request) => {
       yPosition += 5;
     }
 
-    // Get PDF as base64
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
 
-    // Upload to Supabase Storage
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const fileName = `${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-chiron-shadow-report.pdf`;
     const filePath = `reports/${fileName}`;
@@ -197,7 +266,6 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
-    // Get public URL
     const { data: publicUrlData } = supabase.storage
       .from('pdfs')
       .getPublicUrl(filePath);
