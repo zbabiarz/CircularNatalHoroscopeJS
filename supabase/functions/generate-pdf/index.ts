@@ -151,7 +151,10 @@ Deno.serve(async (req: Request) => {
       const imgWidth = 60;
       const imgHeight = 20;
       const imgX = (pageWidth - imgWidth) / 2;
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.7 }));
       doc.addImage(`data:image/png;base64,${headerImageBase64}`, 'PNG', imgX, yPosition, imgWidth, imgHeight);
+      doc.restoreGraphicsState();
       yPosition += imgHeight + 8;
     }
 
