@@ -248,7 +248,7 @@ function Result() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
       <div className="max-w-3xl w-full">
         <div ref={pdfContentRef} className="pdf-content">
-          <div className={`text-center mb-8 backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <div className={`text-center mb-8 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             <div className="flex justify-center mb-4">
               <SparkleImage
                 src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
@@ -256,13 +256,13 @@ function Result() {
                 className="w-32 h-32"
               />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-brown mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
               {name}'s Chiron Shadow
             </h1>
-            <p className="text-xl text-magenta font-semibold">
+            <p className="text-xl text-white font-semibold" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
             </p>
-            <div className="mt-4 text-brown/90">
+            <div className="mt-4 text-white/90" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               <p className="text-base">
                 Chiron in {chironSign}
                 {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
@@ -321,11 +321,11 @@ function Result() {
           </button>
         </div>
 
-        <div className={`mt-10 backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl p-8 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <p className="text-brown mb-4 text-lg">
+        <div className={`mt-10 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+          <p className="text-white mb-4 text-lg" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
             Want to dive deeper into your shadow work journey?
           </p>
-          <p className="text-brown font-semibold mb-6 text-xl">
+          <p className="text-white font-semibold mb-6 text-xl" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
             Follow Morgan for more insights
           </p>
           <div className="flex justify-center gap-6 flex-wrap">
