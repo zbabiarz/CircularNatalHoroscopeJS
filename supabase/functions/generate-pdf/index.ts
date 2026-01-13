@@ -120,7 +120,7 @@ Deno.serve(async (req: Request) => {
 
     const { name, chironSign, chironHouse, chironDegree, archetype, report }: RequestBody = await req.json();
 
-    const headerImageUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69666c19db644802f753ba95.png";
+    const headerImageUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69666e4102f1bec5b7190e9d.png";
 
     const [headerImageBase64, fontBase64] = await Promise.all([
       fetchImageAsBase64(headerImageUrl),
