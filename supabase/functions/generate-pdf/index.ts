@@ -120,12 +120,10 @@ Deno.serve(async (req: Request) => {
 
     const { name, chironSign, chironHouse, chironDegree, archetype, report }: RequestBody = await req.json();
 
-    const discoBallUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png";
-    const secondImageUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69666558aa336f1cfdb9fa71.webp";
+    const headerImageUrl = "https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69666c19db644802f753ba95.png";
 
-    const [discoBallBase64, secondImageBase64, fontBase64] = await Promise.all([
-      fetchImageAsBase64(discoBallUrl),
-      fetchImageAsBase64(secondImageUrl),
+    const [headerImageBase64, fontBase64] = await Promise.all([
+      fetchImageAsBase64(headerImageUrl),
       loadCinzelDecorativeFont()
     ]);
 
@@ -149,19 +147,11 @@ Deno.serve(async (req: Request) => {
     doc.setFillColor(249, 242, 235);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    if (discoBallBase64) {
-      const imgWidth = 30;
-      const imgHeight = 30;
-      const imgX = (pageWidth - imgWidth) / 2;
-      doc.addImage(`data:image/png;base64,${discoBallBase64}`, 'PNG', imgX, yPosition, imgWidth, imgHeight);
-      yPosition += imgHeight + 5;
-    }
-
-    if (secondImageBase64) {
+    if (headerImageBase64) {
       const imgWidth = 60;
       const imgHeight = 20;
       const imgX = (pageWidth - imgWidth) / 2;
-      doc.addImage(`data:image/webp;base64,${secondImageBase64}`, 'WEBP', imgX, yPosition, imgWidth, imgHeight);
+      doc.addImage(`data:image/png;base64,${headerImageBase64}`, 'PNG', imgX, yPosition, imgWidth, imgHeight);
       yPosition += imgHeight + 8;
     }
 
