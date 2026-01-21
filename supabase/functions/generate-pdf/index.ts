@@ -267,7 +267,7 @@ Deno.serve(async (req: Request) => {
     const buttonTextY = buttonY + 8;
     doc.text(buttonText, buttonTextX, buttonTextY);
 
-    doc.link(buttonX, buttonY, buttonWidth, buttonHeight, { url: '#' });
+    doc.link(buttonX, buttonY, buttonWidth, buttonHeight, { url: 'https://lovelightandblackholes.com/wound-to-wisdom' });
 
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));

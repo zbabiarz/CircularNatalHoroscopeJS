@@ -352,7 +352,7 @@ function Result() {
               Listen on my Podcast
             </a>
             <a
-              href="#"
+              href="https://lovelightandblackholes.com/wound-to-wisdom"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-white hover:bg-magenta hover:text-white text-magenta font-semibold px-6 py-3 rounded-full shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105"
