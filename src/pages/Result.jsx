@@ -313,12 +313,14 @@ function Result() {
               </>
             )}
           </button>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+          <a
+            href="https://lovelightandblackholes.com/wound-to-wisdom"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 inline-block"
           >
-            Continue Your Healing Journey
-          </button>
+            Turn this wound into wisdom
+          </a>
         </div>
 
         <div className={`mt-10 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
