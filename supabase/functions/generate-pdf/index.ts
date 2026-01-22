@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
     doc.setFontSize(12);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    const buttonText = "Shadow Course";
+    const buttonText = "Turn this wound into wisdom";
     const buttonTextWidth = doc.getTextWidth(buttonText);
     const buttonTextX = buttonX + (buttonWidth - buttonTextWidth) / 2;
     const buttonTextY = buttonY + 8;
