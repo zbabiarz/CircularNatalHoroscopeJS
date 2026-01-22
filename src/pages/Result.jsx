@@ -351,7 +351,7 @@ function Result() {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 3a7 7 0 00-7 7c0 1.933.784 3.683 2.05 4.95L9 15a5 5 0 115-5l-1.95 2.05A7.025 7.025 0 0012 19a7 7 0 000-14zm0 4a3 3 0 100 6 3 3 0 000-6z"/>
               </svg>
-              Listen on my Podcast
+              Listen to the podcast
             </a>
             <a
               href="https://lovelightandblackholes.com/wound-to-wisdom"
@@ -362,7 +362,7 @@ function Result() {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
               </svg>
-              Shadow Course
+              Do shadow work!
             </a>
           </div>
         </div>
