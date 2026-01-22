@@ -250,7 +250,7 @@ Deno.serve(async (req: Request) => {
 
     yPosition += 10;
 
-    const buttonWidth = 50;
+    const buttonWidth = 80;
     const buttonHeight = 12;
     const buttonX = (pageWidth - buttonWidth) / 2;
     const buttonY = yPosition;
