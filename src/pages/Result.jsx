@@ -4,6 +4,7 @@ import { shadowMap } from '../data/shadowMap'
 import ReportFormatter from '../components/ReportFormatter'
 import SparkleImage from '../components/SparkleImage'
 import TurbulentFlow from '../components/ui/turbulent-flow'
+import ShareModal from '../components/ShareModal'
 import { supabase } from '../lib/supabase'
 
 function Result() {
@@ -13,6 +14,7 @@ function Result() {
   const [aiReport, setAiReport] = useState('')
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [pdfSentToWebhook, setPdfSentToWebhook] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const pdfContentRef = useRef(null)
 
   const name = searchParams.get('name')
@@ -313,12 +315,24 @@ function Result() {
               </>
             )}
           </button>
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            Share
+          </button>
           <a
             href="https://lovelightandblackholes.com/wound-to-wisdom"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-magenta hover:bg-magenta/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 inline-block"
+            className="bg-brown hover:bg-brown/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 inline-flex items-center gap-2"
           >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+            </svg>
             Turn this wound into wisdom
           </a>
         </div>
@@ -372,6 +386,8 @@ function Result() {
         </footer>
       </div>
     </div>
+    
+    <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
     </>
   )
 }
