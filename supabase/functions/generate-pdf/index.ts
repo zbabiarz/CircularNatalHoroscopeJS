@@ -252,22 +252,40 @@ Deno.serve(async (req: Request) => {
 
     const buttonWidth = 80;
     const buttonHeight = 12;
-    const buttonX = (pageWidth - buttonWidth) / 2;
+    const buttonGap = 5;
+    const totalButtonsWidth = (buttonWidth * 2) + buttonGap;
+    const startX = (pageWidth - totalButtonsWidth) / 2;
     const buttonY = yPosition;
 
+    doc.setFillColor(109, 40, 217);
+    doc.roundedRect(startX, buttonY, buttonWidth, buttonHeight, 3, 3, 'F');
+
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    const shareButtonText = "Share";
+    const shareButtonTextWidth = doc.getTextWidth(shareButtonText);
+    const shareButtonTextX = startX + (buttonWidth - shareButtonTextWidth) / 2;
+    const shareButtonTextY = buttonY + 8;
+    doc.text(shareButtonText, shareButtonTextX, shareButtonTextY);
+
+    doc.link(startX, buttonY, buttonWidth, buttonHeight, { url: 'https://shadowwork.lovelightandblackholes.com' });
+
+    const wisdomButtonX = startX + buttonWidth + buttonGap;
+
     doc.setFillColor(219, 39, 119);
-    doc.roundedRect(buttonX, buttonY, buttonWidth, buttonHeight, 3, 3, 'F');
+    doc.roundedRect(wisdomButtonX, buttonY, buttonWidth, buttonHeight, 3, 3, 'F');
 
     doc.setFontSize(12);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     const buttonText = "Turn this wound into wisdom";
     const buttonTextWidth = doc.getTextWidth(buttonText);
-    const buttonTextX = buttonX + (buttonWidth - buttonTextWidth) / 2;
+    const buttonTextX = wisdomButtonX + (buttonWidth - buttonTextWidth) / 2;
     const buttonTextY = buttonY + 8;
     doc.text(buttonText, buttonTextX, buttonTextY);
 
-    doc.link(buttonX, buttonY, buttonWidth, buttonHeight, { url: 'https://lovelightandblackholes.com/wound-to-wisdom' });
+    doc.link(wisdomButtonX, buttonY, buttonWidth, buttonHeight, { url: 'https://lovelightandblackholes.com/wound-to-wisdom' });
 
     const pdfBase64 = doc.output('datauristring').split(',')[1];
     const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
