@@ -181,8 +181,13 @@ function Home() {
             <p className="text-lg text-white mb-4" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               Your deepest shadow was written in the stars when you were born. Astrology points to it through your Chiron placement, and how to alchemize it.
             </p>
-            <p className="text-base text-white/90" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
+            <p className="text-base text-white/90 mb-6" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               No quizzes. No guesswork. Just an instant astro report.
+            </p>
+            <p className="text-base text-white/90 leading-relaxed" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
+              Shadow work is hard when you don't know where to start.<br />
+              Did you know your deepest shadow was written in your birth chart when you were born?!<br />
+              This instant astro report uses Chiron to reveal, with shocking accuracy, your deepest wound and how to work with it. Your shadow is the key to your power! It's time to take your shadow medicine.
             </p>
           </div>
         </div>

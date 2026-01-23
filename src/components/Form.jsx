@@ -311,7 +311,7 @@ function Form({ onSubmit, isSubmitting }) {
         disabled={isSubmitting}
         className="w-full bg-magenta hover:bg-magenta/90 text-white font-semibold py-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed button-glow"
       >
-        {isSubmitting ? 'Calculating...' : 'Tell me my medicine!'}
+        {isSubmitting ? 'Calculating...' : 'Get my instant report!'}
       </button>
 
       {showBirthTimeWarning && (
