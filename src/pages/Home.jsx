@@ -178,12 +178,6 @@ function Home() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
               Your Shadow Medicine
             </h1>
-            <p className="text-lg text-white mb-4" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              Your deepest shadow was written in the stars when you were born. Astrology points to it through your Chiron placement, and how to alchemize it.
-            </p>
-            <p className="text-base text-white/90 mb-6" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              No quizzes. No guesswork. Just an instant astro report.
-            </p>
             <p className="text-base text-white/90 leading-relaxed" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
               Shadow work is hard when you don't know where to start.<br />
               Did you know your deepest shadow was written in your birth chart when you were born?!<br />
