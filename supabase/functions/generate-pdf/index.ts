@@ -269,7 +269,7 @@ Deno.serve(async (req: Request) => {
     const shareButtonTextY = buttonY + 8;
     doc.text(shareButtonText, shareButtonTextX, shareButtonTextY);
 
-    doc.link(startX, buttonY, buttonWidth, buttonHeight, { url: 'https://shadowwork.lovelightandblackholes.com' });
+    doc.link(startX, buttonY, buttonWidth, buttonHeight, { url: 'https://shadow.lovelightandblackholes.com/share' });
 
     const wisdomButtonX = startX + buttonWidth + buttonGap;
 
