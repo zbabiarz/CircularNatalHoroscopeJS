@@ -257,7 +257,7 @@ Deno.serve(async (req: Request) => {
     const startX = (pageWidth - totalButtonsWidth) / 2;
     const buttonY = yPosition;
 
-    doc.setFillColor(109, 40, 217);
+    doc.setFillColor(60, 122, 110);
     doc.roundedRect(startX, buttonY, buttonWidth, buttonHeight, 3, 3, 'F');
 
     doc.setFontSize(12);

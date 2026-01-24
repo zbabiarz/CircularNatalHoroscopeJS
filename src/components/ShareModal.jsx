@@ -4,7 +4,7 @@ export default function ShareModal({ isOpen, onClose }) {
   const [copied, setCopied] = useState(false)
 
   const shareUrl = window.location.origin
-  const shareMessage = "Is your mind blown? Share this with someone to blow their mind too!"
+  const shareMessage = "This just blew my mind! Find your shadow in the stars. https://shadow.lovelightandblackholes.com"
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
