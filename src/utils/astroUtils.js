@@ -102,7 +102,26 @@ function waitForEphemeris() {
   })
 }
 
-// Legacy function kept for fallback only
+function getChironSignFromDate(birthDateStr) {
+  const birthDate = new Date(birthDateStr + 'T00:00:00Z')
+  const birthTime = birthDate.getTime()
+
+  for (const period of chironSigns) {
+    const startDate = new Date(period.start + 'T00:00:00Z')
+    const endDate = new Date(period.end + 'T23:59:59Z')
+
+    if (birthTime >= startDate.getTime() && birthTime <= endDate.getTime()) {
+      return period.sign
+    }
+  }
+
+  if (birthTime < new Date(chironSigns[0].start + 'T00:00:00Z').getTime()) {
+    return chironSigns[0].sign
+  }
+
+  return chironSigns[chironSigns.length - 1].sign
+}
+
 function getChironSign(degree) {
   const zodiacSigns = [
     'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -115,7 +134,6 @@ function getChironSign(degree) {
   return zodiacSigns[signIndex]
 }
 
-// Legacy function kept for fallback only
 function getChironDegree(birthDate) {
   const date = new Date(birthDate)
   const sortedDegrees = [...chironDegrees].sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -232,7 +250,7 @@ export async function calculateChironData(formData) {
   }
 
   chironDegree = getChironDegree(birthDate)
-  chironSign = getChironSign(chironDegree)
+  chironSign = getChironSignFromDate(birthDate)
 
   console.log('=== CHIRON CALCULATION (Lookup Table) ===')
   console.log(`Birth: ${birthDate} at ${birthLocation}`)
