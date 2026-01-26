@@ -42,14 +42,16 @@ This document describes the upgrade from lookup table interpolation to Swiss Eph
 ### New Calculation Flow
 
 ```javascript
-// 1. Initialize Swiss Ephemeris (WASM)
-await initSwissEph()
+// 1. Initialize Swiss Ephemeris (WASM) using static init method
+await initSwissEph()  // Calls SwissEPH.init() internally
 
 // 2. Calculate Julian Day from birth date/time
 const julianDay = calculateJulianDay(date, time)
+// Uses: swissEph.swe_julday(year, month, day, decimalHours, SE_GREG_CAL)
 
 // 3. Get Chiron's exact position
 const chironPosition = calculateChironPosition(julianDay)
+// Uses: swissEph.swe_calc_ut(julianDay, SE_CHIRON, SEFLG_SWIEPH | SEFLG_SPEED)
 // Returns: { longitude, latitude, distance, speed }
 
 // 4. Convert to zodiac sign and degree
@@ -58,6 +60,7 @@ const zodiacInfo = getZodiacSign(longitude)
 
 // 5. If birth time provided, calculate houses
 const houseData = calculateHouses(julianDay, lat, lng)
+// Uses: swissEph.swe_houses(julianDay, lat, lng, 'P')
 // Returns: { houses[], ascendant, mc, armc, vertex, equatorialAscendant }
 
 // 6. Find which house Chiron is in
@@ -107,6 +110,19 @@ If Swiss Ephemeris fails to load (rare edge case), the system automatically fall
 2. circular-natal-horoscope-js library for house calculations
 
 This ensures the app always works, even in edge cases.
+
+## Implementation Details
+
+### Swiss Ephemeris Library
+- **Package**: `sweph-wasm@1.2.12`
+- **Initialization**: Uses `SwissEPH.init()` static method to load WASM module
+- **API**: Instance methods on SwissEPH class (e.g., `swe.swe_calc_ut()`)
+- **Constants**: Instance properties (e.g., `swe.SE_CHIRON`, `swe.SE_GREG_CAL`)
+
+### Key Functions
+- `swe_julday()`: Convert calendar date to Julian Day
+- `swe_calc_ut()`: Calculate planetary positions (Universal Time)
+- `swe_houses()`: Calculate house cusps and angles (returns `{cusps, ascmc}`)
 
 ## Performance
 
