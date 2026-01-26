@@ -166,7 +166,9 @@ function getChironDegree(birthDate) {
 }
 
 export async function calculateChironData(formData) {
+  console.log('calculateChironData received formData:', formData)
   const { name, email, birthDate, birthTime, birthLocation, birthCoordinates } = formData
+  console.log('Extracted birthDate:', birthDate, 'birthTime:', birthTime)
 
   let chironDegree, chironSign, chironHouse = 'Unknown'
 
@@ -191,6 +193,7 @@ export async function calculateChironData(formData) {
         }
       }
 
+      console.log('SwissEph: Raw birthDate string -', birthDate)
       const [year, month, day] = birthDate.split('-').map(Number)
       console.log('SwissEph: Parsed date -', { year, month, day, hours, minutes })
 
