@@ -1,27 +1,30 @@
-import SwissEPH from 'sweph-wasm'
-
 let swissEph = null
-let initPromise = null
+let initAttempted = false
+let initSucceeded = false
 
 export async function initSwissEph() {
-  if (swissEph) return swissEph
+  if (initAttempted) {
+    if (initSucceeded) return swissEph
+    throw new Error('Swiss Ephemeris not available')
+  }
 
-  if (initPromise) return initPromise
+  initAttempted = true
 
-  initPromise = (async () => {
-    try {
-      console.log('Initializing Swiss Ephemeris...')
-      swissEph = await SwissEPH.init()
-      console.log('Swiss Ephemeris initialized successfully')
-      return swissEph
-    } catch (error) {
-      console.error('Swiss Ephemeris initialization failed:', error)
-      initPromise = null
-      throw error
-    }
-  })()
+  try {
+    const SwissEPH = (await import('sweph-wasm')).default
+    swissEph = await SwissEPH.init()
+    initSucceeded = true
+    console.log('Swiss Ephemeris initialized successfully')
+    return swissEph
+  } catch (error) {
+    initSucceeded = false
+    swissEph = null
+    throw new Error('Swiss Ephemeris WASM not available in this environment')
+  }
+}
 
-  return initPromise
+export function isSwissEphAvailable() {
+  return initSucceeded && swissEph !== null
 }
 
 export function calculateJulianDay(date, time) {
