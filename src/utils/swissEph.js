@@ -13,13 +13,9 @@ export async function initSwissEph() {
   try {
     const SwissEPH = (await import('sweph-wasm')).default
     swissEph = await SwissEPH.init()
-    console.log('Swiss Ephemeris WASM loaded')
-
-    await swissEph.swe_set_ephe_path()
-    console.log('Swiss Ephemeris ephemeris files loaded')
 
     initSucceeded = true
-    console.log('Swiss Ephemeris initialized successfully')
+    console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
     return swissEph
   } catch (error) {
     console.log('Swiss Ephemeris init error:', error.message || error)
@@ -88,7 +84,7 @@ export function calculateChironPosition(julianDay) {
   const result = swissEph.swe_calc_ut(
     julianDay,
     swissEph.SE_CHIRON,
-    swissEph.SEFLG_SWIEPH | swissEph.SEFLG_SPEED
+    swissEph.SEFLG_MOSEPH | swissEph.SEFLG_SPEED
   )
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
