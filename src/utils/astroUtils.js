@@ -166,9 +166,7 @@ function getChironDegree(birthDate) {
 }
 
 export async function calculateChironData(formData) {
-  console.log('calculateChironData received formData:', formData)
   const { name, email, birthDate, birthTime, birthLocation, birthCoordinates } = formData
-  console.log('Extracted birthDate:', birthDate, 'birthTime:', birthTime)
 
   let chironDegree, chironSign, chironHouse = 'Unknown'
 
@@ -193,18 +191,14 @@ export async function calculateChironData(formData) {
         }
       }
 
-      console.log('SwissEph: Raw birthDate string -', birthDate)
       const [year, month, day] = birthDate.split('-').map(Number)
-      console.log('SwissEph: Parsed date -', { year, month, day, hours, minutes })
 
       const julianDay = calculateJulianDay(
         { year, month, day },
         { hours, minutes }
       )
-      console.log('SwissEph: Julian Day calculated -', julianDay)
 
       const chironPosition = calculateChironPosition(julianDay)
-      console.log('SwissEph: Chiron position calculated -', chironPosition)
 
       chironDegree = chironPosition.longitude
       const zodiacInfo = getZodiacSign(chironDegree)
@@ -233,7 +227,7 @@ export async function calculateChironData(formData) {
 
       return buildResult(name, email, chironSign, chironDegree, chironHouse)
     } catch (err) {
-      console.log('Swiss Ephemeris calculation error, using fallback:', err.message || err)
+      console.log('Using lookup table fallback (Chiron not in Moshier ephemeris)')
     }
   }
 

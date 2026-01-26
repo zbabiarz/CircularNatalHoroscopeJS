@@ -81,21 +81,25 @@ export function calculateChironPosition(julianDay) {
     throw new Error('Swiss Ephemeris not initialized')
   }
 
-  const result = swissEph.swe_calc_ut(
-    julianDay,
-    swissEph.SE_CHIRON,
-    swissEph.SEFLG_MOSEPH | swissEph.SEFLG_SPEED
-  )
+  try {
+    const result = swissEph.swe_calc_ut(
+      julianDay,
+      swissEph.SE_CHIRON,
+      swissEph.SEFLG_MOSEPH | swissEph.SEFLG_SPEED
+    )
 
-  if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error('Failed to calculate Chiron position')
-  }
+    if (!result || (Array.isArray(result) && result.length === 0)) {
+      throw new Error('Chiron calculation returned no data')
+    }
 
-  return {
-    longitude: result[0],
-    latitude: result[1],
-    distance: result[2],
-    speed: result[3]
+    return {
+      longitude: result[0],
+      latitude: result[1],
+      distance: result[2],
+      speed: result[3]
+    }
+  } catch (error) {
+    throw new Error(`Chiron ephemeris not available in Moshier build - using lookup table fallback`)
   }
 }
 
