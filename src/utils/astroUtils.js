@@ -192,13 +192,17 @@ export async function calculateChironData(formData) {
       }
 
       const [year, month, day] = birthDate.split('-').map(Number)
+      console.log('SwissEph: Parsed date -', { year, month, day, hours, minutes })
 
       const julianDay = calculateJulianDay(
         { year, month, day },
         { hours, minutes }
       )
+      console.log('SwissEph: Julian Day calculated -', julianDay)
 
       const chironPosition = calculateChironPosition(julianDay)
+      console.log('SwissEph: Chiron position calculated -', chironPosition)
+
       chironDegree = chironPosition.longitude
       const zodiacInfo = getZodiacSign(chironDegree)
       chironSign = zodiacInfo.sign
@@ -226,7 +230,7 @@ export async function calculateChironData(formData) {
 
       return buildResult(name, email, chironSign, chironDegree, chironHouse)
     } catch (err) {
-      console.log('Swiss Ephemeris calculation error, using fallback')
+      console.log('Swiss Ephemeris calculation error, using fallback:', err.message || err)
     }
   }
 

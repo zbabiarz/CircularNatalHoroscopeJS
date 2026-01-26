@@ -13,10 +13,16 @@ export async function initSwissEph() {
   try {
     const SwissEPH = (await import('sweph-wasm')).default
     swissEph = await SwissEPH.init()
+    console.log('Swiss Ephemeris WASM loaded')
+
+    await swissEph.swe_set_ephe_path()
+    console.log('Swiss Ephemeris ephemeris files loaded')
+
     initSucceeded = true
     console.log('Swiss Ephemeris initialized successfully')
     return swissEph
   } catch (error) {
+    console.log('Swiss Ephemeris init error:', error.message || error)
     initSucceeded = false
     swissEph = null
     throw new Error('Swiss Ephemeris WASM not available in this environment')
