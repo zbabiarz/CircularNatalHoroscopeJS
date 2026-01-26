@@ -1,17 +1,27 @@
 import SwissEph from 'sweph-wasm'
 
 let swissEph = null
+let initPromise = null
 
 export async function initSwissEph() {
   if (swissEph) return swissEph
 
-  try {
-    swissEph = new SwissEph()
-    return swissEph
-  } catch (error) {
-    console.error('Swiss Ephemeris initialization failed:', error)
-    throw error
-  }
+  if (initPromise) return initPromise
+
+  initPromise = (async () => {
+    try {
+      console.log('Initializing Swiss Ephemeris...')
+      swissEph = await SwissEph()
+      console.log('Swiss Ephemeris initialized successfully')
+      return swissEph
+    } catch (error) {
+      console.error('Swiss Ephemeris initialization failed:', error)
+      initPromise = null
+      throw error
+    }
+  })()
+
+  return initPromise
 }
 
 export function calculateJulianDay(date, time) {
@@ -24,12 +34,14 @@ export function calculateJulianDay(date, time) {
     throw new Error('Swiss Ephemeris not initialized')
   }
 
+  const SE_GREG_CAL = 1
+
   const julianDay = swissEph.swe_julday(
     year,
     month,
     day,
     decimalHours,
-    swissEph.SE_GREG_CAL
+    SE_GREG_CAL
   )
 
   return julianDay
@@ -40,20 +52,24 @@ export function calculateHouses(julianDay, latitude, longitude) {
     throw new Error('Swiss Ephemeris not initialized')
   }
 
-  const houses = swissEph.swe_houses(
+  const result = swissEph.swe_houses(
     julianDay,
     latitude,
     longitude,
     'P'
   )
 
+  if (!result || result.error) {
+    throw new Error(`Failed to calculate houses: ${result?.error || 'Unknown error'}`)
+  }
+
   return {
-    houses: houses.house,
-    ascendant: houses.ascendant,
-    mc: houses.mc,
-    armc: houses.armc,
-    vertex: houses.vertex,
-    equatorialAscendant: houses.equatorialAscendant
+    houses: result.data.house || result.house,
+    ascendant: result.data.ascendant || result.ascendant,
+    mc: result.data.mc || result.mc,
+    armc: result.data.armc || result.armc,
+    vertex: result.data.vertex || result.vertex,
+    equatorialAscendant: result.data.equatorialAscendant || result.equatorialAscendant
   }
 }
 
@@ -62,19 +78,25 @@ export function calculateChironPosition(julianDay) {
     throw new Error('Swiss Ephemeris not initialized')
   }
 
-  const CHIRON_ID = swissEph.SE_CHIRON
+  const SE_CHIRON = 15
+  const SEFLG_SWIEPH = 2
+  const SEFLG_SPEED = 256
 
   const result = swissEph.swe_calc_ut(
     julianDay,
-    CHIRON_ID,
-    swissEph.SEFLG_SWIEPH | swissEph.SEFLG_SPEED
+    SE_CHIRON,
+    SEFLG_SWIEPH | SEFLG_SPEED
   )
 
+  if (!result || result.error) {
+    throw new Error(`Failed to calculate Chiron position: ${result?.error || 'Unknown error'}`)
+  }
+
   return {
-    longitude: result[0],
-    latitude: result[1],
-    distance: result[2],
-    speed: result[3]
+    longitude: result.data[0],
+    latitude: result.data[1],
+    distance: result.data[2],
+    speed: result.data[3]
   }
 }
 
