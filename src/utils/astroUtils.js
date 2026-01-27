@@ -250,7 +250,7 @@ export async function calculateChironData(formData) {
   }
 
   chironDegree = getChironDegree(birthDate)
-  chironSign = getChironSignFromDate(birthDate)
+  chironSign = getChironSign(chironDegree)
 
   console.log('=== CHIRON CALCULATION (Lookup Table) ===')
   console.log(`Birth: ${birthDate} at ${birthLocation}`)
