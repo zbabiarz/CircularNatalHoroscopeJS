@@ -1,3 +1,5 @@
+import moment from 'moment-timezone'
+import tzlookup from 'tz-lookup'
 import { Horoscope } from '../Horoscope'
 import { Origin } from '../Origin'
 import chironSigns from '../data/chiron-signs.json'
@@ -12,6 +14,45 @@ import {
   getZodiacSign,
   findHouseForPlanet
 } from './swissEph'
+
+function convertLocalToUTC(year, month, day, hours, minutes, latitude, longitude) {
+  const timezone = tzlookup(latitude, longitude)
+  const tzInfo = moment.tz.zone(timezone)
+
+  const localMoment = moment.tz({
+    year,
+    month: month - 1,
+    date: day,
+    hour: hours,
+    minute: minutes,
+    second: 0
+  }, timezone)
+
+  const utcMoment = localMoment.clone().utc()
+
+  const offsetMinutes = tzInfo.utcOffset(localMoment.valueOf())
+  const offsetHours = -offsetMinutes / 60
+  const isDST = localMoment.isDST()
+
+  console.log('=== TIMEZONE CONVERSION ===')
+  console.log(`Local Input: ${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`)
+  console.log(`Timezone: ${timezone}`)
+  console.log(`UTC Offset: ${offsetHours >= 0 ? '+' : ''}${offsetHours} hours`)
+  console.log(`DST Active: ${isDST ? 'Yes' : 'No'}`)
+  console.log(`UTC Output: ${utcMoment.format('YYYY-MM-DD HH:mm')}`)
+  console.log('===========================')
+
+  return {
+    year: utcMoment.year(),
+    month: utcMoment.month() + 1,
+    day: utcMoment.date(),
+    hours: utcMoment.hours(),
+    minutes: utcMoment.minutes(),
+    timezone,
+    offsetHours,
+    isDST
+  }
+}
 
 let swissEphChecked = false
 let swissEphWorks = false
@@ -192,28 +233,48 @@ export async function calculateChironData(formData) {
 
   if (canUseSwissEph) {
     try {
-      let hours = 12, minutes = 0
+      let localHours = 12, localMinutes = 0
 
       if (birthTime) {
         if (birthTime.includes(' ')) {
           const [time, period] = birthTime.split(' ')
-          ;[hours, minutes] = time.split(':').map(Number)
+          ;[localHours, localMinutes] = time.split(':').map(Number)
 
-          if (period === 'PM' && hours !== 12) {
-            hours += 12
-          } else if (period === 'AM' && hours === 12) {
-            hours = 0
+          if (period === 'PM' && localHours !== 12) {
+            localHours += 12
+          } else if (period === 'AM' && localHours === 12) {
+            localHours = 0
           }
         } else {
-          ;[hours, minutes] = birthTime.split(':').map(Number)
+          ;[localHours, localMinutes] = birthTime.split(':').map(Number)
         }
       }
 
-      const [year, month, day] = birthDate.split('-').map(Number)
+      const [localYear, localMonth, localDay] = birthDate.split('-').map(Number)
+
+      let utcYear = localYear, utcMonth = localMonth, utcDay = localDay
+      let utcHours = localHours, utcMinutes = localMinutes
+
+      if (birthCoordinates && birthCoordinates[0] && birthCoordinates[1]) {
+        const utcData = convertLocalToUTC(
+          localYear, localMonth, localDay,
+          localHours, localMinutes,
+          birthCoordinates[0], birthCoordinates[1]
+        )
+        utcYear = utcData.year
+        utcMonth = utcData.month
+        utcDay = utcData.day
+        utcHours = utcData.hours
+        utcMinutes = utcData.minutes
+      } else {
+        console.log('=== TIMEZONE CONVERSION ===')
+        console.log('No coordinates available - using local time as UTC (may be inaccurate)')
+        console.log('===========================')
+      }
 
       const julianDay = calculateJulianDay(
-        { year, month, day },
-        { hours, minutes }
+        { year: utcYear, month: utcMonth, day: utcDay },
+        { hours: utcHours, minutes: utcMinutes }
       )
 
       const chironPosition = calculateChironPosition(julianDay)
@@ -224,6 +285,7 @@ export async function calculateChironData(formData) {
 
       console.log('=== CHIRON CALCULATION (Swiss Ephemeris) ===')
       console.log(`Birth: ${birthDate} ${birthTime || '(no time)'} at ${birthLocation}`)
+      console.log(`Julian Day: ${julianDay.toFixed(6)}`)
       console.log(`Chiron: ${chironSign} ${zodiacInfo.degree.toFixed(2)}° (${chironDegree.toFixed(2)}° absolute)`)
 
       if (birthTime && birthCoordinates) {
