@@ -121,11 +121,16 @@ export function getZodiacSign(longitude) {
 }
 
 export function findHouseForPlanet(houseCusps, planetLongitude) {
-  planetLongitude = planetLongitude % 360
+  planetLongitude = ((planetLongitude % 360) + 360) % 360
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 1; i <= 12; i++) {
     const currentCusp = houseCusps[i]
-    const nextCusp = houseCusps[(i + 1) % 12]
+    const nextIndex = i === 12 ? 1 : i + 1
+    const nextCusp = houseCusps[nextIndex]
+
+    if (currentCusp === undefined || nextCusp === undefined) {
+      continue
+    }
 
     let isInHouse = false
 
@@ -136,7 +141,7 @@ export function findHouseForPlanet(houseCusps, planetLongitude) {
     }
 
     if (isInHouse) {
-      return i + 1
+      return i
     }
   }
 

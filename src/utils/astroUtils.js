@@ -175,15 +175,35 @@ function getChironSign(degree) {
   return zodiacSigns[signIndex]
 }
 
-function getChironDegree(birthDate) {
-  const date = new Date(birthDate)
+function getChironDegree(birthDate, birthTime = null) {
+  let date = new Date(birthDate)
+
+  if (birthTime) {
+    let hours = 12, minutes = 0
+
+    if (birthTime.includes(' ')) {
+      const [time, period] = birthTime.split(' ')
+      ;[hours, minutes] = time.split(':').map(Number)
+
+      if (period === 'PM' && hours !== 12) {
+        hours += 12
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0
+      }
+    } else {
+      ;[hours, minutes] = birthTime.split(':').map(Number)
+    }
+
+    date = new Date(birthDate + 'T' + String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':00')
+  }
+
   const sortedDegrees = [...chironDegrees].sort((a, b) => new Date(a.date) - new Date(b.date))
 
   let beforeEntry = null
   let afterEntry = null
 
   for (let i = 0; i < sortedDegrees.length; i++) {
-    const entryDate = new Date(sortedDegrees[i].date)
+    const entryDate = new Date(sortedDegrees[i].date + 'T00:00:00')
     if (entryDate <= date) {
       beforeEntry = sortedDegrees[i]
     }
@@ -203,11 +223,11 @@ function getChironDegree(birthDate) {
     return chironDegrees[0].degree
   }
 
-  const beforeDate = new Date(beforeEntry.date)
-  const afterDate = new Date(afterEntry.date)
-  const totalDays = (afterDate - beforeDate) / (1000 * 60 * 60 * 24)
-  const daysSinceBefore = (date - beforeDate) / (1000 * 60 * 60 * 24)
-  const fraction = daysSinceBefore / totalDays
+  const beforeDate = new Date(beforeEntry.date + 'T00:00:00')
+  const afterDate = new Date(afterEntry.date + 'T00:00:00')
+  const totalMs = afterDate - beforeDate
+  const msSinceBefore = date - beforeDate
+  const fraction = msSinceBefore / totalMs
 
   let degreeDiff = afterEntry.degree - beforeEntry.degree
   if (Math.abs(degreeDiff) > 180) {
@@ -311,7 +331,7 @@ export async function calculateChironData(formData) {
     }
   }
 
-  chironDegree = getChironDegree(birthDate)
+  chironDegree = getChironDegree(birthDate, birthTime)
   chironSign = getChironSign(chironDegree)
 
   console.log('=== CHIRON CALCULATION (Lookup Table) ===')
