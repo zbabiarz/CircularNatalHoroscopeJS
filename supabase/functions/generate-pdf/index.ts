@@ -17,15 +17,12 @@ interface RequestBody {
   report: string;
 }
 
-interface ReportSection {
-  title: string;
-  content: string[];
-}
-
 const BEIGE_BG = [249, 242, 235];
 const DARK_TEXT = [31, 31, 31];
 const TEAL_BUTTON = [72, 133, 122];
 const WHITE = [255, 255, 255];
+const DARK_BG = [15, 23, 42];
+const ACCENT_GOLD = [218, 165, 32];
 
 function parseMarkdownReport(markdown: string): {
   archetype: string;
@@ -110,7 +107,7 @@ function parseMarkdownReport(markdown: string): {
   return result;
 }
 
-function wrapText(doc: any, text: string, maxWidth: number): string[] {
+function wrapText(doc: jsPDF, text: string, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
   let currentLine = '';
@@ -134,92 +131,56 @@ function wrapText(doc: any, text: string, maxWidth: number): string[] {
   return lines;
 }
 
-async function fetchImageAsBase64(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    return btoa(binary);
-  } catch (error) {
-    console.error("Error fetching image:", error);
-    return null;
-  }
-}
-
-async function loadCustomFonts(doc: jsPDF): Promise<{ hasSerif: boolean; hasSans: boolean }> {
-  try {
-    const cinzelUrl = "https://fonts.gstatic.com/s/cinzel/v23/8vIU7w042Wp87g4G0UTUEE5eK_w.ttf";
-    const response = await fetch(cinzelUrl);
-    if (!response.ok) return { hasSerif: false, hasSans: false };
-
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < uint8Array.length; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    const fontBase64 = btoa(binary);
-
-    doc.addFileToVFS("Cinzel-Regular.ttf", fontBase64);
-    doc.addFont("Cinzel-Regular.ttf", "Cinzel", "normal");
-
-    return { hasSerif: true, hasSans: false };
-  } catch (error) {
-    console.error("Error loading fonts:", error);
-    return { hasSerif: false, hasSans: false };
-  }
-}
-
-function drawSparkleIcon(doc: jsPDF, x: number, y: number, size: number = 4) {
-  doc.setDrawColor(31, 31, 31);
+function drawStarIcon(doc: jsPDF, x: number, y: number, size: number = 4) {
+  doc.setDrawColor(...ACCENT_GOLD as [number, number, number]);
   doc.setLineWidth(0.5);
-
   doc.line(x, y - size, x, y + size);
   doc.line(x - size, y, x + size, y);
-
   const smallSize = size * 0.5;
   doc.line(x - smallSize * 0.7, y - smallSize * 0.7, x + smallSize * 0.7, y + smallSize * 0.7);
   doc.line(x - smallSize * 0.7, y + smallSize * 0.7, x + smallSize * 0.7, y - smallSize * 0.7);
+}
+
+function drawDarkBackground(doc: jsPDF, pageWidth: number, pageHeight: number) {
+  doc.setFillColor(...DARK_BG as [number, number, number]);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+  doc.setFillColor(30, 41, 59);
+  doc.rect(0, 0, pageWidth, pageHeight / 3, 'F');
+}
+
+function drawBeigeBackground(doc: jsPDF, pageWidth: number, pageHeight: number) {
+  doc.setFillColor(...BEIGE_BG as [number, number, number]);
+  doc.rect(0, 0, pageWidth, pageHeight, 'F');
 }
 
 function addContentPage(
   doc: jsPDF,
   title: string,
   content: string[],
-  fonts: { hasSerif: boolean; hasSans: boolean },
   pageWidth: number,
   pageHeight: number,
   margin: number
 ): number {
   doc.addPage();
-  doc.setFillColor(...BEIGE_BG);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  drawBeigeBackground(doc, pageWidth, pageHeight);
 
   let yPos = margin + 5;
 
-  drawSparkleIcon(doc, pageWidth / 2, yPos, 3);
+  drawStarIcon(doc, pageWidth / 2, yPos, 3);
   yPos += 10;
 
-  doc.setFontSize(32);
-  doc.setTextColor(...DARK_TEXT);
-  if (fonts.hasSerif) {
-    doc.setFont('Cinzel', 'normal');
-  } else {
-    doc.setFont('helvetica', 'bold');
-  }
+  doc.setFontSize(28);
+  doc.setTextColor(...DARK_TEXT as [number, number, number]);
+  doc.setFont('helvetica', 'bold');
 
   const titleWidth = doc.getTextWidth(title);
   doc.text(title, (pageWidth - titleWidth) / 2, yPos);
-  yPos += 20;
+  yPos += 18;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
-  doc.setTextColor(...DARK_TEXT);
+  doc.setTextColor(...DARK_TEXT as [number, number, number]);
 
   const maxWidth = pageWidth - (margin * 2);
 
@@ -232,8 +193,7 @@ function addContentPage(
 
       if (yPos > pageHeight - 30) {
         doc.addPage();
-        doc.setFillColor(...BEIGE_BG);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        drawBeigeBackground(doc, pageWidth, pageHeight);
         yPos = margin;
       }
 
@@ -249,8 +209,7 @@ function addContentPage(
     if (paragraph.startsWith('- ') || paragraph.startsWith('•')) {
       if (yPos > pageHeight - 25) {
         doc.addPage();
-        doc.setFillColor(...BEIGE_BG);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        drawBeigeBackground(doc, pageWidth, pageHeight);
         yPos = margin;
       }
 
@@ -270,8 +229,7 @@ function addContentPage(
     } else {
       if (yPos > pageHeight - 30) {
         doc.addPage();
-        doc.setFillColor(...BEIGE_BG);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        drawBeigeBackground(doc, pageWidth, pageHeight);
         yPos = margin;
       }
 
@@ -279,8 +237,7 @@ function addContentPage(
       for (const line of wrappedParagraph) {
         if (yPos > pageHeight - 20) {
           doc.addPage();
-          doc.setFillColor(...BEIGE_BG);
-          doc.rect(0, 0, pageWidth, pageHeight, 'F');
+          drawBeigeBackground(doc, pageWidth, pageHeight);
           yPos = margin;
         }
         doc.text(line, margin, yPos);
@@ -311,59 +268,30 @@ Deno.serve(async (req: Request) => {
 
     const { name, chironSign, chironHouse, chironDegree, archetype, report }: RequestBody = await req.json();
 
-    const cosmicBgUrl = "https://images.pexels.com/photos/956999/milky-way-starry-sky-night-sky-star-956999.jpeg";
-
-    const [cosmicBgBase64, fonts] = await Promise.all([
-      fetchImageAsBase64(cosmicBgUrl),
-      (async () => {
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-        return await loadCustomFonts(doc);
-      })()
-    ]);
-
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'letter'
     });
 
-    await loadCustomFonts(doc);
-
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
 
-    if (cosmicBgBase64) {
-      doc.addImage(`data:image/jpeg;base64,${cosmicBgBase64}`, 'JPEG', 0, 0, pageWidth, pageHeight);
+    drawDarkBackground(doc, pageWidth, pageHeight);
 
-      doc.setFillColor(0, 0, 0);
-      doc.setGState(new doc.GState({ opacity: 0.5 }));
-      doc.rect(0, 0, pageWidth, pageHeight, 'F');
-      doc.setGState(new doc.GState({ opacity: 1.0 }));
-    } else {
-      doc.setFillColor(20, 20, 30);
-      doc.rect(0, 0, pageWidth, pageHeight, 'F');
-    }
+    let yPos = 35;
 
-    let yPos = 40;
-
-    const discoBallSize = 20;
-    doc.setFillColor(200, 200, 220);
-    doc.circle(pageWidth / 2, yPos, discoBallSize / 2, 'F');
+    doc.setFillColor(...ACCENT_GOLD as [number, number, number]);
+    doc.circle(pageWidth / 2, yPos, 12, 'F');
     doc.setFillColor(255, 255, 255);
-    doc.setGState(new doc.GState({ opacity: 0.3 }));
-    doc.circle(pageWidth / 2 - 3, yPos - 3, 6, 'F');
-    doc.setGState(new doc.GState({ opacity: 1.0 }));
+    doc.circle(pageWidth / 2 - 3, yPos - 3, 4, 'F');
 
-    yPos += discoBallSize + 15;
+    yPos += 30;
 
-    doc.setFontSize(48);
-    doc.setTextColor(...WHITE);
-    if (fonts.hasSerif) {
-      doc.setFont('Cinzel', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
+    doc.setFontSize(42);
+    doc.setTextColor(...WHITE as [number, number, number]);
+    doc.setFont('helvetica', 'bold');
 
     const titleLine1 = "YOUR SHADOW";
     const titleLine2 = "MEDICINE";
@@ -371,39 +299,33 @@ Deno.serve(async (req: Request) => {
     const title2Width = doc.getTextWidth(titleLine2);
 
     doc.text(titleLine1, (pageWidth - title1Width) / 2, yPos);
-    yPos += 18;
+    yPos += 16;
     doc.text(titleLine2, (pageWidth - title2Width) / 2, yPos);
-    yPos += 15;
+    yPos += 12;
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
     const subtitle = `Chiron Report by Morgan Garza`;
     const subtitleWidth = doc.getTextWidth(subtitle);
     doc.text(subtitle, (pageWidth - subtitleWidth) / 2, yPos);
-    yPos += 35;
+    yPos += 30;
 
-    doc.setFillColor(...BEIGE_BG);
-    doc.setGState(new doc.GState({ opacity: 0.95 }));
+    doc.setFillColor(...BEIGE_BG as [number, number, number]);
     const boxPadding = 15;
     const boxWidth = pageWidth - (margin * 2);
-    const boxHeight = 70;
+    const boxHeight = 75;
     doc.roundedRect(margin, yPos - 10, boxWidth, boxHeight, 3, 3, 'F');
-    doc.setGState(new doc.GState({ opacity: 1.0 }));
 
-    doc.setFontSize(36);
-    doc.setTextColor(...DARK_TEXT);
-    if (fonts.hasSerif) {
-      doc.setFont('Cinzel', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
+    doc.setFontSize(32);
+    doc.setTextColor(...DARK_TEXT as [number, number, number]);
+    doc.setFont('helvetica', 'bold');
 
     const placementTitle = `Chiron in ${chironSign}`;
     const placementTitleWidth = doc.getTextWidth(placementTitle);
     doc.text(placementTitle, (pageWidth - placementTitleWidth) / 2, yPos);
     yPos += 12;
 
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'normal');
     const houseText = chironHouse ? `${chironHouse}` : '';
     if (houseText) {
@@ -414,61 +336,48 @@ Deno.serve(async (req: Request) => {
 
     const parsed = parseMarkdownReport(report);
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     const archetypeTitle = parsed.archetype || archetype;
     const archetypeDisplay = archetypeTitle.startsWith('The ') ? archetypeTitle : `The ${archetypeTitle}`;
     const archetypeTitleWidth = doc.getTextWidth(archetypeDisplay);
     doc.text(archetypeDisplay, (pageWidth - archetypeTitleWidth) / 2, yPos);
-    yPos += 15;
+    yPos += 14;
 
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...DARK_TEXT);
+    doc.setTextColor(...DARK_TEXT as [number, number, number]);
     const storyText = parsed.chironStory.join(' ');
     const storyLines = wrapText(doc, storyText, boxWidth - (boxPadding * 2));
-    const maxStoryLines = 5;
+    const maxStoryLines = 4;
     for (let i = 0; i < Math.min(storyLines.length, maxStoryLines); i++) {
       doc.text(storyLines[i], margin + boxPadding, yPos);
       yPos += 5;
     }
 
-    addContentPage(doc, 'Core Wound', parsed.coreWound, fonts, pageWidth, pageHeight, margin);
-
-    addContentPage(doc, 'How it Feels', parsed.howItFeels, fonts, pageWidth, pageHeight, margin);
-
-    addContentPage(doc, 'Shadow Patterns', parsed.shadowPatterns, fonts, pageWidth, pageHeight, margin);
+    addContentPage(doc, 'Core Wound', parsed.coreWound, pageWidth, pageHeight, margin);
+    addContentPage(doc, 'How it Feels', parsed.howItFeels, pageWidth, pageHeight, margin);
+    addContentPage(doc, 'Shadow Patterns', parsed.shadowPatterns, pageWidth, pageHeight, margin);
 
     doc.addPage();
-    if (cosmicBgBase64) {
-      doc.addImage(`data:image/jpeg;base64,${cosmicBgBase64}`, 'JPEG', 0, 0, pageWidth, pageHeight);
-      doc.setFillColor(0, 0, 0);
-      doc.setGState(new doc.GState({ opacity: 0.5 }));
-      doc.rect(0, 0, pageWidth, pageHeight, 'F');
-      doc.setGState(new doc.GState({ opacity: 1.0 }));
-    }
+    drawDarkBackground(doc, pageWidth, pageHeight);
 
     yPos = margin + 20;
-    doc.setFontSize(42);
-    doc.setTextColor(...WHITE);
-    if (fonts.hasSerif) {
-      doc.setFont('Cinzel', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
+    doc.setFontSize(36);
+    doc.setTextColor(...WHITE as [number, number, number]);
+    doc.setFont('helvetica', 'bold');
+
     const medicineTitle = "Your Medicine";
     const medicineTitleWidth = doc.getTextWidth(medicineTitle);
     doc.text(medicineTitle, (pageWidth - medicineTitleWidth) / 2, yPos);
     yPos += 20;
 
-    doc.setFillColor(...BEIGE_BG);
-    doc.setGState(new doc.GState({ opacity: 0.85 }));
+    doc.setFillColor(...BEIGE_BG as [number, number, number]);
     const medicineBoxHeight = 150;
     doc.roundedRect(margin, yPos, boxWidth, medicineBoxHeight, 5, 5, 'F');
-    doc.setGState(new doc.GState({ opacity: 1.0 }));
 
     yPos += 12;
-    doc.setFontSize(12);
-    doc.setTextColor(...DARK_TEXT);
+    doc.setFontSize(11);
+    doc.setTextColor(...DARK_TEXT as [number, number, number]);
     doc.setFont('helvetica', 'normal');
 
     const medicineIntro = "When integrated, this placement becomes POWERFUL:";
@@ -506,23 +415,19 @@ Deno.serve(async (req: Request) => {
       yPos += 6;
     }
 
-    addContentPage(doc, 'Your Invitation', parsed.yourInvitation, fonts, pageWidth, pageHeight, margin);
+    addContentPage(doc, 'Your Invitation', parsed.yourInvitation, pageWidth, pageHeight, margin);
 
     doc.addPage();
-    doc.setFillColor(...BEIGE_BG);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+    drawBeigeBackground(doc, pageWidth, pageHeight);
 
     yPos = margin + 5;
-    drawSparkleIcon(doc, pageWidth / 2, yPos, 3);
+    drawStarIcon(doc, pageWidth / 2, yPos, 3);
     yPos += 15;
 
-    doc.setFontSize(32);
-    doc.setTextColor(...DARK_TEXT);
-    if (fonts.hasSerif) {
-      doc.setFont('Cinzel', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
+    doc.setFontSize(28);
+    doc.setTextColor(...DARK_TEXT as [number, number, number]);
+    doc.setFont('helvetica', 'bold');
+
     const reflectionTitle = "Reflection";
     const reflectionTitleWidth = doc.getTextWidth(reflectionTitle);
     doc.text(reflectionTitle, (pageWidth - reflectionTitleWidth) / 2, yPos);
@@ -557,13 +462,13 @@ Deno.serve(async (req: Request) => {
 
     const buttonWidth = 70;
     const buttonHeight = 12;
-    doc.setFillColor(...TEAL_BUTTON);
+    doc.setFillColor(...TEAL_BUTTON as [number, number, number]);
     doc.roundedRect((pageWidth - buttonWidth) / 2, yPos, buttonWidth, buttonHeight, 3, 3, 'F');
 
     doc.setFontSize(13);
-    doc.setTextColor(...WHITE);
+    doc.setTextColor(...WHITE as [number, number, number]);
     doc.setFont('helvetica', 'bold');
-    const shareText = "SHARE ➤";
+    const shareText = "SHARE";
     const shareTextWidth = doc.getTextWidth(shareText);
     doc.text(shareText, (pageWidth - shareTextWidth) / 2, yPos + 8);
 
@@ -574,7 +479,7 @@ Deno.serve(async (req: Request) => {
     yPos += buttonHeight + 20;
 
     doc.setFontSize(16);
-    doc.setTextColor(...DARK_TEXT);
+    doc.setTextColor(...DARK_TEXT as [number, number, number]);
     doc.setFont('helvetica', 'bold');
     const deeperText = "Want to go deeper?";
     const deeperTextWidth = doc.getTextWidth(deeperText);
@@ -582,11 +487,11 @@ Deno.serve(async (req: Request) => {
     yPos += 12;
 
     const wisdomButtonWidth = 130;
-    doc.setFillColor(...TEAL_BUTTON);
+    doc.setFillColor(...TEAL_BUTTON as [number, number, number]);
     doc.roundedRect((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, buttonHeight, 3, 3, 'F');
 
     doc.setFontSize(11);
-    doc.setTextColor(...WHITE);
+    doc.setTextColor(...WHITE as [number, number, number]);
     doc.setFont('helvetica', 'bold');
     const wisdomText = "TURN THIS WOUND INTO WISDOM";
     const wisdomTextWidth = doc.getTextWidth(wisdomText);
