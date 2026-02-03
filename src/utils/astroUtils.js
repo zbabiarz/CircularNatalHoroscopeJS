@@ -175,6 +175,26 @@ function getChironSign(degree) {
   return zodiacSigns[signIndex]
 }
 
+function getSignProgressFromDate(birthDateStr, sign) {
+  const birthDate = new Date(birthDateStr + 'T00:00:00Z')
+  const birthTime = birthDate.getTime()
+
+  for (const period of chironSigns) {
+    if (period.sign !== sign) continue
+
+    const startDate = new Date(period.start + 'T00:00:00Z')
+    const endDate = new Date(period.end + 'T23:59:59Z')
+
+    if (birthTime >= startDate.getTime() && birthTime <= endDate.getTime()) {
+      const totalDuration = endDate.getTime() - startDate.getTime()
+      const elapsed = birthTime - startDate.getTime()
+      return Math.min(0.99, Math.max(0, elapsed / totalDuration))
+    }
+  }
+
+  return 0.5
+}
+
 function getChironDegree(birthDate, birthTime = null) {
   let date = new Date(birthDate)
 
@@ -342,10 +362,26 @@ export async function calculateChironData(formData) {
     }
   }
 
-  chironDegree = getChironDegree(birthDate, birthTime)
-  chironSign = getChironSign(chironDegree)
+  chironSign = getChironSignFromDate(birthDate)
 
-  console.log('=== CHIRON CALCULATION (Lookup Table) ===')
+  const signStartDegrees = {
+    'Aries': 0, 'Taurus': 30, 'Gemini': 60, 'Cancer': 90,
+    'Leo': 120, 'Virgo': 150, 'Libra': 180, 'Scorpio': 210,
+    'Sagittarius': 240, 'Capricorn': 270, 'Aquarius': 300, 'Pisces': 330
+  }
+
+  const rawDegree = getChironDegree(birthDate, birthTime)
+  const expectedSignStart = signStartDegrees[chironSign]
+  const expectedSignEnd = expectedSignStart + 30
+
+  if (rawDegree >= expectedSignStart && rawDegree < expectedSignEnd) {
+    chironDegree = rawDegree
+  } else {
+    const signProgress = getSignProgressFromDate(birthDate, chironSign)
+    chironDegree = expectedSignStart + (signProgress * 30)
+  }
+
+  console.log('=== CHIRON CALCULATION (Date-Based Sign Lookup) ===')
   console.log(`Birth: ${birthDate} at ${birthLocation}`)
   console.log(`Chiron: ${chironSign} at ${chironDegree.toFixed(2)}°`)
 
