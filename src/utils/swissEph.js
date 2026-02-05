@@ -2,6 +2,11 @@ let swissEph = null
 let initAttempted = false
 let initSucceeded = false
 let epheFilesLoaded = false
+let loadingPromise = null
+
+const EPHE_BASE_URL = 'https://github.com/aloistr/swisseph/raw/refs/heads/master/ephe'
+const EPHE_FILES = ['seas_18.se1', 'sepl_18.se1']
+const EPHE_DIR = '/ephe'
 
 export async function initSwissEph() {
   if (initAttempted) {
@@ -31,14 +36,55 @@ export async function initSwissEph() {
 
 async function loadEphemerisFiles() {
   if (epheFilesLoaded || !swissEph) return
+  if (loadingPromise) return loadingPromise
 
+  loadingPromise = doLoadEphemerisFiles()
+  return loadingPromise
+}
+
+async function doLoadEphemerisFiles() {
   try {
-    await swissEph.swe_set_ephe_path(
-      'https://github.com/aloistr/swisseph/raw/refs/heads/master/ephe/',
-      ['seas_18.se1', 'sepl_18.se1']
-    )
+    const wasm = swissEph.wasm
+    const FS = wasm.FS
+
+    if (!FS.analyzePath(EPHE_DIR, true).exists) {
+      FS.mkdir(EPHE_DIR)
+    }
+
+    let loaded = 0
+    for (const name of EPHE_FILES) {
+      const url = `${EPHE_BASE_URL}/${name}`
+      const response = await fetch(url)
+      if (!response.ok) {
+        console.log(`Failed to fetch ${name}: HTTP ${response.status}`)
+        continue
+      }
+
+      const buffer = await response.arrayBuffer()
+      const data = new Uint8Array(buffer)
+      const filePath = `${EPHE_DIR}/${name}`
+
+      if (FS.analyzePath(filePath).exists) {
+        FS.unlink(filePath)
+      }
+
+      FS.createDataFile(EPHE_DIR, name, data, true, true, true)
+      console.log(`Loaded ephemeris file: ${name} (${data.byteLength} bytes)`)
+      loaded++
+    }
+
+    if (loaded === 0) {
+      console.log('No ephemeris files could be downloaded')
+      return
+    }
+
+    const pathPtr = wasm._malloc(EPHE_DIR.length + 1)
+    wasm.stringToUTF8(EPHE_DIR, pathPtr, EPHE_DIR.length + 1)
+    wasm._swe_set_ephe_path(pathPtr)
+    wasm._free(pathPtr)
+
     epheFilesLoaded = true
-    console.log('Swiss Ephemeris data files loaded (Chiron support enabled)')
+    console.log(`Swiss Ephemeris data files loaded (${loaded} files, Chiron support enabled)`)
   } catch (error) {
     console.log('Could not load ephemeris data files, Chiron will use lookup table fallback:', error.message || error)
   }
