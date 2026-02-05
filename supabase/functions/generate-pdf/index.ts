@@ -512,7 +512,7 @@ Deno.serve(async (req: Request) => {
     doc.line(arrowX + 8, arrowY - 2, arrowX + 5, arrowY - 2);
     doc.line(arrowX + 8, arrowY - 2, arrowX + 8, arrowY + 1);
     doc.link((pageWidth - shareButtonWidth) / 2, yPos, shareButtonWidth, shareButtonHeight, {
-      url: 'https://shadow.lovelightandblackholes.com/'
+      url: 'https://shadow.lovelightandblackholes.com/share'
     });
     yPos += shareButtonHeight + 25;
     doc.setFontSize(18);
