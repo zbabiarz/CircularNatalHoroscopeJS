@@ -8,6 +8,8 @@ import { shadowMap } from '../data/shadowMap'
 import {
   initSwissEph,
   isSwissEphAvailable,
+  isEpheFilesLoaded,
+  waitForEphemerisFiles,
   calculateJulianDay,
   calculateChironPosition,
   calculateHouses,
@@ -272,6 +274,8 @@ export async function calculateChironData(formData) {
   const canUseSwissEph = await tryInitSwissEph()
 
   if (canUseSwissEph) {
+    await waitForEphemerisFiles()
+
     try {
       let localHours = 12, localMinutes = 0
 
@@ -317,16 +321,18 @@ export async function calculateChironData(formData) {
         { hours: utcHours, minutes: utcMinutes }
       )
 
+      const ephSource = isEpheFilesLoaded() ? 'Swiss Ephemeris (Full)' : 'Swiss Ephemeris (Moshier)'
       const chironPosition = calculateChironPosition(julianDay)
 
       chironDegree = chironPosition.longitude
       const zodiacInfo = getZodiacSign(chironDegree)
       chironSign = zodiacInfo.sign
 
-      console.log('=== CHIRON CALCULATION (Swiss Ephemeris) ===')
+      console.log(`=== CHIRON CALCULATION (${ephSource}) ===`)
       console.log(`Birth: ${birthDate} ${birthTime || '(no time)'} at ${birthLocation}`)
       console.log(`Julian Day: ${julianDay.toFixed(6)}`)
       console.log(`Chiron: ${chironSign} ${zodiacInfo.degree.toFixed(2)}° (${chironDegree.toFixed(2)}° absolute)`)
+      console.log(`Retrograde: ${chironPosition.speed < 0 ? 'Yes' : 'No'} (speed: ${chironPosition.speed?.toFixed(4)}°/day)`)
 
       if (birthTime && birthCoordinates) {
         const houseData = calculateHouses(
@@ -358,7 +364,7 @@ export async function calculateChironData(formData) {
 
       return buildResult(name, email, chironSign, chironDegree, chironHouse)
     } catch (err) {
-      console.log('Using lookup table fallback (Chiron not in Moshier ephemeris)')
+      console.log('Swiss Ephemeris Chiron calculation failed, using lookup table fallback:', err.message)
     }
   }
 

@@ -1,6 +1,7 @@
 let swissEph = null
 let initAttempted = false
 let initSucceeded = false
+let epheFilesLoaded = false
 
 export async function initSwissEph() {
   if (initAttempted) {
@@ -16,6 +17,9 @@ export async function initSwissEph() {
 
     initSucceeded = true
     console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
+
+    loadEphemerisFiles()
+
     return swissEph
   } catch (error) {
     console.log('Swiss Ephemeris init error:', error.message || error)
@@ -25,8 +29,39 @@ export async function initSwissEph() {
   }
 }
 
+async function loadEphemerisFiles() {
+  if (epheFilesLoaded || !swissEph) return
+
+  try {
+    await swissEph.swe_set_ephe_path(
+      'https://github.com/aloistr/swisseph/raw/refs/heads/master/ephe/',
+      ['seas_18.se1', 'sepl_18.se1']
+    )
+    epheFilesLoaded = true
+    console.log('Swiss Ephemeris data files loaded (Chiron support enabled)')
+  } catch (error) {
+    console.log('Could not load ephemeris data files, Chiron will use lookup table fallback:', error.message || error)
+  }
+}
+
+export async function waitForEphemerisFiles() {
+  if (epheFilesLoaded) return true
+  if (!swissEph) return false
+
+  try {
+    await loadEphemerisFiles()
+    return epheFilesLoaded
+  } catch {
+    return false
+  }
+}
+
 export function isSwissEphAvailable() {
   return initSucceeded && swissEph !== null
+}
+
+export function isEpheFilesLoaded() {
+  return epheFilesLoaded
 }
 
 export function calculateJulianDay(date, time) {
@@ -81,25 +116,25 @@ export function calculateChironPosition(julianDay) {
     throw new Error('Swiss Ephemeris not initialized')
   }
 
-  try {
-    const result = swissEph.swe_calc_ut(
-      julianDay,
-      swissEph.SE_CHIRON,
-      swissEph.SEFLG_MOSEPH | swissEph.SEFLG_SPEED
-    )
+  const flags = epheFilesLoaded
+    ? swissEph.SEFLG_SWIEPH | swissEph.SEFLG_SPEED
+    : swissEph.SEFLG_MOSEPH | swissEph.SEFLG_SPEED
 
-    if (!result || (Array.isArray(result) && result.length === 0)) {
-      throw new Error('Chiron calculation returned no data')
-    }
+  const result = swissEph.swe_calc_ut(
+    julianDay,
+    swissEph.SE_CHIRON,
+    flags
+  )
 
-    return {
-      longitude: result[0],
-      latitude: result[1],
-      distance: result[2],
-      speed: result[3]
-    }
-  } catch (error) {
-    throw new Error(`Chiron ephemeris not available in Moshier build - using lookup table fallback`)
+  if (!result || (Array.isArray(result) && result.length === 0)) {
+    throw new Error('Chiron calculation returned no data')
+  }
+
+  return {
+    longitude: result[0],
+    latitude: result[1],
+    distance: result[2],
+    speed: result[3]
   }
 }
 
