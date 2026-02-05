@@ -4,7 +4,7 @@ let initSucceeded = false
 let epheFilesLoaded = false
 let loadingPromise = null
 
-const EPHE_BASE_URL = 'https://github.com/aloistr/swisseph/raw/refs/heads/master/ephe'
+const EPHE_BASE_URL = 'https://cdn.jsdelivr.net/gh/aloistr/swisseph@master/ephe'
 const EPHE_FILES = ['seas_18.se1', 'sepl_18.se1']
 const EPHE_DIR = '/ephe'
 
@@ -86,7 +86,8 @@ async function doLoadEphemerisFiles() {
     epheFilesLoaded = true
     console.log(`Swiss Ephemeris data files loaded (${loaded} files, Chiron support enabled)`)
   } catch (error) {
-    console.log('Could not load ephemeris data files, Chiron will use lookup table fallback:', error.message || error)
+    console.error('CRITICAL: Could not load ephemeris data files:', error.message || error)
+    throw new Error('Failed to load Swiss Ephemeris data files. Chiron calculations require these files.')
   }
 }
 
