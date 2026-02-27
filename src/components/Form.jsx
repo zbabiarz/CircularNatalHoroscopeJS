@@ -107,6 +107,12 @@ function Form({ onSubmit, isSubmitting }) {
       return
     }
 
+    const birthYear = new Date(formData.birthDate).getFullYear()
+    if (isNaN(birthYear) || birthYear < 1900 || birthYear > new Date().getFullYear()) {
+      alert('Please enter a valid birth date with a year between 1900 and ' + new Date().getFullYear() + '.')
+      return
+    }
+
     if (!formData.birthCoordinates) {
       alert('Please select your birth location from the dropdown suggestions.')
       return
@@ -216,6 +222,8 @@ function Form({ onSubmit, isSubmitting }) {
               value={formData.birthDate}
               onChange={handleChange}
               required
+              min="1900-01-01"
+              max={new Date().toISOString().split('T')[0]}
               className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
             />
           </div>
