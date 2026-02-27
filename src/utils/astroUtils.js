@@ -51,28 +51,11 @@ function convertLocalToUTC(year, month, day, hours, minutes, latitude, longitude
   }
 }
 
-let swissEphChecked = false
-let swissEphWorks = false
-
-async function tryInitSwissEph() {
-  if (swissEphChecked) return swissEphWorks
-  swissEphChecked = true
-
-  try {
-    await initSwissEph()
-    swissEphWorks = true
-    return true
-  } catch {
-    swissEphWorks = false
-    return false
-  }
-}
-
 export async function calculateChironData(formData) {
   const { name, email, birthDate, birthTime, birthLocation, birthCoordinates } = formData
 
   try {
-    await tryInitSwissEph()
+    await initSwissEph()
     await waitForEphemerisFiles()
 
     let localHours = 12, localMinutes = 0
