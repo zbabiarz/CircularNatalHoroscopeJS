@@ -1,43 +1,37 @@
 let swissEph = null
+let initAttempted = false
 let initSucceeded = false
 let epheFilesLoaded = false
 let loadingPromise = null
-let initPromise = null
 
 const EPHE_BASE_URL = 'https://cdn.jsdelivr.net/gh/aloistr/swisseph@master/ephe'
 const EPHE_FILES = ['seas_18.se1', 'sepl_18.se1']
 const EPHE_DIR = '/ephe'
 
 export async function initSwissEph() {
-  if (initSucceeded && swissEph) {
+  if (initAttempted) {
+    if (initSucceeded) return swissEph
+    throw new Error('Swiss Ephemeris not available')
+  }
+
+  initAttempted = true
+
+  try {
+    const SwissEPH = (await import('sweph-wasm')).default
+    swissEph = await SwissEPH.init()
+
+    initSucceeded = true
+    console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
+
+    loadEphemerisFiles()
+
     return swissEph
+  } catch (error) {
+    console.log('Swiss Ephemeris init error:', error.message || error)
+    initSucceeded = false
+    swissEph = null
+    throw new Error('Swiss Ephemeris WASM not available in this environment')
   }
-
-  if (initPromise) {
-    return initPromise
-  }
-
-  initPromise = (async () => {
-    try {
-      const SwissEPH = (await import('sweph-wasm')).default
-      swissEph = await SwissEPH.init()
-
-      initSucceeded = true
-      console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
-
-      loadEphemerisFiles()
-
-      return swissEph
-    } catch (error) {
-      console.error('Swiss Ephemeris init error:', error)
-      initSucceeded = false
-      swissEph = null
-      initPromise = null
-      throw new Error(`Swiss Ephemeris WASM initialization failed: ${error.message}`)
-    }
-  })()
-
-  return initPromise
 }
 
 async function loadEphemerisFiles() {
@@ -115,15 +109,6 @@ export function isSwissEphAvailable() {
 
 export function isEpheFilesLoaded() {
   return epheFilesLoaded
-}
-
-export function resetSwissEph() {
-  initSucceeded = false
-  swissEph = null
-  initPromise = null
-  epheFilesLoaded = false
-  loadingPromise = null
-  console.log('Swiss Ephemeris reset - ready for retry')
 }
 
 export function calculateJulianDay(date, time) {
