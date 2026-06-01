@@ -9,8 +9,12 @@ export default {
       colors: {
         cream: '#f9f2eb',
         brown: '#382a25',
-        magenta: '#8d1246',
+        magenta: '#437e78',
         rose: '#c6beba',
+        teal: '#437e78',
+      },
+      fontFamily: {
+        montserrat: ['Montserrat', 'sans-serif'],
       },
       transitionDuration: {
         '2000': '2000ms',

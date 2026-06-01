@@ -166,37 +166,38 @@ function Home() {
       {isSubmitting && <MysticalLoader />}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-2xl w-full">
-        <div className="text-center mb-8 fade-in">
-          <div className="backdrop-blur-md bg-black/40 rounded-2xl p-6 mb-8 border border-white/10">
-            <div className="flex justify-center mb-6">
-              <SparkleImage
-                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
-                alt="Shadow Work Astro"
-                className="w-16 h-16 md:w-20 md:h-20"
-              />
+          <div className="text-center mb-8 fade-in">
+            <div className="rounded-2xl p-6 md:p-8 mb-8">
+              <div className="flex justify-center mb-6">
+                <SparkleImage
+                  src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
+                  alt="Shadow Work Astro"
+                  className="w-16 h-16 md:w-20 md:h-20"
+                />
+              </div>
+              <p className="text-sm font-semibold tracking-[0.2em] uppercase mb-4" style={{ color: '#437e78' }}>
+                Free Instant Report
+              </p>
+              <h1 className="text-3xl md:text-4xl font-bold mb-5 text-white leading-tight" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Your shadow has been in your birth chart this whole time!
+              </h1>
+              <p className="text-base text-white/80 leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                I'll tell you your deepest shadow and how it's run your whole life based on your Chiron placement. Eerily accurate. Totally liberating. Enter your birth info and let me blow your mind.
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
-              Your Shadow Medicine
-            </h1>
-            <p className="text-base text-white/90 leading-relaxed" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              Shadow work is hard when you don't know where to start.<br />
-              Did you know your deepest shadow was written in your birth chart when you were born?!<br />
-              This instant astro report uses Chiron to reveal, with shocking accuracy, your deepest wound and how to work with it. Your shadow is the key to your power! It's time to take your shadow medicine.
-            </p>
           </div>
-        </div>
 
-        <div className="backdrop-blur-md bg-white/70 rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30">
-          <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-        </div>
+          <div className="rounded-2xl shadow-xl p-8 md:p-10" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(67,126,120,0.2)', backdropFilter: 'blur(8px)' }}>
+            <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          </div>
 
-        <footer className="mt-8 text-center text-sm backdrop-blur-md bg-black/40 rounded-xl p-4 border border-white/10">
-          <span className="text-white" style={{ textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)' }}>
-            This insight is intended to support your personal growth and healing journey.
-          </span>
-        </footer>
+          <footer className="mt-8 text-center text-sm rounded-xl p-4">
+            <span className="text-white/50" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              This insight is intended to support your personal growth and healing journey.
+            </span>
+          </footer>
+        </div>
       </div>
-    </div>
     </>
   )
 }

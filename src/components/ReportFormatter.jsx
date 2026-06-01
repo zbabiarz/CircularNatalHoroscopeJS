@@ -80,72 +80,35 @@ function ReportFormatter({ report }) {
   }
 
   const getSectionStyle = (type) => {
+    const tealBase = 'rgba(67,126,120,'
     const styles = {
       intro: {
-        bg: 'bg-gradient-to-r from-magenta/5 to-rose/5',
-        border: 'border-l-4 border-magenta/30',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
+        bg: `bg-gradient-to-r from-[${tealBase}0.08)] to-transparent`,
+        border: `border-l-4`,
+        borderColor: `${tealBase}0.3)`,
+        titleColor: 'text-white',
+        textColor: 'text-white/80'
       },
       archetype: {
-        bg: 'bg-gradient-to-r from-magenta/10 to-rose/10',
-        border: 'border-l-4 border-magenta',
-        titleColor: 'text-magenta',
-        textColor: 'text-brown/90'
+        bg: '',
+        border: 'border-l-4',
+        borderColor: '#437e78',
+        titleColor: '',
+        textColor: 'text-white/80'
       },
       theme: {
-        bg: 'bg-gradient-to-r from-rose/10 to-magenta/5',
-        border: 'border-l-4 border-rose',
-        titleColor: 'text-magenta',
-        textColor: 'text-brown/90'
-      },
-      chiron: {
-        bg: 'bg-gradient-to-r from-magenta/5 to-rose/10',
-        border: 'border-l-4 border-magenta/40',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
-      },
-      wound: {
-        bg: 'bg-gradient-to-r from-brown/5 to-rose/10',
-        border: 'border-l-4 border-brown/40',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
-      },
-      feels: {
-        bg: 'bg-gradient-to-r from-rose/10 to-brown/5',
-        border: 'border-l-4 border-rose/50',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
-      },
-      shadow: {
-        bg: 'bg-gradient-to-r from-brown/10 to-rose/5',
-        border: 'border-l-4 border-brown/60',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
-      },
-      medicine: {
-        bg: 'bg-gradient-to-r from-magenta/10 to-magenta/5',
-        border: 'border-l-4 border-magenta',
-        titleColor: 'text-magenta',
-        textColor: 'text-brown/90'
-      },
-      invitation: {
-        bg: 'bg-gradient-to-r from-rose/15 to-magenta/10',
-        border: 'border-l-4 border-rose',
-        titleColor: 'text-magenta',
-        textColor: 'text-brown/90'
-      },
-      prompts: {
-        bg: 'bg-gradient-to-r from-brown/5 to-brown/10',
-        border: 'border-l-4 border-brown/50',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/80'
+        bg: '',
+        border: 'border-l-4',
+        borderColor: `${tealBase}0.6)`,
+        titleColor: '',
+        textColor: 'text-white/80'
       },
       default: {
-        bg: 'bg-cream/30',
-        border: 'border-l-4 border-rose/30',
-        titleColor: 'text-brown',
-        textColor: 'text-brown/90'
+        bg: '',
+        border: 'border-l-4',
+        borderColor: `${tealBase}0.2)`,
+        titleColor: 'text-white',
+        textColor: 'text-white/80'
       }
     }
     return styles[type] || styles.default
@@ -164,7 +127,11 @@ function ReportFormatter({ report }) {
         return (
           <div
             key={index}
-            className={`${style.bg} ${style.border} rounded-lg transition-all duration-300 hover:shadow-md ${collapsible ? 'cursor-pointer' : ''} pdf-section mb-6`}
+            className={`rounded-lg transition-all duration-300 ${collapsible ? 'cursor-pointer' : ''} pdf-section mb-6`}
+            style={{
+              background: 'rgba(67,126,120,0.06)',
+              borderLeft: `4px solid ${style.borderColor || 'rgba(67,126,120,0.2)'}`,
+            }}
           >
             {section.title && (
               <div
@@ -173,25 +140,15 @@ function ReportFormatter({ report }) {
                 data-expanded={collapsible ? (isExpanded ? 'true' : 'false') : undefined}
                 className={`p-6 ${collapsible && !isExpanded ? 'pb-6' : 'pb-2'} ${collapsible ? 'hover:opacity-80' : ''}`}
               >
-                <h3 className={`text-xl md:text-2xl font-bold ${style.titleColor} flex items-center justify-between gap-2`}>
-                  <span className="flex items-center gap-2">
-                    {section.type === 'archetype' && '✨'}
-                    {section.type === 'theme' && '🌙'}
-                    {section.type === 'chiron' && '💔'}
-                    {section.type === 'wound' && '💫'}
-                    {section.type === 'feels' && '🌊'}
-                    {section.type === 'shadow' && '🌑'}
-                    {section.type === 'medicine' && '🔮'}
-                    {section.type === 'invitation' && '⭐'}
-                    {section.type === 'prompts' && '📝'}
-                    {section.title}
-                  </span>
+                <h3 className="text-xl md:text-2xl font-bold flex items-center justify-between gap-2" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
+                  <span>{section.title}</span>
                   {collapsible && (
                     <svg
                       className={`w-6 h-6 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''} print:hidden`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      style={{ color: '#437e78' }}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -205,22 +162,20 @@ function ReportFormatter({ report }) {
                 !collapsible || isExpanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
               }`}
             >
-              <div className={`px-6 pb-6 space-y-4 ${style.textColor} leading-relaxed relative ${showSparkles ? 'sparkle-reveal' : ''}`}>
+              <div className={`px-6 pb-6 space-y-4 leading-relaxed relative ${showSparkles ? 'sparkle-reveal' : ''}`} style={{ color: 'rgba(255,255,255,0.75)', fontFamily: "'Montserrat', sans-serif" }}>
                 {showSparkles && (
                   <>
-                    <div className="sparkle sparkle-1" style={{ top: '10%', left: '15%' }}>✨</div>
-                    <div className="sparkle sparkle-2" style={{ top: '30%', right: '20%' }}>✨</div>
-                    <div className="sparkle sparkle-3" style={{ top: '50%', left: '10%' }}>✨</div>
-                    <div className="sparkle sparkle-4" style={{ top: '70%', right: '15%' }}>✨</div>
-                    <div className="sparkle sparkle-5" style={{ top: '20%', right: '40%' }}>✨</div>
-                    <div className="sparkle sparkle-6" style={{ top: '60%', left: '35%' }}>✨</div>
+                    <div className="sparkle sparkle-1" style={{ top: '10%', left: '15%', color: '#437e78' }}>*</div>
+                    <div className="sparkle sparkle-2" style={{ top: '30%', right: '20%', color: '#437e78' }}>*</div>
+                    <div className="sparkle sparkle-3" style={{ top: '50%', left: '10%', color: '#437e78' }}>*</div>
+                    <div className="sparkle sparkle-4" style={{ top: '70%', right: '15%', color: '#437e78' }}>*</div>
                   </>
                 )}
                 {section.content.map((paragraph, pIndex) => {
                   if (paragraph.startsWith('-')) {
                     return (
                       <div key={pIndex} className="flex gap-3 items-start">
-                        <span className="text-magenta mt-1 flex-shrink-0">•</span>
+                        <span className="mt-1 flex-shrink-0" style={{ color: '#437e78' }}>&#8226;</span>
                         <p className="flex-1">{paragraph.substring(1).trim()}</p>
                       </div>
                     )

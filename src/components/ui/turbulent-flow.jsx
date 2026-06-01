@@ -10,10 +10,7 @@ export const Component = ({ children }) => {
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: 'url(https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/697279c015885e6920900d1d.jpeg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundColor: '#000000',
         }}
       />
       {children && (

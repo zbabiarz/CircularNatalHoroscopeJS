@@ -3,6 +3,10 @@ import { useLoadScript, Autocomplete } from '@react-google-maps/api'
 
 const libraries = ['places']
 
+const inputClass = "w-full px-4 py-3 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/50 bg-white/5 text-white placeholder-white/30 font-montserrat"
+const selectClass = "px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/50 bg-white/5 text-white font-montserrat"
+const labelClass = "block text-sm font-semibold text-white/80 mb-2 font-montserrat"
+
 function Form({ onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -78,7 +82,6 @@ function Form({ onSubmit, isSubmitting }) {
     }
     setTimeComponents(newTimeComponents)
 
-    // Convert to 24-hour format if we have all components
     if (newTimeComponents.hour && newTimeComponents.minute) {
       let hour24 = parseInt(newTimeComponents.hour)
       if (newTimeComponents.period === 'PM' && hour24 !== 12) {
@@ -178,8 +181,8 @@ function Form({ onSubmit, isSubmitting }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="name" className="block text-sm font-semibold text-brown mb-2">
-          Full Name <span className="text-magenta">*</span>
+        <label htmlFor="name" className={labelClass}>
+          Full Name <span style={{ color: '#437e78' }}>*</span>
         </label>
         <input
           type="text"
@@ -188,14 +191,14 @@ function Form({ onSubmit, isSubmitting }) {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+          className={inputClass}
           placeholder="Your full name"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-semibold text-brown mb-2">
-          Email <span className="text-magenta">*</span>
+        <label htmlFor="email" className={labelClass}>
+          Email <span style={{ color: '#437e78' }}>*</span>
         </label>
         <input
           type="email"
@@ -204,7 +207,7 @@ function Form({ onSubmit, isSubmitting }) {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+          className={inputClass}
           placeholder="your@email.com"
         />
       </div>
@@ -212,8 +215,8 @@ function Form({ onSubmit, isSubmitting }) {
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2">
           <div>
-            <label htmlFor="birthDate" className="block text-sm font-semibold text-brown mb-2">
-              Birth Date <span className="text-magenta">*</span>
+            <label htmlFor="birthDate" className={labelClass}>
+              Birth Date <span style={{ color: '#437e78' }}>*</span>
             </label>
             <input
               type="date"
@@ -224,19 +227,19 @@ function Form({ onSubmit, isSubmitting }) {
               required
               min="1900-01-01"
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              className={`${inputClass} text-sm md:text-base`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-brown mb-2">
-              Birth Time <span className="text-brown/40">(Optional)</span>
+            <label className={labelClass}>
+              Birth Time <span className="text-white/30">(Optional)</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
               <select
                 value={timeComponents.hour}
                 onChange={(e) => handleTimeChange('hour', e.target.value)}
-                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+                className={selectClass}
               >
                 <option value="">Hour</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map(hour => (
@@ -246,7 +249,7 @@ function Form({ onSubmit, isSubmitting }) {
               <select
                 value={timeComponents.minute}
                 onChange={(e) => handleTimeChange('minute', e.target.value)}
-                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+                className={selectClass}
               >
                 <option value="">Min</option>
                 {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map(min => (
@@ -256,7 +259,7 @@ function Form({ onSubmit, isSubmitting }) {
               <select
                 value={timeComponents.period}
                 onChange={(e) => handleTimeChange('period', e.target.value)}
-                className="px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+                className={selectClass}
               >
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
@@ -264,18 +267,17 @@ function Form({ onSubmit, isSubmitting }) {
             </div>
           </div>
         </div>
-        <p className="text-xs text-brown/60 mt-1">Optional - needed for house placement accuracy</p>
+        <p className="text-xs text-white/40 mt-1">Optional - needed for house placement accuracy</p>
       </div>
 
       <div>
-        <label htmlFor="birthLocation" className="block text-sm font-semibold text-brown mb-2">
-          Birth Location <span className="text-magenta">*</span>
+        <label htmlFor="birthLocation" className={labelClass}>
+          Birth Location <span style={{ color: '#437e78' }}>*</span>
         </label>
         {isLoaded && apiStatus === 'loaded' ? (
           <Autocomplete
             onLoad={(autocomplete) => {
               autocompleteRef.current = autocomplete
-              console.log('Autocomplete loaded successfully')
             }}
             onPlaceChanged={handlePlaceChanged}
             options={{
@@ -290,7 +292,7 @@ function Form({ onSubmit, isSubmitting }) {
               value={formData.birthLocation}
               onChange={handleLocationInputChange}
               autoComplete="off"
-              className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50"
+              className={inputClass}
               placeholder="Start typing city name..."
             />
           </Autocomplete>
@@ -302,13 +304,13 @@ function Form({ onSubmit, isSubmitting }) {
             value={formData.birthLocation}
             onChange={handleLocationInputChange}
             disabled
-            className="w-full px-4 py-3 border border-rose rounded-lg focus:outline-none focus:ring-2 focus:ring-magenta/50 bg-cream/50 opacity-50"
+            className={`${inputClass} opacity-50`}
             placeholder="Loading location search..."
           />
         )}
-        <p className="text-xs text-brown/60 mt-1">
+        <p className="text-xs text-white/40 mt-1">
           {formData.birthCoordinates
-            ? `✓ Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
+            ? `Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
             : 'Required - start typing and select your birth city from the dropdown'
           }
         </p>
@@ -317,24 +319,32 @@ function Form({ onSubmit, isSubmitting }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-magenta hover:bg-magenta/90 text-white font-semibold py-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed button-glow"
+        className="w-full font-bold py-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed button-glow text-white text-lg tracking-wide"
+        style={{
+          fontFamily: "'Montserrat', sans-serif",
+          background: '#437e78',
+        }}
       >
-        {isSubmitting ? 'Calculating...' : 'Get my instant report!'}
+        {isSubmitting ? 'Calculating...' : 'Run My Report'}
       </button>
 
+      <p className="text-center text-sm text-white/50 mt-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        Free. Instant. Kind of life changing.
+      </p>
+
       {showBirthTimeWarning && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 md:p-8 animate-fade-in">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="rounded-xl shadow-2xl max-w-sm w-full p-6 md:p-8 animate-fade-in" style={{ background: '#111', border: '1px solid rgba(67,126,120,0.3)' }}>
             <div className="text-center mb-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mb-4">
-                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4" style={{ background: 'rgba(67,126,120,0.15)' }}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#437e78' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0-10a9 9 0 110 18 9 9 0 010-18z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-brown mb-2">Don't know your exact birth time?</h3>
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>Don't know your exact birth time?</h3>
             </div>
 
-            <p className="text-brown/70 mb-6 text-center">
+            <p className="text-white/60 mb-6 text-center" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               That's ok! You'll still discover your shadow medicine, it just won't be as detailed.
             </p>
 
@@ -342,14 +352,16 @@ function Form({ onSubmit, isSubmitting }) {
               <button
                 type="button"
                 onClick={() => setShowBirthTimeWarning(false)}
-                className="flex-1 px-4 py-2 border border-brown/20 text-brown font-semibold rounded-lg hover:bg-brown/5 transition-colors duration-200"
+                className="flex-1 px-4 py-2 border border-white/20 text-white font-semibold rounded-lg hover:bg-white/5 transition-colors duration-200"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
               >
                 Add Birth Time
               </button>
               <button
                 type="button"
                 onClick={handleConfirmWithoutBirthTime}
-                className="flex-1 px-4 py-3 bg-magenta hover:bg-magenta/90 text-white font-semibold rounded-lg transition-colors duration-200"
+                className="flex-1 px-4 py-3 text-white font-semibold rounded-lg transition-colors duration-200"
+                style={{ fontFamily: "'Montserrat', sans-serif", background: '#437e78' }}
               >
                 Okay, Continue
               </button>

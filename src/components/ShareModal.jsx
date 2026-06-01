@@ -52,73 +52,40 @@ export default function ShareModal({ isOpen, onClose }) {
   }
 
   const shareOptions = [
-    {
-      name: 'Copy Link',
-      icon: '📋',
-      action: handleCopyToClipboard,
-      color: 'bg-gray-100 hover:bg-gray-200'
-    },
-    {
-      name: 'Email',
-      icon: '✉️',
-      action: handleEmail,
-      color: 'bg-blue-50 hover:bg-blue-100'
-    },
-    {
-      name: 'WhatsApp',
-      icon: '💬',
-      action: handleWhatsApp,
-      color: 'bg-green-50 hover:bg-green-100'
-    },
-    {
-      name: 'SMS',
-      icon: '📱',
-      action: handleSMS,
-      color: 'bg-purple-50 hover:bg-purple-100'
-    },
-    {
-      name: 'Facebook',
-      icon: '👍',
-      action: handleFacebook,
-      color: 'bg-blue-50 hover:bg-blue-100'
-    },
-    {
-      name: 'Twitter',
-      icon: '𝕏',
-      action: handleTwitter,
-      color: 'bg-sky-50 hover:bg-sky-100'
-    },
-    {
-      name: 'LinkedIn',
-      icon: '💼',
-      action: handleLinkedIn,
-      color: 'bg-blue-50 hover:bg-blue-100'
-    }
+    { name: 'Copy Link', icon: 'Link', action: handleCopyToClipboard },
+    { name: 'Email', icon: 'Mail', action: handleEmail },
+    { name: 'WhatsApp', icon: 'Chat', action: handleWhatsApp },
+    { name: 'SMS', icon: 'SMS', action: handleSMS },
+    { name: 'Facebook', icon: 'FB', action: handleFacebook },
+    { name: 'Twitter', icon: 'X', action: handleTwitter },
+    { name: 'LinkedIn', icon: 'In', action: handleLinkedIn }
   ]
 
   if (!isOpen) return null
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm" 
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      style={{ background: 'rgba(0,0,0,0.7)' }}
       onClick={onClose}
     >
-      <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border-2 border-magenta/20 transform transition-all"
+      <div
+        className="rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all"
+        style={{ background: '#111', border: '1px solid rgba(67,126,120,0.25)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-brown">Share the Magic ✨</h2>
+          <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>Share</h2>
           <button
             onClick={onClose}
-            className="text-brown/60 hover:text-brown transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full"
+            className="text-white/40 hover:text-white transition-colors text-2xl leading-none w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full"
             aria-label="Close"
           >
-            ×
+            x
           </button>
         </div>
 
-        <p className="text-brown/70 mb-6 text-sm leading-relaxed">
+        <p className="text-white/50 mb-6 text-sm leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
           {shareMessage}
         </p>
 
@@ -132,39 +99,54 @@ export default function ShareModal({ isOpen, onClose }) {
                   setTimeout(() => onClose(), 300)
                 }
               }}
-              className={`flex flex-col items-center gap-2 p-4 rounded-lg ${option.color} border border-transparent hover:border-magenta/30 transition-all duration-300 group`}
+              className="flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-300 group"
+              style={{
+                background: 'rgba(67,126,120,0.06)',
+                borderColor: 'rgba(67,126,120,0.15)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(67,126,120,0.15)'
+                e.currentTarget.style.borderColor = 'rgba(67,126,120,0.35)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(67,126,120,0.06)'
+                e.currentTarget.style.borderColor = 'rgba(67,126,120,0.15)'
+              }}
             >
-              <span className="text-2xl group-hover:scale-110 transition-transform">
+              <span className="text-sm font-semibold group-hover:scale-110 transition-transform" style={{ color: '#437e78' }}>
                 {option.icon}
               </span>
-              <span className="text-xs font-medium text-brown text-center">
+              <span className="text-xs font-medium text-white/60" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 {option.name}
               </span>
             </button>
           ))}
         </div>
 
-        <div className="bg-magenta/5 rounded-lg p-4 border border-magenta/20">
-          <p className="text-xs text-brown/60 mb-2 font-medium">Share URL:</p>
+        <div className="rounded-lg p-4" style={{ background: 'rgba(67,126,120,0.08)', border: '1px solid rgba(67,126,120,0.15)' }}>
+          <p className="text-xs text-white/40 mb-2 font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>Share URL:</p>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={shareUrl}
               readOnly
-              className="flex-1 bg-white border border-magenta/20 rounded px-3 py-2 text-sm text-brown truncate focus:outline-none focus:ring-2 focus:ring-magenta/30"
+              className="flex-1 rounded px-3 py-2 text-sm text-white truncate focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(67,126,120,0.2)', fontFamily: "'Montserrat', sans-serif" }}
             />
             <button
               onClick={handleCopyToClipboard}
-              className="bg-magenta hover:bg-magenta/90 text-white px-4 py-2 rounded font-medium text-sm transition-colors whitespace-nowrap"
+              className="text-white px-4 py-2 rounded font-medium text-sm transition-colors whitespace-nowrap"
+              style={{ background: '#437e78', fontFamily: "'Montserrat', sans-serif" }}
             >
-              {copied ? '✓ Copied' : 'Copy'}
+              {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="w-full mt-6 bg-brown/10 hover:bg-brown/20 text-brown font-medium py-3 rounded-lg transition-colors"
+          className="w-full mt-6 text-white/50 font-medium py-3 rounded-lg transition-colors hover:bg-white/5"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: "'Montserrat', sans-serif" }}
         >
           Close
         </button>

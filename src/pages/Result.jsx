@@ -136,10 +136,8 @@ function Result() {
     if (aiReport && !pdfSentToWebhook && isVisible && !isLoadingReport) {
       const sendPdfToWebhook = async () => {
         try {
-          console.log('Starting PDF generation for webhook...')
           await new Promise(resolve => setTimeout(resolve, 2000))
 
-          console.log('Calling generate-pdf Edge Function...')
           const pdfApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`
           const pdfResponse = await fetch(pdfApiUrl, {
             method: 'POST',
@@ -162,9 +160,7 @@ function Result() {
           }
 
           const { url: publicUrl, fileName } = await pdfResponse.json()
-          console.log('PDF generated successfully:', publicUrl)
 
-          console.log('Sending PDF URL to webhook...')
           const webhookApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-pdf-webhook`
           const webhookResponse = await fetch(webhookApiUrl, {
             method: 'POST',
@@ -187,10 +183,7 @@ function Result() {
           })
 
           if (webhookResponse.ok) {
-            console.log('PDF URL successfully sent to webhook')
             setPdfSentToWebhook(true)
-          } else {
-            console.error('Webhook response not OK:', webhookResponse.status, await webhookResponse.text())
           }
         } catch (error) {
           console.error('Error in PDF generation/sending process:', error)
@@ -205,7 +198,6 @@ function Result() {
     setIsGeneratingPdf(true)
 
     try {
-      console.log('Calling generate-pdf Edge Function...')
       const pdfApiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`
       const pdfResponse = await fetch(pdfApiUrl, {
         method: 'POST',
@@ -228,7 +220,6 @@ function Result() {
       }
 
       const { url: pdfUrl } = await pdfResponse.json()
-      console.log('PDF generated successfully:', pdfUrl)
 
       const link = document.createElement('a')
       link.href = pdfUrl
@@ -248,123 +239,126 @@ function Result() {
     <>
       <TurbulentFlow />
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
-      <div className="max-w-3xl w-full">
-        <div ref={pdfContentRef} className="pdf-content">
-          <div className={`text-center mb-8 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-            <div className="flex justify-center mb-4">
-              <SparkleImage
-                src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
-                alt="Shadow Work Astro Quiz Logo"
-                className="w-32 h-32"
-              />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8)' }}>
-              {name}'s Chiron Shadow
-            </h1>
-            <p className="text-xl text-white font-semibold" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
-            </p>
-            <div className="mt-4 text-white/90" style={{ textShadow: '1px 1px 4px rgba(0, 0, 0, 0.8)' }}>
-              <p className="text-base">
-                Chiron in {chironSign}
-                {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
-                {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}°`}
+        <div className="max-w-3xl w-full">
+          <div ref={pdfContentRef} className="pdf-content">
+            <div className={`text-center mb-8 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(67,126,120,0.08)', border: '1px solid rgba(67,126,120,0.2)' }}>
+              <div className="flex justify-center mb-4">
+                <SparkleImage
+                  src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
+                  alt="Shadow Work Astro Quiz Logo"
+                  className="w-32 h-32"
+                />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                {name}'s Chiron Shadow
+              </h1>
+              <p className="text-xl font-semibold" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
+                {shadowData.archetype.startsWith('The ') ? shadowData.archetype : `The ${shadowData.archetype}`}
               </p>
-            </div>
-          </div>
-
-          <div className={`bg-white rounded-2xl shadow-xl p-8 md:p-10 border border-rose/30 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-            <div className="max-w-none">
-              {isLoadingReport ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-magenta mb-4"></div>
-                  <p className="text-brown/80 text-lg mb-2">Generating your personalized report...</p>
-                  <p className="text-brown/60 text-sm">This may take up to 30 seconds</p>
-                </div>
-              ) : aiReport ? (
-                <ReportFormatter report={aiReport} />
-              ) : (
-                <p className="text-brown/90 leading-relaxed whitespace-pre-line">
-                  {shadowData.description}
+              <div className="mt-4 text-white/70" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                <p className="text-base">
+                  Chiron in {chironSign}
+                  {chironHouse && chironHouse !== 'Unknown' && ` in the ${chironHouse}`}
+                  {chironDegree && ` at ${parseFloat(chironDegree).toFixed(2)}`}
                 </p>
-              )}
+              </div>
+            </div>
+
+            <div className={`rounded-2xl shadow-xl p-8 md:p-10 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(67,126,120,0.15)', backdropFilter: 'blur(8px)' }}>
+              <div className="max-w-none">
+                {isLoadingReport ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 mb-4" style={{ borderColor: '#437e78' }}></div>
+                    <p className="text-white/70 text-lg mb-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>Generating your personalized report...</p>
+                    <p className="text-white/40 text-sm" style={{ fontFamily: "'Montserrat', sans-serif" }}>This may take up to 30 seconds</p>
+                  </div>
+                ) : aiReport ? (
+                  <ReportFormatter report={aiReport} />
+                ) : (
+                  <p className="text-white/80 leading-relaxed whitespace-pre-line" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    {shadowData.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className={`flex gap-4 justify-center flex-wrap transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <button
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPdf || isLoadingReport}
-            className="bg-rose hover:bg-rose/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
-          >
-            {isGeneratingPdf ? (
-              <>
-                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Download PDF Report
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => setIsShareModalOpen(true)}
-            className="bg-brown hover:bg-brown/90 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 inline-flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-            Share
-          </button>
-        </div>
-
-        <div className={`mt-10 bg-white rounded-2xl shadow-xl p-8 md:p-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-          <p className="text-brown/80 text-lg italic leading-relaxed">
-            Feeling called out?<br />
-            Mind blown and thinking,<br />
-            "ok now what?"
-          </p>
-          <p className="text-brown mt-6 text-lg leading-relaxed">
-            Click the button below to learn what to do next<br />
-            and turn this wound into wisdom!
-          </p>
-          <div className="mt-6">
-            <a
-              href="https://lovelightandblackholes.com/wound-to-wisdom"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-[#2F5B50] hover:bg-[#264a41] text-white font-bold tracking-widest uppercase px-10 py-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm"
+          <div className={`flex gap-4 justify-center flex-wrap transition-all duration-800 delay-400 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf || isLoadingReport}
+              className="text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+              style={{ background: '#437e78', fontFamily: "'Montserrat', sans-serif" }}
             >
-              Wound to Wisdom
-            </a>
+              {isGeneratingPdf ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download PDF Report
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 inline-flex items-center gap-2"
+              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', fontFamily: "'Montserrat', sans-serif" }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Share
+            </button>
           </div>
-          <p className="text-brown/80 mt-8 text-base leading-relaxed">
-            You've got mail! This report will be emailed to you<br />
-            as a PDF so you can keep it forever.
-          </p>
-          <p className="text-brown/70 mt-6 text-base">
-            Questions? Email me at<br />
-            <a href="mailto:magic@lovelightandblackholes.com" className="text-brown hover:text-magenta transition-colors">
-              magic@lovelightandblackholes.com
-            </a>
-          </p>
-        </div>
 
-        <footer className="mt-8 text-center text-sm text-white/70" style={{ textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)' }}>
-          This insight is intended to support your personal growth and healing journey.
-        </footer>
+          <div className={`mt-10 rounded-2xl shadow-xl p-8 md:p-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(67,126,120,0.15)' }}>
+            <p className="text-white/70 text-lg italic leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Feeling called out?<br />
+              Mind blown and thinking,<br />
+              "ok now what?"
+            </p>
+            <p className="text-white mt-6 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Click the button below to learn what to do next<br />
+              and turn this wound into wisdom!
+            </p>
+            <div className="mt-6">
+              <a
+                href="https://lovelightandblackholes.com/wound-to-wisdom"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-white font-bold tracking-widest uppercase px-10 py-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm"
+                style={{ background: '#437e78', fontFamily: "'Montserrat', sans-serif" }}
+              >
+                Wound to Wisdom
+              </a>
+            </div>
+            <p className="text-white/60 mt-8 text-base leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              You've got mail! This report will be emailed to you<br />
+              as a PDF so you can keep it forever.
+            </p>
+            <p className="text-white/50 mt-6 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Questions? Email me at<br />
+              <a href="mailto:magic@lovelightandblackholes.com" className="text-white hover:text-teal transition-colors" style={{ color: '#437e78' }}>
+                magic@lovelightandblackholes.com
+              </a>
+            </p>
+          </div>
+
+          <footer className="mt-8 text-center text-sm text-white/40" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+            This insight is intended to support your personal growth and healing journey.
+          </footer>
+        </div>
       </div>
-    </div>
-    
-    <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
+
+      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} />
     </>
   )
 }
