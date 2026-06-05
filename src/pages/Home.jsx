@@ -187,12 +187,43 @@ function Home() {
             </div>
           </div>
 
-          <div className="rounded-2xl shadow-xl p-8 md:p-10" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(67,126,120,0.2)', backdropFilter: 'blur(8px)' }}>
+          <div className="rounded-2xl shadow-xl p-8 md:p-10" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
             <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
           </div>
 
-          <footer className="mt-8 text-center text-sm rounded-xl p-4">
-            <span className="text-white/50" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-2">
+            <div className="rounded-xl p-4" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-white text-sm leading-relaxed mb-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                It was unbelievably accurate for me. The words and prompts were exactly what I needed right now in my shadow work journey like a smack in the face &#x1F610;
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-base">&#x1F525;</span>
+                  <div className="w-5 h-5 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
+                    <span className="text-[8px] text-white">&#9679;</span>
+                  </div>
+                </div>
+                <span className="text-white/40 text-xs" style={{ fontFamily: "'Montserrat', sans-serif" }}>10:41 AM</span>
+              </div>
+            </div>
+            <div className="rounded-xl p-4" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-white text-sm leading-relaxed mb-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Holy shit Morgan this was so accurate that it made me cry!! It was beyond spot on
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-base">&#x1F525;</span>
+                  <div className="w-5 h-5 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
+                    <span className="text-[8px] text-white">&#9679;</span>
+                  </div>
+                </div>
+                <span className="text-white/40 text-xs" style={{ fontFamily: "'Montserrat', sans-serif" }}>09:42 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <footer className="mt-6 text-center text-xs rounded-xl p-4">
+            <span className="text-white/40" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               This insight is intended to support your personal growth and healing journey.
             </span>
           </footer>

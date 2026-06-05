@@ -3,9 +3,9 @@ import { useLoadScript, Autocomplete } from '@react-google-maps/api'
 
 const libraries = ['places']
 
-const inputClass = "w-full px-4 py-3 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/50 bg-white/5 text-white placeholder-white/30 font-montserrat"
-const selectClass = "px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/50 bg-white/5 text-white font-montserrat"
-const labelClass = "block text-sm font-semibold text-white/80 mb-2 font-montserrat"
+const inputClass = "w-full px-4 py-3 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#437e78]/60 bg-white text-gray-900 placeholder-gray-400 font-montserrat"
+const selectClass = "px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#437e78]/60 bg-white text-gray-900 font-montserrat"
+const labelClass = "block text-sm font-medium text-white/90 mb-1.5 font-montserrat"
 
 function Form({ onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState({
@@ -233,7 +233,7 @@ function Form({ onSubmit, isSubmitting }) {
 
           <div>
             <label className={labelClass}>
-              Birth Time <span className="text-white/30">(Optional)</span>
+              Birth Time <span className="text-white/50 font-normal">(optional - for house accuracy)</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
               <select
@@ -267,7 +267,7 @@ function Form({ onSubmit, isSubmitting }) {
             </div>
           </div>
         </div>
-        <p className="text-xs text-white/40 mt-1">Optional - needed for house placement accuracy</p>
+        <p className="text-xs text-white/50 mt-1">Select from dropdown for accuracy.</p>
       </div>
 
       <div>
@@ -308,7 +308,7 @@ function Form({ onSubmit, isSubmitting }) {
             placeholder="Loading location search..."
           />
         )}
-        <p className="text-xs text-white/40 mt-1">
+        <p className="text-xs text-white/50 mt-1">
           {formData.birthCoordinates
             ? `Location selected (${formData.birthCoordinates[0].toFixed(4)}, ${formData.birthCoordinates[1].toFixed(4)})`
             : 'Required - start typing and select your birth city from the dropdown'
@@ -319,17 +319,17 @@ function Form({ onSubmit, isSubmitting }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full font-bold py-4 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed button-glow text-white text-lg tracking-wide"
+        className="w-full font-bold py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed text-white text-lg tracking-wide"
         style={{
           fontFamily: "'Montserrat', sans-serif",
           background: '#437e78',
         }}
       >
-        {isSubmitting ? 'Calculating...' : 'Run My Report'}
+        {isSubmitting ? 'Calculating...' : 'run my report'}
       </button>
 
-      <p className="text-center text-sm text-white/50 mt-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-        Free. Instant. Kind of life changing.
+      <p className="text-center text-xs text-white/40 mt-2 italic" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        free. instant. kind of life-changing.
       </p>
 
       {showBirthTimeWarning && (
