@@ -114,7 +114,8 @@ function ReportFormatter({ report }) {
     return styles[type] || styles.default
   }
 
-  const sections = formatReport(report)
+  const allSections = formatReport(report)
+  const sections = allSections.filter(s => !['medicine', 'invitation', 'prompts'].includes(s.type))
 
   return (
     <div className="space-y-6">

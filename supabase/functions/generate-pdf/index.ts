@@ -370,169 +370,73 @@ Deno.serve(async (req: Request) => {
     // PAGE 4: Shadow Patterns
     addContentPage(doc, 'Shadow Patterns', parsed.shadowPatterns, pageWidth, pageHeight, margin, hasFonts);
 
-    // PAGE 5: Your Medicine (cosmic background)
+    // PAGE 5: Final CTA page
     doc.addPage();
     addCosmicBackground(doc, pageWidth, pageHeight);
-    yPos = 20;
+    yPos = 25;
     addDiscoBall(doc, pageWidth / 2, yPos, 25);
-    yPos += 30;
-    doc.setFontSize(36);
+    yPos += 35;
+
+    doc.setFontSize(28);
     doc.setTextColor(...WHITE);
     if (hasFonts) {
       doc.setFont('Cinzel', 'normal');
     } else {
       doc.setFont('times', 'bold');
     }
-    const medicineTitle = "Your Medicine";
-    const medicineTitleWidth = doc.getTextWidth(medicineTitle);
-    doc.text(medicineTitle, (pageWidth - medicineTitleWidth) / 2, yPos);
-    yPos += 15;
-    const medicineCardMargin = margin - 5;
-    const medicineCardWidth = pageWidth - (medicineCardMargin * 2);
-    const medicineCardHeight = 140;
-    drawRoundedCard(doc, medicineCardMargin, yPos, medicineCardWidth, medicineCardHeight, 12, 0.9);
-    yPos += 15;
-    doc.setFontSize(11);
-    doc.setTextColor(...DARK_TEXT);
-    if (hasFonts) {
-      doc.setFont('TenorSans', 'normal');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
-    const medicineIntro = "When integrated, this placement becomes POWERFUL:";
-    doc.text(medicineIntro, medicineCardMargin + 12, yPos);
+    const ctaTitle = "So ... what do you do";
+    const ctaTitle2 = "with all of this?";
+    const ctaTitleWidth = doc.getTextWidth(ctaTitle);
+    const ctaTitle2Width = doc.getTextWidth(ctaTitle2);
+    doc.text(ctaTitle, (pageWidth - ctaTitleWidth) / 2, yPos);
     yPos += 12;
-    for (const item of parsed.yourMedicine.slice(0, 6)) {
-      if (yPos > pageHeight - 50) break;
-      if (item.startsWith('- ') || item.startsWith('*')) {
-        const bulletText = item.replace(/^[-*]\s*/, '');
-        const wrappedBullet = wrapText(doc, bulletText, medicineCardWidth - 35);
-        for (let i = 0; i < wrappedBullet.length; i++) {
-          if (i === 0) {
-            doc.text('*', medicineCardMargin + 14, yPos);
-            doc.text(wrappedBullet[i], medicineCardMargin + 22, yPos);
-          } else {
-            doc.text(wrappedBullet[i], medicineCardMargin + 22, yPos);
-          }
-          yPos += 6;
-        }
-        yPos += 3;
-      }
-    }
-    yPos += 5;
-    const medicineClosing = parsed.yourMedicine.filter(item =>
-      item.toLowerCase().includes('wound') && item.toLowerCase().includes('superpower')
-    );
-    const transformText = medicineClosing.length > 0
-      ? medicineClosing[0].replace(/^[-*]\s*/, '')
-      : "Your wound becomes your superpower when you embrace your authentic truth.";
-    const wrappedTransform = wrapText(doc, transformText, medicineCardWidth - 24);
-    for (const line of wrappedTransform) {
-      doc.text(line, medicineCardMargin + 12, yPos);
-      yPos += 6;
-    }
-
-    // PAGE 6: Your Invitation
-    addContentPage(doc, 'Your Invitation', parsed.yourInvitation, pageWidth, pageHeight, margin, hasFonts);
-
-    // PAGE 7: Reflection
-    doc.addPage();
-    doc.setFillColor(...BEIGE_BG);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
-    yPos = margin + 8;
-    drawSparkleIcon(doc, pageWidth / 2, yPos, 5);
+    doc.text(ctaTitle2, (pageWidth - ctaTitle2Width) / 2, yPos);
     yPos += 18;
-    doc.setFontSize(32);
-    doc.setTextColor(...DARK_TEXT);
-    if (hasFonts) {
-      doc.setFont('Cinzel', 'normal');
-    } else {
-      doc.setFont('times', 'bold');
-    }
-    const reflectionTitle = "Reflection";
-    const reflectionTitleWidth = doc.getTextWidth(reflectionTitle);
-    doc.text(reflectionTitle, (pageWidth - reflectionTitleWidth) / 2, yPos);
+
+    const ctaCardMargin = margin - 5;
+    const ctaCardWidth = pageWidth - (ctaCardMargin * 2);
+    const ctaCardHeight = pageHeight - yPos - 15;
+    drawRoundedCard(doc, ctaCardMargin, yPos, ctaCardWidth, ctaCardHeight, 12, 0.9);
     yPos += 15;
-    const reflectionCardMargin = margin - 5;
-    const reflectionCardWidth = pageWidth - (reflectionCardMargin * 2);
-    const reflectionCardHeight = 55;
-    drawRoundedCard(doc, reflectionCardMargin, yPos, reflectionCardWidth, reflectionCardHeight, 12);
-    yPos += 12;
+
+    doc.setFontSize(10.5);
+    doc.setTextColor(...DARK_TEXT);
     if (hasFonts) {
       doc.setFont('TenorSans', 'normal');
     } else {
       doc.setFont('helvetica', 'normal');
     }
-    doc.setFontSize(11);
-    const reflectionPrompts = parsed.reflectionPrompts.filter(p => p.startsWith('-') || p.includes('?'));
-    for (const prompt of reflectionPrompts.slice(0, 2)) {
-      const promptText = prompt.replace(/^[-*]\s*/, '');
-      const wrappedPrompt = wrapText(doc, promptText, reflectionCardWidth - 24);
-      for (const line of wrappedPrompt) {
-        doc.text(line, reflectionCardMargin + 12, yPos);
+
+    const ctaParagraphs = [
+      'You could sit with it. Reread it. Tell your therapist about it. Text your friend "omg this is so me."',
+      'And then wake up tomorrow running the exact same patterns.',
+      'The report named the wound. But naming it isn\'t the same as moving it.',
+      'Wound to Wisdom is where the actual work happens. This is where you truly see the coping mechanisms underneath the pattern, why your shadow formed the way it did, and how to stop being quietly organized around something that was never meant to run your whole life.',
+      'Three short practical and actionable lessons that actually change how you move in the world. Kiss this pattern goodbye for good and BE FREE!'
+    ];
+
+    for (const paragraph of ctaParagraphs) {
+      const wrappedPara = wrapText(doc, paragraph, ctaCardWidth - 24);
+      for (const line of wrappedPara) {
+        doc.text(line, ctaCardMargin + 12, yPos);
         yPos += 6;
       }
-      yPos += 6;
+      yPos += 5;
     }
-    yPos += 20;
-    doc.setFontSize(15);
-    if (hasFonts) {
-      doc.setFont('TenorSans', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
-    const ctaText1 = "Did this report crack you wide open?";
-    const ctaText1Width = doc.getTextWidth(ctaText1);
-    doc.text(ctaText1, (pageWidth - ctaText1Width) / 2, yPos);
+
     yPos += 8;
-    doc.setFontSize(14);
-    const ctaText2 = "Send this quiz to someone who needs it!";
-    const ctaText2Width = doc.getTextWidth(ctaText2);
-    doc.text(ctaText2, (pageWidth - ctaText2Width) / 2, yPos);
-    yPos += 18;
-    const shareButtonWidth = 90;
-    const shareButtonHeight = 14;
-    doc.setFillColor(...TEAL_BUTTON);
-    doc.roundedRect((pageWidth - shareButtonWidth) / 2, yPos, shareButtonWidth, shareButtonHeight, 7, 7, 'F');
-    doc.setFontSize(14);
-    doc.setTextColor(...WHITE);
-    if (hasFonts) {
-      doc.setFont('TenorSans', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
-    const shareText = "SHARE";
-    const shareTextWidth = doc.getTextWidth(shareText);
-    doc.text(shareText, (pageWidth - shareTextWidth) / 2 - 8, yPos + 10);
-    const arrowX = (pageWidth + shareTextWidth) / 2 + 2;
-    const arrowY = yPos + 7;
-    doc.setDrawColor(...WHITE);
-    doc.setLineWidth(0.8);
-    doc.line(arrowX, arrowY + 3, arrowX + 8, arrowY - 2);
-    doc.line(arrowX + 8, arrowY - 2, arrowX + 5, arrowY - 2);
-    doc.line(arrowX + 8, arrowY - 2, arrowX + 8, arrowY + 1);
-    doc.link((pageWidth - shareButtonWidth) / 2, yPos, shareButtonWidth, shareButtonHeight, {
-      url: 'https://shadow.lovelightandblackholes.com/share'
-    });
-    yPos += shareButtonHeight + 25;
-    doc.setFontSize(18);
-    doc.setTextColor(...DARK_TEXT);
-    if (hasFonts) {
-      doc.setFont('TenorSans', 'normal');
-    } else {
-      doc.setFont('helvetica', 'bold');
-    }
-    const deeperText = "Want to go deeper?";
-    const deeperTextWidth = doc.getTextWidth(deeperText);
-    doc.text(deeperText, (pageWidth - deeperTextWidth) / 2, yPos);
-    yPos += 15;
-    const wisdomButtonWidth = 160;
+    const wisdomButtonWidth = 170;
     const wisdomButtonHeight = 14;
     doc.setFillColor(...TEAL_BUTTON);
     doc.roundedRect((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, 7, 7, 'F');
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor(...WHITE);
-    const wisdomText = "TURN THIS WOUND INTO WISDOM";
+    if (hasFonts) {
+      doc.setFont('TenorSans', 'normal');
+    } else {
+      doc.setFont('helvetica', 'bold');
+    }
+    const wisdomText = "Turn this wound into wisdom \u2192";
     const wisdomTextWidth = doc.getTextWidth(wisdomText);
     doc.text(wisdomText, (pageWidth - wisdomTextWidth) / 2, yPos + 10);
     doc.link((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, {

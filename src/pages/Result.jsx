@@ -320,33 +320,49 @@ function Result() {
           </div>
 
           <div className={`mt-10 rounded-2xl shadow-xl p-8 md:p-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(67,126,120,0.15)' }}>
-            <p className="text-white/70 text-lg italic leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Feeling called out?<br />
-              Mind blown and thinking,<br />
-              "ok now what?"
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              ok. so now what?
+            </h2>
+            <p className="text-white/70 text-base leading-relaxed mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              I'm not going to rock your world with all this info and leave you hanging. I gotchu!
             </p>
-            <p className="text-white mt-6 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Click the button below to learn what to do next<br />
-              and turn this wound into wisdom!
+            <p className="text-white/70 text-base leading-relaxed mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Knowing your wound doesn't heal it. Understanding your pattern doesn't stop you from running it.
             </p>
-            <div className="mt-6">
+            <p className="text-white/70 text-base leading-relaxed mb-6" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Wound to Wisdom is the "what do I actually DO with this" part that I created just for you to make sense of all of this. It's time to turn this lifetime of pain into the thing that actually gives you your edge.
+            </p>
+            <div className="space-y-2 mb-6">
+              <p className="text-base" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
+                &#10022; 3 short, potent lessons
+              </p>
+              <p className="text-base" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
+                &#10022; the practice, not more information
+              </p>
+              <p className="text-base" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
+                &#10022; start today for just $37 w/ lifetime access
+              </p>
+            </div>
+            <p className="text-white/70 text-base leading-relaxed mb-8" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              It's about damn time you put this pattern out to pasture to see just how good it can get!
+            </p>
+            <div className="mb-8">
               <a
                 href="https://lovelightandblackholes.com/wound-to-wisdom"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block text-white font-bold tracking-widest uppercase px-10 py-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm"
+                className="inline-block text-white font-bold tracking-wide px-10 py-4 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105 text-base"
                 style={{ background: '#437e78', fontFamily: "'Montserrat', sans-serif" }}
               >
-                Wound to Wisdom
+                I'm ready to go deeper
               </a>
             </div>
-            <p className="text-white/60 mt-8 text-base leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              You've got mail! This report will be emailed to you<br />
-              as a PDF so you can keep it forever.
+            <p className="text-white/50 mt-6 text-sm leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              You've got mail! This report will be emailed to you as a PDF so you can keep it forever.
             </p>
-            <p className="text-white/50 mt-6 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Questions? Email me at<br />
-              <a href="mailto:magic@lovelightandblackholes.com" className="text-white hover:text-teal transition-colors" style={{ color: '#437e78' }}>
+            <p className="text-white/40 mt-4 text-sm" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Questions? Email me at{' '}
+              <a href="mailto:magic@lovelightandblackholes.com" className="transition-colors" style={{ color: '#437e78' }}>
                 magic@lovelightandblackholes.com
               </a>
             </p>

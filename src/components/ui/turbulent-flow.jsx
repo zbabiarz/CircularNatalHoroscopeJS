@@ -11,6 +11,10 @@ export const Component = ({ children }) => {
           width: '100%',
           height: '100%',
           backgroundColor: '#000000',
+          backgroundImage: 'url(/morgan_shadow_report.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       />
       {children && (
