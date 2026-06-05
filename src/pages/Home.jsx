@@ -181,7 +181,7 @@ function Home() {
               <h1 className="text-3xl md:text-4xl font-bold mb-5 text-white leading-tight" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Your shadow has been in your birth chart this whole time!
               </h1>
-              <p className="text-base text-white/80 leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              <p className="text-base text-white/90 leading-relaxed inline-block rounded-xl px-4 py-3" style={{ fontFamily: "'Montserrat', sans-serif", background: 'rgba(0,0,0,0.45)' }}>
                 I'll tell you your deepest shadow and how it's run your whole life based on your Chiron placement. Eerily accurate. Totally liberating. Enter your birth info and let me blow your mind.
               </p>
             </div>
