@@ -241,7 +241,7 @@ function Result() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
         <div className="max-w-3xl w-full">
           <div ref={pdfContentRef} className="pdf-content">
-            <div className={`text-center mb-8 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(67,126,120,0.08)', border: '1px solid rgba(67,126,120,0.2)' }}>
+            <div className={`text-center mb-8 rounded-2xl p-8 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(67,126,120,0.3)' }}>
               <div className="flex justify-center mb-4">
                 <SparkleImage
                   src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
@@ -264,7 +264,7 @@ function Result() {
               </div>
             </div>
 
-            <div className={`rounded-2xl shadow-xl p-8 md:p-10 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(67,126,120,0.15)', backdropFilter: 'blur(8px)' }}>
+            <div className={`rounded-2xl shadow-xl p-8 md:p-10 mb-6 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(67,126,120,0.25)', backdropFilter: 'blur(12px)' }}>
               <div className="max-w-none">
                 {isLoadingReport ? (
                   <div className="flex flex-col items-center justify-center py-12">
@@ -319,7 +319,7 @@ function Result() {
             </button>
           </div>
 
-          <div className={`mt-10 rounded-2xl shadow-xl p-8 md:p-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(67,126,120,0.15)' }}>
+          <div className={`mt-10 rounded-2xl shadow-xl p-8 md:p-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(67,126,120,0.25)' }}>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               ok. so now what?
             </h2>

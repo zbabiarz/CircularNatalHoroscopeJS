@@ -130,7 +130,7 @@ function ReportFormatter({ report }) {
             key={index}
             className={`rounded-lg transition-all duration-300 ${collapsible ? 'cursor-pointer' : ''} pdf-section mb-6`}
             style={{
-              background: 'rgba(67,126,120,0.06)',
+              background: 'rgba(10,10,15,0.75)',
               borderLeft: `4px solid ${style.borderColor || 'rgba(67,126,120,0.2)'}`,
             }}
           >
@@ -144,15 +144,17 @@ function ReportFormatter({ report }) {
                 <h3 className="text-xl md:text-2xl font-bold flex items-center justify-between gap-2" style={{ color: '#437e78', fontFamily: "'Montserrat', sans-serif" }}>
                   <span>{section.title}</span>
                   {collapsible && (
-                    <svg
-                      className={`w-6 h-6 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''} print:hidden`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      style={{ color: '#437e78' }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <span className="relative flex-shrink-0 print:hidden" style={{ filter: 'drop-shadow(0 0 6px rgba(67,126,120,0.7)) drop-shadow(0 0 12px rgba(67,126,120,0.4))' }}>
+                      <svg
+                        className={`w-6 h-6 transition-transform duration-300 ${isExpanded ? 'rotate-180' : 'animate-pulse'}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        style={{ color: '#5fb8ae' }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
                   )}
                 </h3>
               </div>
