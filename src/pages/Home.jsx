@@ -193,34 +193,16 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-2">
-            <div className="rounded-2xl p-4 pb-3 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
-              <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-                It was unbelievably accurate for me. The words and prompts were exactly what I needed right now in my shadow work journey like a smack in the face &#x1F610;
-              </p>
-              <div className="flex items-end justify-between mt-3">
-                <div className="flex items-center gap-1">
-                  <span className="text-base leading-none">&#x1F525;</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden">
-                    <img src="/image copy.png" alt="" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>10:41 AM</span>
-              </div>
-            </div>
-            <div className="rounded-2xl p-4 pb-3 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
-              <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-                Holy shit Morgan this was so accurate that it made me cry!! It was beyond spot on
-              </p>
-              <div className="flex items-end justify-between mt-3">
-                <div className="flex items-center gap-1">
-                  <span className="text-base leading-none">&#x1F525;</span>
-                  <div className="w-6 h-6 rounded-full overflow-hidden">
-                    <img src="/image copy.png" alt="" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>09:42 AM</span>
-              </div>
-            </div>
+            <img
+              src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520e8bb5ac427f064ac.png"
+              alt="Testimonial"
+              className="rounded-2xl w-full"
+            />
+            <img
+              src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520f607d4002b9b5de6.png"
+              alt="Testimonial"
+              className="rounded-2xl w-full"
+            />
           </div>
 
           <footer className="mt-6 text-center text-sm rounded-xl p-4">
