@@ -193,16 +193,20 @@ function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-2">
-            <img
-              src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520e8bb5ac427f064ac.png"
-              alt="Testimonial"
-              className="rounded-2xl w-full"
-            />
-            <img
-              src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520f607d4002b9b5de6.png"
-              alt="Testimonial"
-              className="rounded-2xl w-full"
-            />
+            <div className="rounded-2xl overflow-hidden p-3" style={{ background: 'rgba(30,30,35,0.7)' }}>
+              <img
+                src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520e8bb5ac427f064ac.png"
+                alt="Testimonial"
+                className="rounded-lg w-full"
+              />
+            </div>
+            <div className="rounded-2xl overflow-hidden p-3" style={{ background: 'rgba(30,30,35,0.7)' }}>
+              <img
+                src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520f607d4002b9b5de6.png"
+                alt="Testimonial"
+                className="rounded-lg w-full"
+              />
+            </div>
           </div>
 
           <footer className="mt-6 text-center text-sm rounded-xl p-4">
