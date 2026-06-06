@@ -23,11 +23,13 @@ interface RequestBody {
   report: string;
 }
 
-const BEIGE_BG: [number, number, number] = [245, 240, 232];
-const DARK_TEXT: [number, number, number] = [45, 45, 45];
-const TEAL_BUTTON: [number, number, number] = [74, 155, 140];
+const BEIGE_BG: [number, number, number] = [12, 12, 18];
+const DARK_TEXT: [number, number, number] = [255, 255, 255];
+const TEAL_ACCENT: [number, number, number] = [67, 126, 120];
+const TEAL_BUTTON: [number, number, number] = [67, 126, 120];
 const WHITE: [number, number, number] = [255, 255, 255];
-const CARD_BG: [number, number, number] = [250, 247, 243];
+const CARD_BG: [number, number, number] = [18, 18, 28];
+const SOFT_WHITE: [number, number, number] = [220, 220, 225];
 
 function parseMarkdownReport(markdown: string): {
   archetype: string;
@@ -122,7 +124,7 @@ function wrapText(doc: jsPDF, text: string, maxWidth: number): string[] {
 }
 
 function drawSparkleIcon(doc: jsPDF, x: number, y: number, size: number = 6) {
-  doc.setDrawColor(45, 45, 45);
+  doc.setDrawColor(67, 126, 120);
   doc.setLineWidth(0.8);
   doc.line(x, y - size, x, y + size);
   doc.line(x - size, y, x + size, y);
@@ -132,12 +134,11 @@ function drawSparkleIcon(doc: jsPDF, x: number, y: number, size: number = 6) {
 }
 
 function drawRoundedCard(doc: jsPDF, x: number, y: number, width: number, height: number, radius: number = 8, opacity: number = 1) {
-  if (opacity < 1) {
-    doc.setFillColor(250, 247, 243);
-  } else {
-    doc.setFillColor(...CARD_BG);
-  }
+  doc.setFillColor(...CARD_BG);
   doc.roundedRect(x, y, width, height, radius, radius, 'F');
+  doc.setDrawColor(67, 126, 120);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(x, y, width, height, radius, radius, 'S');
 }
 
 function addCosmicBackground(doc: jsPDF, pageWidth: number, pageHeight: number) {
@@ -182,18 +183,18 @@ function addContentPage(
   hasFonts: boolean
 ): number {
   doc.addPage();
-  doc.setFillColor(...BEIGE_BG);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  addCosmicBackground(doc, pageWidth, pageHeight);
   let yPos = margin + 8;
   drawSparkleIcon(doc, pageWidth / 2, yPos, 5);
   yPos += 18;
   doc.setFontSize(32);
-  doc.setTextColor(...DARK_TEXT);
+  doc.setTextColor(...WHITE);
   if (hasFonts) {
     doc.setFont('Cinzel', 'normal');
   } else {
     doc.setFont('times', 'bold');
   }
+  doc.setTextColor(...TEAL_ACCENT);
   const titleWidth = doc.getTextWidth(title);
   doc.text(title, (pageWidth - titleWidth) / 2, yPos);
   yPos += 15;
@@ -207,7 +208,7 @@ function addContentPage(
     doc.setFont('helvetica', 'normal');
   }
   doc.setFontSize(11);
-  doc.setTextColor(...DARK_TEXT);
+  doc.setTextColor(...SOFT_WHITE);
   const maxWidth = cardWidth - 24;
   let tempY = cardContentY;
   const processedContent: { type: string; lines: string[] }[] = [];
@@ -320,11 +321,14 @@ Deno.serve(async (req: Request) => {
     const boxPadding = 15;
     const boxWidth = pageWidth - (margin * 2);
     const boxHeight = pageHeight - yPos - 10;
-    doc.setFillColor(...BEIGE_BG);
-    doc.roundedRect(margin, yPos, boxWidth, boxHeight, 0, 0, 'F');
+    doc.setFillColor(...CARD_BG);
+    doc.roundedRect(margin, yPos, boxWidth, boxHeight, 8, 8, 'F');
+    doc.setDrawColor(67, 126, 120);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, yPos, boxWidth, boxHeight, 8, 8, 'S');
     yPos += 20;
     doc.setFontSize(36);
-    doc.setTextColor(...DARK_TEXT);
+    doc.setTextColor(...TEAL_ACCENT);
     if (hasFonts) {
       doc.setFont('Cinzel', 'normal');
     } else {
@@ -340,6 +344,7 @@ Deno.serve(async (req: Request) => {
     } else {
       doc.setFont('helvetica', 'normal');
     }
+    doc.setTextColor(...SOFT_WHITE);
     const houseText = chironHouse ? chironHouse : '';
     if (houseText) {
       const houseWidth = doc.getTextWidth(houseText);
@@ -349,10 +354,12 @@ Deno.serve(async (req: Request) => {
     const parsed = parseMarkdownReport(report);
     const archetypeTitle = parsed.archetype || archetype;
     const archetypeDisplay = archetypeTitle.startsWith('The ') ? archetypeTitle : `The ${archetypeTitle}`;
+    doc.setTextColor(...TEAL_ACCENT);
     const archetypeTitleWidth = doc.getTextWidth(archetypeDisplay);
     doc.text(archetypeDisplay, (pageWidth - archetypeTitleWidth) / 2, yPos);
     yPos += 18;
     doc.setFontSize(11);
+    doc.setTextColor(...SOFT_WHITE);
     const storyText = parsed.chironStory.join(' ');
     const storyLines = wrapText(doc, storyText, boxWidth - (boxPadding * 2));
     for (let i = 0; i < storyLines.length && yPos < pageHeight - 15; i++) {
@@ -384,8 +391,8 @@ Deno.serve(async (req: Request) => {
     } else {
       doc.setFont('times', 'bold');
     }
-    const ctaTitle = "So ... what do you do";
-    const ctaTitle2 = "with all of this?";
+    const ctaTitle = "ok. so now what?";
+    const ctaTitle2 = "";
     const ctaTitleWidth = doc.getTextWidth(ctaTitle);
     const ctaTitle2Width = doc.getTextWidth(ctaTitle2);
     doc.text(ctaTitle, (pageWidth - ctaTitleWidth) / 2, yPos);
@@ -400,7 +407,7 @@ Deno.serve(async (req: Request) => {
     yPos += 15;
 
     doc.setFontSize(10.5);
-    doc.setTextColor(...DARK_TEXT);
+    doc.setTextColor(...SOFT_WHITE);
     if (hasFonts) {
       doc.setFont('TenorSans', 'normal');
     } else {
@@ -408,11 +415,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const ctaParagraphs = [
-      'You could sit with it. Reread it. Tell your therapist about it. Text your friend "omg this is so me."',
-      'And then wake up tomorrow running the exact same patterns.',
-      'The report named the wound. But naming it isn\'t the same as moving it.',
-      'Wound to Wisdom is where the actual work happens. This is where you truly see the coping mechanisms underneath the pattern, why your shadow formed the way it did, and how to stop being quietly organized around something that was never meant to run your whole life.',
-      'Three short practical and actionable lessons that actually change how you move in the world. Kiss this pattern goodbye for good and BE FREE!'
+      "I'm not going to rock your world with all this info and leave you hanging. I gotchu!",
+      "Knowing your wound doesn't heal it. Understanding your pattern doesn't stop you from running it.",
+      'Wound to Wisdom is the "what do I actually DO with this" part that I created just for you to make sense of all of this. It\'s time to turn this lifetime of pain into the thing that actually gives you your edge.',
     ];
 
     for (const paragraph of ctaParagraphs) {
@@ -422,6 +427,29 @@ Deno.serve(async (req: Request) => {
         yPos += 6;
       }
       yPos += 5;
+    }
+
+    yPos += 4;
+    doc.setTextColor(...TEAL_ACCENT);
+    const features = [
+      '\u2726 3 short, potent lessons',
+      '\u2726 the practice, not more information',
+      '\u2726 start today for just $37 w/ lifetime access',
+    ];
+    for (const feature of features) {
+      const featureWidth = doc.getTextWidth(feature);
+      doc.text(feature, (pageWidth - featureWidth) / 2, yPos);
+      yPos += 7;
+    }
+
+    yPos += 4;
+    doc.setTextColor(...SOFT_WHITE);
+    const closingText = "It's about damn time you put this pattern out to pasture to see just how good it can get!";
+    const closingLines = wrapText(doc, closingText, ctaCardWidth - 24);
+    for (const line of closingLines) {
+      const lineW = doc.getTextWidth(line);
+      doc.text(line, (pageWidth - lineW) / 2, yPos);
+      yPos += 6;
     }
 
     yPos += 8;
@@ -436,7 +464,7 @@ Deno.serve(async (req: Request) => {
     } else {
       doc.setFont('helvetica', 'bold');
     }
-    const wisdomText = "Turn this wound into wisdom \u2192";
+    const wisdomText = "I'm ready to go deeper \u2192";
     const wisdomTextWidth = doc.getTextWidth(wisdomText);
     doc.text(wisdomText, (pageWidth - wisdomTextWidth) / 2, yPos + 10);
     doc.link((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, {
