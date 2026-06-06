@@ -163,7 +163,7 @@ function Home() {
   return (
     <>
       <TurbulentFlow />
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(0,0,0,0.20)', zIndex: 1 }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 1 }} />
       {isSubmitting && <MysticalLoader />}
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" style={{ zIndex: 2 }}>
         <div className="max-w-2xl w-full">
