@@ -234,8 +234,8 @@ function Home() {
             </div>
           </div>
 
-          <footer className="mt-6 text-center text-xs rounded-xl p-4">
-            <span className="text-white/40" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          <footer className="mt-6 text-center text-sm rounded-xl p-4">
+            <span className="text-white/60" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               This insight is intended to support your personal growth and healing journey.
             </span>
           </footer>

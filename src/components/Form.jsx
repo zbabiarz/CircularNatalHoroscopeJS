@@ -328,7 +328,7 @@ function Form({ onSubmit, isSubmitting }) {
         {isSubmitting ? 'Calculating...' : 'run my report'}
       </button>
 
-      <p className="text-center text-xs text-white/40 mt-2 italic" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <p className="text-center text-sm text-white/60 mt-3 italic" style={{ fontFamily: "'Montserrat', sans-serif" }}>
         free. instant. kind of life-changing.
       </p>
 
