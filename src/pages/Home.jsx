@@ -192,45 +192,33 @@ function Home() {
             <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 px-2">
-            <div className="relative pb-4">
-              <div className="rounded-2xl p-4 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
-                <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-                  It was unbelievably accurate for me. The words and prompts were exactly what I needed right now in my shadow work journey like a smack in the face &#x1F610;
-                </p>
-                <div className="flex justify-end mt-1">
-                  <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>10:41 AM</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-2">
+            <div className="rounded-2xl p-4 pb-3 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
+              <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+                It was unbelievably accurate for me. The words and prompts were exactly what I needed right now in my shadow work journey like a smack in the face &#x1F610;
+              </p>
+              <div className="flex items-end justify-between mt-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-base leading-none">&#x1F525;</span>
+                  <div className="w-6 h-6 rounded-full overflow-hidden">
+                    <img src="/image copy.png" alt="" className="w-full h-full object-cover" />
+                  </div>
                 </div>
-              </div>
-              <div className="absolute -bottom-1 left-3 flex items-center rounded-full px-2 py-1 shadow-md" style={{ background: 'rgba(60,60,67,0.85)', border: '2px solid rgba(0,0,0,0.3)' }}>
-                <span className="text-sm leading-none">&#x1F525;</span>
-                <div className="w-5 h-5 rounded-full overflow-hidden ml-1">
-                  <img
-                    src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>10:41 AM</span>
               </div>
             </div>
-            <div className="relative pb-4">
-              <div className="rounded-2xl p-4 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
-                <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-                  Holy shit Morgan this was so accurate that it made me cry!! It was beyond spot on
-                </p>
-                <div className="flex justify-end mt-1">
-                  <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>09:42 AM</span>
+            <div className="rounded-2xl p-4 pb-3 shadow-lg" style={{ background: 'rgba(230,230,235,0.95)' }}>
+              <p className="text-gray-800 text-[15px] leading-relaxed" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+                Holy shit Morgan this was so accurate that it made me cry!! It was beyond spot on
+              </p>
+              <div className="flex items-end justify-between mt-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-base leading-none">&#x1F525;</span>
+                  <div className="w-6 h-6 rounded-full overflow-hidden">
+                    <img src="/image copy.png" alt="" className="w-full h-full object-cover" />
+                  </div>
                 </div>
-              </div>
-              <div className="absolute -bottom-1 left-3 flex items-center rounded-full px-2 py-1 shadow-md" style={{ background: 'rgba(60,60,67,0.85)', border: '2px solid rgba(0,0,0,0.3)' }}>
-                <span className="text-sm leading-none">&#x1F525;</span>
-                <div className="w-5 h-5 rounded-full overflow-hidden ml-1">
-                  <img
-                    src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <span className="text-[11px]" style={{ color: '#8e8e93', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>09:42 AM</span>
               </div>
             </div>
           </div>
