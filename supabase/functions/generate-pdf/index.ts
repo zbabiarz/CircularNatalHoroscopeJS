@@ -139,31 +139,26 @@ function drawRoundedCard(doc: jsPDF, x: number, y: number, width: number, height
   doc.roundedRect(x, y, width, height, radius, radius, 'S');
 }
 
-async function fetchCosmicBgBase64(): Promise<string | null> {
-  try {
-    const resp = await fetch('https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a250de16a06f03d4490bdc7.png');
-    if (!resp.ok) return null;
-    const buf = await resp.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  } catch {
-    return null;
-  }
-}
-
-function addCosmicBackground(doc: jsPDF, pageWidth: number, pageHeight: number, bgBase64: string | null) {
-  if (bgBase64) {
-    try {
-      doc.addImage('data:image/png;base64,' + bgBase64, 'PNG', 0, 0, pageWidth, pageHeight);
-      return;
-    } catch {}
-  }
+function addCosmicBackground(doc: jsPDF, pageWidth: number, pageHeight: number) {
   doc.setFillColor(8, 8, 14);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
+  doc.setDrawColor(67, 126, 120);
+  doc.setLineWidth(0.3);
+  const starPositions = [
+    [15,20],[45,12],[80,25],[120,18],[160,30],[190,10],[30,50],[70,45],[110,55],[150,42],
+    [180,60],[25,80],[55,75],[95,85],[135,70],[175,90],[20,110],[60,105],[100,115],[140,100],
+    [170,120],[35,140],[75,135],[115,145],[155,130],[185,150],[10,170],[50,165],[90,175],
+    [130,160],[165,180],[40,200],[80,195],[120,205],[160,190],[190,210],[25,230],[65,225],
+    [105,235],[145,220],[175,240],[15,255],[55,250],[95,260],[135,245],[170,265],[35,15],
+    [100,35],[150,55],[30,95],[85,125],[145,155],[40,185],[100,215],[155,245],[200,20],
+    [200,70],[200,130],[200,195],[200,250],[5,40],[5,100],[5,160],[5,220],[5,270]
+  ];
+  for (const [sx, sy] of starPositions) {
+    const size = Math.random() * 0.6 + 0.3;
+    const brightness = Math.floor(Math.random() * 80 + 175);
+    doc.setFillColor(brightness, brightness, brightness + 10);
+    doc.circle(sx, sy, size, 'F');
+  }
 }
 
 function addDiscoBall(doc: jsPDF, x: number, y: number, size: number = 25) {
@@ -196,11 +191,10 @@ function addContentPage(
   pageWidth: number,
   pageHeight: number,
   margin: number,
-  hasFonts: boolean,
-  bgBase64: string | null
+  hasFonts: boolean
 ): number {
   doc.addPage();
-  addCosmicBackground(doc, pageWidth, pageHeight, bgBase64);
+  addCosmicBackground(doc, pageWidth, pageHeight);
   let yPos = margin + 8;
   drawSparkleIcon(doc, pageWidth / 2, yPos, 5);
   yPos += 18;
@@ -304,10 +298,8 @@ Deno.serve(async (req: Request) => {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const hasFonts = setupFonts(doc);
-    const bgBase64 = await fetchCosmicBgBase64();
-
     // PAGE 1: Cover
-    addCosmicBackground(doc, pageWidth, pageHeight, bgBase64);
+    addCosmicBackground(doc, pageWidth, pageHeight);
     let yPos = 25;
     addDiscoBall(doc, pageWidth / 2, yPos, 30);
     yPos += 35;
@@ -387,17 +379,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // PAGE 2: Core Wound
-    addContentPage(doc, 'Core Wound', parsed.coreWound, pageWidth, pageHeight, margin, hasFonts, bgBase64);
+    addContentPage(doc, 'Core Wound', parsed.coreWound, pageWidth, pageHeight, margin, hasFonts);
 
     // PAGE 3: How it Feels
-    addContentPage(doc, 'How it Feels', parsed.howItFeels, pageWidth, pageHeight, margin, hasFonts, bgBase64);
+    addContentPage(doc, 'How it Feels', parsed.howItFeels, pageWidth, pageHeight, margin, hasFonts);
 
     // PAGE 4: Shadow Patterns
-    addContentPage(doc, 'Shadow Patterns', parsed.shadowPatterns, pageWidth, pageHeight, margin, hasFonts, bgBase64);
+    addContentPage(doc, 'Shadow Patterns', parsed.shadowPatterns, pageWidth, pageHeight, margin, hasFonts);
 
     // PAGE 5: Final CTA page
     doc.addPage();
-    addCosmicBackground(doc, pageWidth, pageHeight, bgBase64);
+    addCosmicBackground(doc, pageWidth, pageHeight);
     yPos = 25;
     addDiscoBall(doc, pageWidth / 2, yPos, 25);
     yPos += 35;
