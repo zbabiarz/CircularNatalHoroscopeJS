@@ -218,7 +218,7 @@ function addContentPage(
   } else {
     doc.setFont('helvetica', 'normal');
   }
-  doc.setFontSize(11);
+  doc.setFontSize(13);
   doc.setTextColor(...SOFT_WHITE);
   const maxWidth = cardWidth - 24;
   let tempY = cardContentY;
@@ -230,16 +230,16 @@ function addContentPage(
         paragraph.startsWith('When integrated,')) {
       const wrappedIntro = wrapText(doc, paragraph, maxWidth);
       processedContent.push({ type: 'intro', lines: wrappedIntro });
-      tempY += wrappedIntro.length * 6 + 8;
+      tempY += wrappedIntro.length * 7.5 + 8;
     } else if (paragraph.startsWith('- ') || paragraph.startsWith('*')) {
       const bulletText = paragraph.replace(/^[-*]\s*/, '');
       const wrappedBullet = wrapText(doc, bulletText, maxWidth - 10);
       processedContent.push({ type: 'bullet', lines: wrappedBullet });
-      tempY += wrappedBullet.length * 6 + 4;
+      tempY += wrappedBullet.length * 7.5 + 4;
     } else {
       const wrappedParagraph = wrapText(doc, paragraph, maxWidth);
       processedContent.push({ type: 'paragraph', lines: wrappedParagraph });
-      tempY += wrappedParagraph.length * 6 + 6;
+      tempY += wrappedParagraph.length * 7.5 + 6;
     }
   }
   const cardHeight = Math.min(tempY - cardStartY + 15, pageHeight - cardStartY - margin);
@@ -249,7 +249,7 @@ function addContentPage(
     if (item.type === 'intro') {
       for (const line of item.lines) {
         doc.text(line, cardMargin + 12, cardContentY);
-        cardContentY += 6;
+        cardContentY += 7.5;
       }
       cardContentY += 4;
     } else if (item.type === 'bullet') {
@@ -260,13 +260,13 @@ function addContentPage(
         } else {
           doc.text(item.lines[i], cardMargin + 22, cardContentY);
         }
-        cardContentY += 6;
+        cardContentY += 7.5;
       }
       cardContentY += 2;
     } else {
       for (const line of item.lines) {
         doc.text(line, cardMargin + 12, cardContentY);
-        cardContentY += 6;
+        cardContentY += 7.5;
       }
       cardContentY += 4;
     }
@@ -368,14 +368,14 @@ Deno.serve(async (req: Request) => {
     const archetypeTitleWidth = doc.getTextWidth(archetypeDisplay);
     doc.text(archetypeDisplay, (pageWidth - archetypeTitleWidth) / 2, yPos);
     yPos += 18;
-    doc.setFontSize(11);
+    doc.setFontSize(13);
     doc.setTextColor(...SOFT_WHITE);
     const storyText = parsed.chironStory.join(' ');
     const storyLines = wrapText(doc, storyText, boxWidth - (boxPadding * 2));
     for (let i = 0; i < storyLines.length && yPos < pageHeight - 15; i++) {
       const lineWidth = doc.getTextWidth(storyLines[i]);
       doc.text(storyLines[i], (pageWidth - lineWidth) / 2, yPos);
-      yPos += 6;
+      yPos += 7.5;
     }
 
     // PAGE 2: Core Wound
@@ -416,7 +416,7 @@ Deno.serve(async (req: Request) => {
     drawRoundedCard(doc, ctaCardMargin, yPos, ctaCardWidth, ctaCardHeight, 12, 0.9);
     yPos += 15;
 
-    doc.setFontSize(10.5);
+    doc.setFontSize(12.5);
     doc.setTextColor(...SOFT_WHITE);
     if (hasFonts) {
       doc.setFont('TenorSans', 'normal');
@@ -434,7 +434,7 @@ Deno.serve(async (req: Request) => {
       const wrappedPara = wrapText(doc, paragraph, ctaCardWidth - 24);
       for (const line of wrappedPara) {
         doc.text(line, ctaCardMargin + 12, yPos);
-        yPos += 6;
+        yPos += 7.5;
       }
       yPos += 5;
     }
@@ -446,28 +446,30 @@ Deno.serve(async (req: Request) => {
       '\u2726 the practice, not more information',
       '\u2726 start today for just $37 w/ lifetime access',
     ];
+    doc.setFontSize(13);
     for (const feature of features) {
       const featureWidth = doc.getTextWidth(feature);
       doc.text(feature, (pageWidth - featureWidth) / 2, yPos);
-      yPos += 7;
+      yPos += 8.5;
     }
 
     yPos += 4;
+    doc.setFontSize(12.5);
     doc.setTextColor(...SOFT_WHITE);
     const closingText = "It's about damn time you put this pattern out to pasture to see just how good it can get!";
     const closingLines = wrapText(doc, closingText, ctaCardWidth - 24);
     for (const line of closingLines) {
       const lineW = doc.getTextWidth(line);
       doc.text(line, (pageWidth - lineW) / 2, yPos);
-      yPos += 6;
+      yPos += 7.5;
     }
 
     yPos += 8;
-    const wisdomButtonWidth = 170;
-    const wisdomButtonHeight = 14;
+    const wisdomButtonWidth = 175;
+    const wisdomButtonHeight = 16;
     doc.setFillColor(...TEAL_BUTTON);
-    doc.roundedRect((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, 7, 7, 'F');
-    doc.setFontSize(11);
+    doc.roundedRect((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, 8, 8, 'F');
+    doc.setFontSize(13);
     doc.setTextColor(...WHITE);
     if (hasFonts) {
       doc.setFont('TenorSans', 'normal');
@@ -476,7 +478,7 @@ Deno.serve(async (req: Request) => {
     }
     const wisdomText = "I'm ready to go deeper \u2192";
     const wisdomTextWidth = doc.getTextWidth(wisdomText);
-    doc.text(wisdomText, (pageWidth - wisdomTextWidth) / 2, yPos + 10);
+    doc.text(wisdomText, (pageWidth - wisdomTextWidth) / 2, yPos + 11);
     doc.link((pageWidth - wisdomButtonWidth) / 2, yPos, wisdomButtonWidth, wisdomButtonHeight, {
       url: 'https://lovelightandblackholes.com/wound-to-wisdom'
     });
