@@ -1,0 +1,8 @@
+[functions.generate-report]
+verify_jwt = false
+
+[functions.generate-pdf]
+verify_jwt = false
+
+[functions.send-pdf-webhook]
+verify_jwt = false

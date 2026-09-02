@@ -86,7 +86,8 @@ async function pollRunStatus(
     );
 
     if (!statusResponse.ok) {
-      throw new Error(`Failed to poll run status: ${await statusResponse.text()}`);
+      const body = await statusResponse.text();
+      throw new Error(`Failed to poll run status (HTTP ${statusResponse.status}): ${body || 'empty response'}`);
     }
 
     const runStatus = await statusResponse.json();
@@ -395,18 +396,26 @@ Example openings (vary these - use different ones each time):
 
 Write like you're having coffee with them, telling them the truth they need to hear.`;
 
-    const threadResponse = await fetch("https://api.openai.com/v1/threads", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
-      },
-      body: JSON.stringify({}),
-    });
+    let threadResponse: Response | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      threadResponse = await fetch("https://api.openai.com/v1/threads", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "OpenAI-Beta": "assistants=v2",
+        },
+        body: JSON.stringify({}),
+      });
+      if (threadResponse.ok || threadResponse.status === 401 || threadResponse.status === 403) break;
+      console.log(`Thread creation attempt ${attempt + 1} failed (HTTP ${threadResponse.status}), retrying...`);
+      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+    }
 
-    if (!threadResponse.ok) {
-      throw new Error(`Failed to create thread: ${await threadResponse.text()}`);
+    if (!threadResponse || !threadResponse.ok) {
+      const status = threadResponse?.status ?? 'unknown';
+      const body = threadResponse ? await threadResponse.text() : 'no response';
+      throw new Error(`Failed to create thread (HTTP ${status}): ${body || 'empty response'}`);
     }
 
     const thread = await threadResponse.json();
@@ -429,7 +438,8 @@ Write like you're having coffee with them, telling them the truth they need to h
     );
 
     if (!messageResponse.ok) {
-      throw new Error(`Failed to add message: ${await messageResponse.text()}`);
+      const body = await messageResponse.text();
+      throw new Error(`Failed to add message (HTTP ${messageResponse.status}): ${body || 'empty response'}`);
     }
 
     const runResponse = await fetch(
@@ -448,7 +458,8 @@ Write like you're having coffee with them, telling them the truth they need to h
     );
 
     if (!runResponse.ok) {
-      throw new Error(`Failed to create run: ${await runResponse.text()}`);
+      const body = await runResponse.text();
+      throw new Error(`Failed to create run (HTTP ${runResponse.status}): ${body || 'empty response'}`);
     }
 
     const run = await runResponse.json();
@@ -467,7 +478,8 @@ Write like you're having coffee with them, telling them the truth they need to h
     );
 
     if (!messagesResponse.ok) {
-      throw new Error(`Failed to retrieve messages: ${await messagesResponse.text()}`);
+      const body = await messagesResponse.text();
+      throw new Error(`Failed to retrieve messages (HTTP ${messagesResponse.status}): ${body || 'empty response'}`);
     }
 
     const messages = await messagesResponse.json();
