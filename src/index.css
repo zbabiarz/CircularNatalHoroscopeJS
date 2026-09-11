@@ -234,10 +234,10 @@ body {
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(67, 126, 120, 0.5), 0 0 10px rgba(67, 126, 120, 0.3);
+    box-shadow: 0 0 5px rgba(195, 205, 66, 0.5), 0 0 10px rgba(195, 205, 66, 0.3);
   }
   50% {
-    box-shadow: 0 0 20px rgba(67, 126, 120, 0.8), 0 0 30px rgba(67, 126, 120, 0.6), 0 0 40px rgba(67, 126, 120, 0.4);
+    box-shadow: 0 0 20px rgba(195, 205, 66, 0.8), 0 0 30px rgba(195, 205, 66, 0.6), 0 0 40px rgba(195, 205, 66, 0.4);
   }
 }
 
@@ -248,15 +248,15 @@ body {
 @keyframes ethereal-shimmer {
   0%, 100% {
     text-shadow:
-      0 0 10px rgba(67, 126, 120, 0.4),
-      0 0 20px rgba(67, 126, 120, 0.2);
+      0 0 10px rgba(195, 205, 66, 0.4),
+      0 0 20px rgba(195, 205, 66, 0.2);
     letter-spacing: 0.05em;
   }
   50% {
     text-shadow:
-      0 0 20px rgba(67, 126, 120, 0.8),
-      0 0 40px rgba(67, 126, 120, 0.5),
-      0 0 60px rgba(67, 126, 120, 0.3);
+      0 0 20px rgba(195, 205, 66, 0.8),
+      0 0 40px rgba(195, 205, 66, 0.5),
+      0 0 60px rgba(195, 205, 66, 0.3);
     letter-spacing: 0.1em;
   }
 }
@@ -273,7 +273,7 @@ body {
 .magical-title {
   font-family: 'Cinzel', serif;
   animation: ethereal-shimmer 3s ease-in-out infinite, float-title 4s ease-in-out infinite;
-  background: linear-gradient(135deg, #437e78 0%, #5aa89f 50%, #437e78 100%);
+  background: linear-gradient(135deg, #c3cd42 0%, #d4de63 50%, #c3cd42 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

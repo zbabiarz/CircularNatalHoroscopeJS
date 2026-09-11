@@ -29,8 +29,7 @@ function Home() {
           chiron_degree: result.chironDegree,
           chiron_house: result.chironHouse === 'Unknown' ? null : result.chironHouse,
           shadow_id: result.shadowId,
-          shadow_text: result.shadowText,
-          ai_report_status: 'pending'
+          shadow_text: result.shadowText
         })
         .select()
         .single()
@@ -40,72 +39,6 @@ function Home() {
       }
 
       const resultId = dbData?.id
-
-      let aiReport = ''
-      let reportStatus = 'pending'
-
-      if (resultId) {
-        try {
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 200000)
-
-          const reportResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-report`,
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                name: result.name,
-                chironSign: result.chironSign,
-                chironHouse: result.chironHouse,
-                chironDegree: result.chironDegree
-              }),
-              signal: controller.signal
-            }
-          )
-
-          clearTimeout(timeoutId)
-
-          if (reportResponse.ok) {
-            const reportData = await reportResponse.json()
-            aiReport = reportData.report
-            reportStatus = reportData.status || 'completed'
-
-            await supabase
-              .from('shadow_work_results')
-              .update({
-                ai_report: aiReport,
-                ai_report_status: reportStatus
-              })
-              .eq('id', resultId)
-          } else {
-            console.error('Failed to generate AI report:', await reportResponse.text())
-            reportStatus = 'failed'
-
-            await supabase
-              .from('shadow_work_results')
-              .update({
-                ai_report_status: 'failed',
-                ai_report_error: 'Failed to generate report'
-              })
-              .eq('id', resultId)
-          }
-        } catch (reportError) {
-          console.error('Error generating AI report:', reportError)
-          reportStatus = 'failed'
-
-          await supabase
-            .from('shadow_work_results')
-            .update({
-              ai_report_status: 'failed',
-              ai_report_error: reportError.message || 'Unknown error'
-            })
-            .eq('id', resultId)
-        }
-      }
 
       try {
         const response = await fetch('https://effortlessai.app.n8n.cloud/webhook/475b8845-0604-47ab-af7e-fe011922dcdd', {
@@ -125,8 +58,7 @@ function Home() {
             chironDegree: result.chironDegree,
             chironHouse: result.chironHouse,
             shadowId: result.shadowId,
-            aiReport: aiReport,
-            reportStatus: reportStatus,
+            resultId: resultId || '',
             timestamp: new Date().toISOString()
           })
         })
@@ -138,8 +70,6 @@ function Home() {
       } catch (webhookError) {
         console.error('Webhook error:', webhookError)
       }
-
-      localStorage.setItem('aiReport', aiReport)
 
       const params = new URLSearchParams({
         shadowId: result.shadowId,
@@ -172,12 +102,12 @@ function Home() {
               <div className="flex justify-center mb-6">
                 <SparkleImage
                   src="https://storage.googleapis.com/msgsndr/QFjnAi2H2A9Cpxi7l0ri/media/69613e8dcef1017f2aad7c2f.png"
-                  alt="Shadow Work Astro"
+                  alt="Your Shadow Map"
                   className="w-16 h-16 md:w-20 md:h-20"
                 />
               </div>
-              <p className="text-sm font-semibold tracking-[0.2em] uppercase mb-4" style={{ color: '#437e78' }}>
-                Free Instant Report
+              <p className="text-sm font-semibold tracking-[0.2em] uppercase mb-4" style={{ color: '#c3cd42' }}>
+                Your Shadow Map
               </p>
               <h1 className="text-3xl md:text-4xl font-bold mb-5 text-white leading-tight" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 Your shadow has been in your birth chart this whole time!
@@ -211,7 +141,7 @@ function Home() {
 
           <footer className="mt-6 text-center text-sm rounded-xl p-4">
             <span className="text-white/60" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              This insight is intended to support your personal growth and healing journey.
+              This insight is intended to support your personal growth.
             </span>
           </footer>
         </div>

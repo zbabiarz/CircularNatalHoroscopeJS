@@ -3,8 +3,8 @@ import { useLoadScript, Autocomplete } from '@react-google-maps/api'
 
 const libraries = ['places']
 
-const inputClass = "w-full px-4 py-3 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#437e78]/60 bg-white text-gray-900 placeholder-gray-400 font-montserrat"
-const selectClass = "px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#437e78]/60 bg-white text-gray-900 font-montserrat"
+const inputClass = "w-full px-4 py-3 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c3cd42]/60 bg-white text-gray-900 placeholder-gray-400 font-montserrat"
+const selectClass = "px-2 md:px-3 py-2 md:py-3 text-sm md:text-base border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c3cd42]/60 bg-white text-gray-900 font-montserrat"
 const labelClass = "block text-sm font-medium text-white/90 mb-1.5 font-montserrat"
 
 function Form({ onSubmit, isSubmitting }) {
@@ -182,7 +182,7 @@ function Form({ onSubmit, isSubmitting }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="name" className={labelClass}>
-          Full Name <span style={{ color: '#437e78' }}>*</span>
+          Full Name <span style={{ color: '#c3cd42' }}>*</span>
         </label>
         <input
           type="text"
@@ -198,7 +198,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="email" className={labelClass}>
-          Email <span style={{ color: '#437e78' }}>*</span>
+          Email <span style={{ color: '#c3cd42' }}>*</span>
         </label>
         <input
           type="email"
@@ -216,7 +216,7 @@ function Form({ onSubmit, isSubmitting }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2">
           <div>
             <label htmlFor="birthDate" className={labelClass}>
-              Birth Date <span style={{ color: '#437e78' }}>*</span>
+              Birth Date <span style={{ color: '#c3cd42' }}>*</span>
             </label>
             <input
               type="date"
@@ -272,7 +272,7 @@ function Form({ onSubmit, isSubmitting }) {
 
       <div>
         <label htmlFor="birthLocation" className={labelClass}>
-          Birth Location <span style={{ color: '#437e78' }}>*</span>
+          Birth Location <span style={{ color: '#c3cd42' }}>*</span>
         </label>
         {isLoaded && apiStatus === 'loaded' ? (
           <Autocomplete
@@ -319,25 +319,26 @@ function Form({ onSubmit, isSubmitting }) {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full font-bold py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed text-white text-lg tracking-wide"
+        className="w-full font-bold py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed text-lg tracking-wide"
         style={{
           fontFamily: "'Montserrat', sans-serif",
-          background: '#437e78',
+          background: '#c3cd42',
+          color: '#1E2220',
         }}
       >
-        {isSubmitting ? 'Calculating...' : 'run my report'}
+        {isSubmitting ? 'Calculating...' : 'Run My Chart'}
       </button>
 
       <p className="text-center text-sm text-white/60 mt-3 italic" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-        free. instant. kind of life-changing.
+        free. instant. see your Chiron placement.
       </p>
 
       {showBirthTimeWarning && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="rounded-xl shadow-2xl max-w-sm w-full p-6 md:p-8 animate-fade-in" style={{ background: '#111', border: '1px solid rgba(67,126,120,0.3)' }}>
+          <div className="rounded-xl shadow-2xl max-w-sm w-full p-6 md:p-8 animate-fade-in" style={{ background: '#111', border: '1px solid rgba(195,205,66,0.3)' }}>
             <div className="text-center mb-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4" style={{ background: 'rgba(67,126,120,0.15)' }}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#437e78' }}>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-4" style={{ background: 'rgba(195,205,66,0.15)' }}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#c3cd42' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0-10a9 9 0 110 18 9 9 0 010-18z" />
                 </svg>
               </div>
@@ -361,7 +362,7 @@ function Form({ onSubmit, isSubmitting }) {
                 type="button"
                 onClick={handleConfirmWithoutBirthTime}
                 className="flex-1 px-4 py-3 text-white font-semibold rounded-lg transition-colors duration-200"
-                style={{ fontFamily: "'Montserrat', sans-serif", background: '#437e78' }}
+                style={{ fontFamily: "'Montserrat', sans-serif", background: '#c3cd42' }}
               >
                 Okay, Continue
               </button>

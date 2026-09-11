@@ -71,7 +71,7 @@ export default function ShareModal({ isOpen, onClose }) {
     >
       <div
         className="rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all"
-        style={{ background: '#111', border: '1px solid rgba(67,126,120,0.25)' }}
+        style={{ background: '#111', border: '1px solid rgba(195,205,66,0.25)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
@@ -101,19 +101,19 @@ export default function ShareModal({ isOpen, onClose }) {
               }}
               className="flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-300 group"
               style={{
-                background: 'rgba(67,126,120,0.06)',
-                borderColor: 'rgba(67,126,120,0.15)',
+                background: 'rgba(195,205,66,0.06)',
+                borderColor: 'rgba(195,205,66,0.15)',
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(67,126,120,0.15)'
-                e.currentTarget.style.borderColor = 'rgba(67,126,120,0.35)'
+                e.currentTarget.style.background = 'rgba(195,205,66,0.15)'
+                e.currentTarget.style.borderColor = 'rgba(195,205,66,0.35)'
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(67,126,120,0.06)'
-                e.currentTarget.style.borderColor = 'rgba(67,126,120,0.15)'
+                e.currentTarget.style.background = 'rgba(195,205,66,0.06)'
+                e.currentTarget.style.borderColor = 'rgba(195,205,66,0.15)'
               }}
             >
-              <span className="text-sm font-semibold group-hover:scale-110 transition-transform" style={{ color: '#437e78' }}>
+              <span className="text-sm font-semibold group-hover:scale-110 transition-transform" style={{ color: '#c3cd42' }}>
                 {option.icon}
               </span>
               <span className="text-xs font-medium text-white/60" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -123,7 +123,7 @@ export default function ShareModal({ isOpen, onClose }) {
           ))}
         </div>
 
-        <div className="rounded-lg p-4" style={{ background: 'rgba(67,126,120,0.08)', border: '1px solid rgba(67,126,120,0.15)' }}>
+        <div className="rounded-lg p-4" style={{ background: 'rgba(195,205,66,0.08)', border: '1px solid rgba(195,205,66,0.15)' }}>
           <p className="text-xs text-white/40 mb-2 font-medium" style={{ fontFamily: "'Montserrat', sans-serif" }}>Share URL:</p>
           <div className="flex items-center gap-2">
             <input
@@ -131,12 +131,12 @@ export default function ShareModal({ isOpen, onClose }) {
               value={shareUrl}
               readOnly
               className="flex-1 rounded px-3 py-2 text-sm text-white truncate focus:outline-none"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(67,126,120,0.2)', fontFamily: "'Montserrat', sans-serif" }}
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(195,205,66,0.2)', fontFamily: "'Montserrat', sans-serif" }}
             />
             <button
               onClick={handleCopyToClipboard}
               className="text-white px-4 py-2 rounded font-medium text-sm transition-colors whitespace-nowrap"
-              style={{ background: '#437e78', fontFamily: "'Montserrat', sans-serif" }}
+              style={{ background: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}
             >
               {copied ? 'Copied' : 'Copy'}
             </button>
