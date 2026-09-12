@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Result from './pages/Result'
 import Share from './pages/Share'
 import Admin from './pages/Admin'
+import TestPdf from './pages/TestPdf'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/result" element={<Result />} />
         <Route path="/share" element={<Share />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/test-pdf" element={<TestPdf />} />
       </Routes>
     </div>
   )
