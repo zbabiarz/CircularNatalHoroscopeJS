@@ -91,15 +91,33 @@ function parseReport(report: string): ReportSections {
   return { woundName, sections };
 }
 
-async function fetchFont(url: string): Promise<string> {
-  const resp = await fetch(url);
-  const buf = await resp.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+async function fetchFontB64(url: string): Promise<string | null> {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      console.error(`Font fetch failed: ${resp.status} ${resp.statusText} for ${url}`);
+      return null;
+    }
+    const contentType = resp.headers.get("content-type") || "";
+    if (contentType.includes("text/html")) {
+      console.error(`Font fetch returned HTML instead of font for ${url}`);
+      return null;
+    }
+    const buf = await resp.arrayBuffer();
+    if (buf.byteLength < 100) {
+      console.error(`Font data too small (${buf.byteLength} bytes) for ${url}`);
+      return null;
+    }
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  } catch (e) {
+    console.error(`Font fetch error for ${url}:`, e);
+    return null;
   }
-  return btoa(binary);
 }
 
 async function loadFonts(
@@ -111,35 +129,54 @@ async function loadFonts(
   let hasMontserrat = false;
   let hasPlayfair = false;
 
+  const montBoldUrl =
+    "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtZ6Hw5aXo.ttf";
+  const montRegUrl =
+    "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aXo.ttf";
+  const playfairUrl =
+    "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFRD-vYSZviVYUb_rj3ij__anPXDTnCjmHKM4nYO7KN_qiTbtbK-F2rA0s.ttf";
+
+  const [montBoldB64, montRegB64, playfairB64] = await Promise.all([
+    fetchFontB64(montBoldUrl),
+    fetchFontB64(montRegUrl),
+    fetchFontB64(playfairUrl),
+  ]);
+
   try {
-    const montBoldUrl =
-      "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtZ6Hw5aXo.ttf";
-    const montRegUrl =
-      "https://fonts.gstatic.com/s/montserrat/v26/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Hw5aXo.ttf";
-    const playfairUrl =
-      "https://fonts.gstatic.com/s/playfairdisplay/v37/nuFRD-vYSZviVYUb_rj3ij__anPXDTnCjmHKM4nYO7KN_qiTbtbK-F2rA0s.ttf";
-
-    const [montBoldB64, montRegB64, playfairB64] = await Promise.all([
-      fetchFont(montBoldUrl),
-      fetchFont(montRegUrl),
-      fetchFont(playfairUrl),
-    ]);
-
-    doc.addFileToVFS("Montserrat-Bold.ttf", montBoldB64);
-    doc.addFont("Montserrat-Bold.ttf", "Montserrat", "bold");
-
-    doc.addFileToVFS("Montserrat-Regular.ttf", montRegB64);
-    doc.addFont("Montserrat-Regular.ttf", "Montserrat", "normal");
-
-    hasMontserrat = true;
-
-    doc.addFileToVFS("PlayfairDisplay-Italic.ttf", playfairB64);
-    doc.addFont("PlayfairDisplay-Italic.ttf", "Playfair", "italic");
-
-    hasPlayfair = true;
+    if (montBoldB64 && montRegB64) {
+      doc.addFileToVFS("Montserrat-Bold.ttf", montBoldB64);
+      doc.addFont("Montserrat-Bold.ttf", "Montserrat", "bold");
+      doc.addFileToVFS("Montserrat-Regular.ttf", montRegB64);
+      doc.addFont("Montserrat-Regular.ttf", "Montserrat", "normal");
+      // Verify font actually works by trying to set it
+      doc.setFont("Montserrat", "bold");
+      hasMontserrat = true;
+      console.log("Montserrat fonts loaded successfully");
+    } else {
+      console.warn("Montserrat fonts not available, using helvetica fallback");
+    }
   } catch (e) {
-    console.error("Font loading failed, using fallback fonts:", e);
+    console.error("Montserrat registration failed:", e);
+    hasMontserrat = false;
   }
+
+  try {
+    if (playfairB64) {
+      doc.addFileToVFS("PlayfairDisplay-Italic.ttf", playfairB64);
+      doc.addFont("PlayfairDisplay-Italic.ttf", "Playfair", "italic");
+      doc.setFont("Playfair", "italic");
+      hasPlayfair = true;
+      console.log("Playfair font loaded successfully");
+    } else {
+      console.warn("Playfair font not available, using times fallback");
+    }
+  } catch (e) {
+    console.error("Playfair registration failed:", e);
+    hasPlayfair = false;
+  }
+
+  // Reset to a safe default font before returning
+  doc.setFont("helvetica", "normal");
 
   return { hasMontserrat, hasPlayfair };
 }
