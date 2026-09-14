@@ -4,20 +4,22 @@ import { shadowMap } from '../data/shadowMap'
 import SparkleImage from '../components/SparkleImage'
 import TurbulentFlow from '../components/ui/turbulent-flow'
 import ShareModal from '../components/ShareModal'
-
-const STRIPE_LINK = 'https://buy.stripe.com/8x23cn9tVerAcRF3Ef7ok02'
+import { supabase } from '../lib/supabase'
 
 function Result() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   const name = searchParams.get('name')
   const chironSign = searchParams.get('chironSign')
   const chironHouse = searchParams.get('chironHouse')
   const chironDegree = searchParams.get('chironDegree')
   const shadowId = searchParams.get('shadowId')
+  const email = searchParams.get('email')
+  const resultId = searchParams.get('resultId')
 
   const shadowData = shadowMap[shadowId] || {
     archetype: 'Unknown',
@@ -27,6 +29,34 @@ function Result() {
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100)
   }, [])
+
+  const handleCheckout = async () => {
+    if (!email || !resultId) {
+      alert('Missing required information for checkout. Please run your chart again.')
+      return
+    }
+
+    setIsRedirecting(true)
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { email, resultId, name },
+      })
+
+      if (error || !data?.url) {
+        console.error('Checkout error:', error)
+        alert('Something went wrong starting checkout. Please try again.')
+        setIsRedirecting(false)
+        return
+      }
+
+      window.location.href = data.url
+    } catch (err) {
+      console.error('Checkout error:', err)
+      alert('Something went wrong starting checkout. Please try again.')
+      setIsRedirecting(false)
+    }
+  }
 
   if (!name || !shadowId) {
     return (
@@ -131,15 +161,14 @@ function Result() {
               </div>
             </div>
 
-            <a
-              href={STRIPE_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block font-bold tracking-wide px-10 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-lg"
+            <button
+              onClick={handleCheckout}
+              disabled={isRedirecting}
+              className="inline-block font-bold tracking-wide px-10 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-lg disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ background: '#c3cd42', color: '#1E2220', fontFamily: "'Montserrat', sans-serif" }}
             >
-              Get Your Full Shadow Map — $37
-            </a>
+              {isRedirecting ? 'Redirecting to checkout...' : 'Get Your Full Shadow Map — $37'}
+            </button>
 
             <p className="text-white/40 mt-4 text-sm" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               26-page personalized deep dive delivered to your inbox
