@@ -127,6 +127,18 @@ function Result() {
             <p className="text-white/70 text-base leading-relaxed max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               {shadowData.description}
             </p>
+
+            <div className="mt-7 pt-7 border-t border-white/10 text-left max-w-lg mx-auto">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
+                The pattern underneath
+              </p>
+              <p className="text-white/85 text-base leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Here's the thing about {archetypeName}: this isn't a label. It's the pattern underneath the pattern. You may have learned to edit yourself, over-give, stay guarded, or work twice as hard to feel safe. That strategy probably helped you once. It may also be the thing keeping you from feeling fully at home in your own life now.
+              </p>
+              <p className="text-white/85 text-base leading-relaxed mt-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Your first question is simple: where are you still choosing approval, control, or belonging over being honest about what you actually need?
+              </p>
+            </div>
           </div>
 
           <div className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
