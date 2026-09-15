@@ -71,6 +71,7 @@ Deno.serve(async (req: Request) => {
         },
       ],
       mode: 'payment',
+      customer_creation: 'always',
       customer_email: email,
       metadata: {
         result_id: resultId,
