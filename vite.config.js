@@ -10,6 +10,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['moment-timezone']
+    include: ['moment-timezone'],
+    exclude: ['sweph-wasm']
   }
 })
