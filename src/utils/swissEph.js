@@ -1,7 +1,7 @@
 let swissEph = null
-let initAttempted = false
 let initSucceeded = false
 let epheFilesLoaded = false
+let initPromise = null
 let loadingPromise = null
 
 const EPHE_BASE_URL = 'https://cdn.jsdelivr.net/gh/aloistr/swisseph@master/ephe'
@@ -9,29 +9,31 @@ const EPHE_FILES = ['seas_18.se1', 'sepl_18.se1']
 const EPHE_DIR = '/ephe'
 
 export async function initSwissEph() {
-  if (initAttempted) {
-    if (initSucceeded) return swissEph
-    throw new Error('Swiss Ephemeris not available')
-  }
+  if (initSucceeded && swissEph) return swissEph
+  if (initPromise) return initPromise
 
-  initAttempted = true
+  initPromise = (async () => {
+    try {
+      const SwissEPH = (await import('sweph-wasm')).default
+      swissEph = await SwissEPH.init()
 
-  try {
-    const SwissEPH = (await import('sweph-wasm')).default
-    swissEph = await SwissEPH.init()
+      initSucceeded = true
+      console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
 
-    initSucceeded = true
-    console.log('Swiss Ephemeris initialized successfully (using Moshier ephemeris)')
+      loadEphemerisFiles()
+      return swissEph
+    } catch (error) {
+      console.log('Swiss Ephemeris init error:', error.message || error)
+      initSucceeded = false
+      swissEph = null
+      initPromise = null
+      throw new Error('Swiss Ephemeris WASM not available in this environment')
+    } finally {
+      initPromise = null
+    }
+  })()
 
-    loadEphemerisFiles()
-
-    return swissEph
-  } catch (error) {
-    console.log('Swiss Ephemeris init error:', error.message || error)
-    initSucceeded = false
-    swissEph = null
-    throw new Error('Swiss Ephemeris WASM not available in this environment')
-  }
+  return initPromise
 }
 
 async function loadEphemerisFiles() {

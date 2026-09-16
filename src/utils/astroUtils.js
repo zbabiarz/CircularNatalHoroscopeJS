@@ -51,12 +51,10 @@ function convertLocalToUTC(year, month, day, hours, minutes, latitude, longitude
   }
 }
 
-let swissEphChecked = false
 let swissEphWorks = false
 
 async function tryInitSwissEph() {
-  if (swissEphChecked) return swissEphWorks
-  swissEphChecked = true
+  if (swissEphWorks) return true
 
   try {
     await initSwissEph()
