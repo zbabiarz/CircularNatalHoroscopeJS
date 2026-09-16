@@ -713,11 +713,6 @@ function buildCoverPage(
   const wrappedWound: string[] = doc.splitTextToSize(data.woundName, 130);
   doc.text(wrappedWound, MARGIN + 5, woundY);
 
-  // Small lime star top-right
-  setColor(doc, LIME);
-  setMontBold(doc, fonts, 18);
-  doc.text("\u2726", PAGE_W - MARGIN - 15, 40);
-
   // Concentric circles right-center
   doc.setDrawColor(CIRCLE_GRAY.r, CIRCLE_GRAY.g, CIRCLE_GRAY.b);
   doc.setLineWidth(0.3);
@@ -733,11 +728,6 @@ function buildCoverPage(
   setPlayfairItalic(doc, fonts, 18);
   setColor(doc, CREAM);
   doc.text("Love, Light, and Black Holes", MARGIN + 5, PAGE_H - 42);
-
-  // Small lime star bottom-left
-  setColor(doc, LIME);
-  setMontBold(doc, fonts, 14);
-  doc.text("\u2726", MARGIN + 5, PAGE_H - 28);
 
   // Short pink line bottom-right
   doc.setDrawColor(PINK_LINE.r, PINK_LINE.g, PINK_LINE.b);
