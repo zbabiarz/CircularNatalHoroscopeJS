@@ -390,7 +390,7 @@ THE PRACTICE
 [2-3 paragraphs with practical integration advice. How to notice the pattern. How to respond differently. What the practice looks like day to day.]
 
 ===SECTION_4A_CALLOUT_TITLE===
-[CALLOUT TITLE — a key practice or rule]
+[CALLOUT TITLE: a key practice or rule]
 
 ===SECTION_4A_CALLOUT_BODY===
 [2-3 sentences with the core practice.]
@@ -495,7 +495,7 @@ A final word from the other side of the wound
 CLOSING
 
 ===SECTION_5D_BODY===
-[2-3 paragraphs closing the report. The wound does not disappear — it softens. Encourage rereading. Leave the reader feeling seen and empowered. This is the final impression.]
+[2-3 paragraphs closing the report. The wound does not disappear. It softens. Encourage rereading. Leave the reader feeling seen and empowered. This is the final impression.]
 
 ===SECTION_5D_CALLOUT_TITLE===
 ONE LAST THING
@@ -513,7 +513,9 @@ hello@lovelightandblackholes.com
 
 IMPORTANT: The Chiron by Sign table (5A) and Chiron by House table (5B) are STATIC and built into the PDF template. Do NOT generate them. Only generate sections 5C and 5D.
 
-Remember: every section should read like Morgan is sitting across from the person, telling them something true about themselves that nobody else has ever put into words. This report must be LONG and RICH — aim for 15,000-25,000 characters total. The reader paid $37. Make it worth ten times that.`;
+CRITICAL FORMATTING RULE: Never use em dashes (—) anywhere in the report. Use periods, commas, colons, or parentheses instead. This is non-negotiable.
+
+Remember: every section should read like Morgan is sitting across from the person, telling them something true about themselves that nobody else has ever put into words. This report must be LONG and RICH. Aim for 15,000-25,000 characters total. The reader paid $37. Make it worth ten times that.`;
 
 function buildUserMessage(
   name: string,
