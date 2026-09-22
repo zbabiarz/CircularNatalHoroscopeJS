@@ -719,10 +719,10 @@ function buildCoverPage(
   doc.circle(PAGE_W - MARGIN - 25, 140, 18);
   doc.circle(PAGE_W - MARGIN - 25, 140, 25);
 
-  // Bottom-left: "by Morgan Garza"
-  setColor(doc, FOOTER_GRAY_DARK);
-  setMontRegular(doc, fonts, 8);
-  doc.text("by Morgan Garza", MARGIN + 5, PAGE_H - 55);
+  // Bottom-left: "by Morgan Garza" (h3 size)
+  setColor(doc, CREAM);
+  setMontBold(doc, fonts, 14);
+  doc.text("by Morgan Garza", MARGIN + 5, PAGE_H - 58);
 
   // "Love, Light, and Black Holes"
   setPlayfairItalic(doc, fonts, 18);
@@ -1412,6 +1412,35 @@ function buildClosingPage(
 }
 
 // ---------------------------------------------------------------------------
+// Static cheat-sheet table data (used when AI doesn't generate 5A/5B)
+// ---------------------------------------------------------------------------
+const CHIRON_BY_SIGN_TABLE = `Aries|||Wound around identity and the right to exist. Feels invisible or too much.|||Courage to be unapologetically themselves and pioneer new paths for others.
+Taurus|||Wound around worth, security, and having enough. Fear of scarcity or loss.|||Deep resilience and the ability to build lasting value from nothing.
+Gemini|||Wound around being heard and taken seriously. Voice dismissed or misunderstood.|||Gift for translating complex truths into language anyone can understand.
+Cancer|||Wound around nurturing and emotional safety. Felt unwelcome or abandoned.|||Capacity to create genuine belonging and emotional sanctuary for others.
+Leo|||Wound around recognition and being seen. Creative light was dimmed or shamed.|||Radiance that inspires others to stop hiding and own their brilliance.
+Virgo|||Wound around perfection and being enough. Never feels finished or good enough.|||Mastery of detail and the ability to heal through practical service.
+Libra|||Wound around partnership and being chosen. Loses self in relationships.|||Gift for creating real harmony and modeling balanced, interdependent love.
+Scorpio|||Wound around trust, betrayal, and intimacy. Fear of vulnerability and power.|||Capacity to transform pain into power and guide others through darkness.
+Sagittarius|||Wound around meaning and belief. Faith shaken or truth dismissed.|||Vision to inspire others with authentic wisdom and bold exploration.
+Capricorn|||Wound around achievement and authority. Never feels successful enough.|||Natural leadership and the ability to build structures that last.
+Aquarius|||Wound around belonging and acceptance. Feels like a perpetual outsider.|||Innovation that changes communities and gives permission to be different.
+Pisces|||Wound around spiritual connection and boundaries. Absorbs everyone's pain.|||Deep compassion and the ability to hold space for collective healing.`;
+
+const CHIRON_BY_HOUSE_TABLE = `1st House|||Wound around identity and self-expression. Feels their existence is not acknowledged.|||Courage to be fully themselves and inspire others to do the same.
+2nd House|||Wound around self-worth and material security. Never feels like enough.|||Ability to build real value and teach others their worth is inherent.
+3rd House|||Wound around communication and being heard. Voice was dismissed early on.|||Gift for authentic expression and teaching others to speak their truth.
+4th House|||Wound around home and family roots. Felt unsafe or like a stranger at home.|||Capacity to create sanctuary and help others heal family wounds.
+5th House|||Wound around creative expression and joy. Play was shamed or stifled.|||Permission to create fearlessly and inspire others to reclaim their joy.
+6th House|||Wound around work, health, and usefulness. Worth tied to productivity.|||Ability to serve from wholeness and model healthy boundaries in work.
+7th House|||Wound around partnership and being chosen. Loses self in others.|||Capacity for real, balanced partnership and teaching interdependence.
+8th House|||Wound around power, intimacy, and shared resources. Fear of vulnerability.|||Ability to transform and regenerate, guiding others through their depths.
+9th House|||Wound around meaning, faith, and truth. Beliefs were dismissed.|||Vision to teach authentic wisdom and inspire others to trust their path.
+10th House|||Wound around authority, career, and public recognition. Fear of exposure.|||Natural leadership and the ability to redefine success on their own terms.
+11th House|||Wound around belonging in community. Felt like an outsider in groups.|||Gift for building communities that celebrate authenticity and difference.
+12th House|||Wound around spiritual identity and surrender. Carries ancestral or collective pain.|||Capacity for deep spiritual healing and guiding others through the dark.`;
+
+// ---------------------------------------------------------------------------
 // MASTER BUILD — orchestrate all 26 pages
 // ---------------------------------------------------------------------------
 async function buildPdf(
@@ -1635,42 +1664,34 @@ async function buildPdf(
   // PAGE 23 — 5A: CHIRON BY SIGN (table)
   // -----------------------------------------------------------------------
   {
-    const tableText = sections.get("SECTION_5A_BODY") || sections.get("SECTION_5A_GRID") || "";
-    if (tableText) {
-      buildTablePage(
-        doc,
-        sections.get("SECTION_5A_TITLE") || "CHIRON BY SIGN",
-        sections.get("SECTION_5A_SUBTITLE") || "",
-        tableText,
-        ["SIGN", "WOUND", "GIFT"],
-        fonts,
-        pc,
-        [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
-      );
-    } else {
-      buildContentPage(doc, sections, "SECTION_5A", fonts, pc);
-    }
+    const tableText = sections.get("SECTION_5A_BODY") || sections.get("SECTION_5A_GRID") || CHIRON_BY_SIGN_TABLE;
+    buildTablePage(
+      doc,
+      sections.get("SECTION_5A_TITLE") || "CHIRON BY SIGN",
+      sections.get("SECTION_5A_SUBTITLE") || "Quick reference for reading others",
+      tableText,
+      ["SIGN", "WOUND", "GIFT"],
+      fonts,
+      pc,
+      [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
+    );
   }
 
   // -----------------------------------------------------------------------
   // PAGE 24 — 5B: CHIRON BY HOUSE (table)
   // -----------------------------------------------------------------------
   {
-    const tableText = sections.get("SECTION_5B_BODY") || sections.get("SECTION_5B_GRID") || "";
-    if (tableText) {
-      buildTablePage(
-        doc,
-        sections.get("SECTION_5B_TITLE") || "CHIRON BY HOUSE",
-        sections.get("SECTION_5B_SUBTITLE") || "",
-        tableText,
-        ["HOUSE", "WOUND", "GIFT"],
-        fonts,
-        pc,
-        [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
-      );
-    } else {
-      buildContentPage(doc, sections, "SECTION_5B", fonts, pc);
-    }
+    const tableText = sections.get("SECTION_5B_BODY") || sections.get("SECTION_5B_GRID") || CHIRON_BY_HOUSE_TABLE;
+    buildTablePage(
+      doc,
+      sections.get("SECTION_5B_TITLE") || "CHIRON BY HOUSE",
+      sections.get("SECTION_5B_SUBTITLE") || "Where the wound lives in the chart",
+      tableText,
+      ["HOUSE", "WOUND", "GIFT"],
+      fonts,
+      pc,
+      [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
+    );
   }
 
   // -----------------------------------------------------------------------
