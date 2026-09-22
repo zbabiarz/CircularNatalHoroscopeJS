@@ -45,23 +45,54 @@ function Result() {
   const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [fromEmail, setFromEmail] = useState(false)
 
-  const name = searchParams.get('name')
-  const chironSign = searchParams.get('chironSign')
-  const chironHouse = searchParams.get('chironHouse')
-  const chironDegree = searchParams.get('chironDegree')
-  const shadowId = searchParams.get('shadowId')
-  const email = searchParams.get('email')
-  const resultId = searchParams.get('resultId')
-
-  const shadowData = shadowMap[shadowId] || {
-    archetype: 'Unknown',
-    description: 'We could not determine your shadow at this time.'
-  }
+  const [resultData, setResultData] = useState({
+    name: searchParams.get('name') || '',
+    chironSign: searchParams.get('chironSign') || '',
+    chironHouse: searchParams.get('chironHouse') || '',
+    chironDegree: searchParams.get('chironDegree') || '',
+    shadowId: searchParams.get('shadowId') || '',
+    email: searchParams.get('email') || '',
+    resultId: searchParams.get('resultId') || '',
+  })
 
   useEffect(() => {
+    const hasFullData = resultData.name && resultData.shadowId
+    const hasResultId = resultData.resultId
+
+    if (!hasFullData && hasResultId) {
+      setIsLoading(true)
+      supabase
+        .from('shadow_work_results')
+        .select('name, email, chiron_sign, chiron_house, chiron_degree, shadow_id')
+        .eq('id', resultData.resultId)
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error || !data) {
+            console.error('Failed to load result:', error)
+            setIsLoading(false)
+            return
+          }
+          setResultData({
+            name: data.name,
+            email: data.email,
+            chironSign: data.chiron_sign,
+            chironHouse: data.chiron_house || 'Unknown',
+            chironDegree: String(data.chiron_degree),
+            shadowId: data.shadow_id,
+            resultId: resultData.resultId,
+          })
+          setFromEmail(true)
+          setIsLoading(false)
+        })
+    }
+
     setTimeout(() => setIsVisible(true), 100)
   }, [])
+
+  const { name, chironSign, chironHouse, chironDegree, shadowId, email, resultId } = resultData
 
   const handleCheckout = async () => {
     if (!email || !resultId) {
@@ -91,6 +122,22 @@ function Result() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <>
+        <TurbulentFlow />
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" style={{ zIndex: 2 }}>
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-white/20 border-t-[#c3cd42] rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white/70 text-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              Loading your results...
+            </p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   if (!name || !shadowId) {
     return (
       <>
@@ -113,6 +160,11 @@ function Result() {
     )
   }
 
+  const shadowData = shadowMap[shadowId] || {
+    archetype: 'Unknown',
+    description: 'We could not determine your shadow at this time.'
+  }
+
   const archetypeName = shadowData.archetype.startsWith('The ')
     ? shadowData.archetype
     : `The ${shadowData.archetype}`
@@ -127,6 +179,18 @@ function Result() {
       <div className="fixed inset-0 pointer-events-none" style={{ background: 'rgba(0,0,0,0.45)', zIndex: 1 }} />
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative" style={{ zIndex: 2 }}>
         <div className="max-w-2xl w-full">
+
+          {/* WELCOME BACK BANNER (email returnees) */}
+          {fromEmail && (
+            <div className={`rounded-2xl p-6 md:p-8 mb-6 text-center transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(195,205,66,0.1)', border: '1px solid rgba(195,205,66,0.3)' }}>
+              <p className="text-lg md:text-xl font-semibold text-white mb-2" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Welcome back, {name.split(' ')[0]}.
+              </p>
+              <p className="text-white/70 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                Your Chiron results are below. Ready to go deeper?
+              </p>
+            </div>
+          )}
 
           {/* MAIN CARD */}
           <div className={`text-center mb-8 rounded-2xl p-8 md:p-10 transition-all duration-800 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
@@ -205,9 +269,9 @@ function Result() {
           )}
 
           {/* UPSELL CARD */}
-          <div className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
+          <div id="checkout" className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              This is just the surface.
+              {fromEmail ? "You've seen the surface. Now go deeper." : "This is just the surface."}
             </h2>
             <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               Your Chiron placement reveals the deepest shadow pattern running your entire life. Your relationships, your career, your money, your body, all of it.
