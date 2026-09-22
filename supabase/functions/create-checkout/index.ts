@@ -78,8 +78,8 @@ Deno.serve(async (req: Request) => {
         email: email,
         name: name || '',
       },
-      success_url: `${origin}/result?checkout=success&result_id=${resultId}`,
-      cancel_url: `${origin}/result?checkout=cancelled&result_id=${resultId}`,
+      success_url: `${origin}/result?checkout=success&resultId=${resultId}`,
+      cancel_url: `${origin}/result?checkout=cancelled&resultId=${resultId}`,
     });
 
     console.log(`Created checkout session ${session.id} for result ${resultId}, email ${email}`);

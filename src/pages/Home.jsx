@@ -17,9 +17,12 @@ function Home() {
     try {
       const result = await calculateChironData(formData)
 
-      const { data: dbData, error: dbError } = await supabase
+      const resultId = crypto.randomUUID()
+
+      const { error: dbError } = await supabase
         .from('shadow_work_results')
         .insert({
+          id: resultId,
           name: result.name,
           email: result.email,
           birth_date: formData.birthDate,
@@ -31,14 +34,10 @@ function Home() {
           shadow_id: result.shadowId,
           shadow_text: result.shadowText
         })
-        .select()
-        .single()
 
       if (dbError) {
         console.error('Database error:', dbError)
       }
-
-      const resultId = dbData?.id
 
       try {
         const response = await fetch('https://effortlessai.app.n8n.cloud/webhook/475b8845-0604-47ab-af7e-fe011922dcdd', {

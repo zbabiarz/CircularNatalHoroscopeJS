@@ -69,26 +69,22 @@ function Admin() {
   const fetchEntries = async () => {
     setLoading(true)
     try {
-      let countQuery = supabase
-        .from('shadow_work_results')
-        .select('*', { count: 'exact', head: true })
+      const { data: countData, error: countError } = await supabase
+        .rpc('admin_count_results', {
+          p_sign_filter: signFilter || null,
+        })
+      if (!countError) setTotalCount(Number(countData) || 0)
 
-      if (signFilter) countQuery = countQuery.eq('chiron_sign', signFilter)
-      const { count } = await countQuery
-      setTotalCount(count || 0)
+      const offset = (page - 1) * PER_PAGE
 
-      const from = (page - 1) * PER_PAGE
-      const to = from + PER_PAGE - 1
-
-      let query = supabase
-        .from('shadow_work_results')
-        .select('id, name, email, birth_date, birth_time, birth_location, chiron_sign, chiron_house, chiron_degree, shadow_id, shadow_text, ai_report, ai_report_status, ai_report_error, created_at')
-        .order(sortField, { ascending: sortDir === 'asc' })
-        .range(from, to)
-
-      if (signFilter) query = query.eq('chiron_sign', signFilter)
-
-      const { data, error } = await query
+      const { data, error } = await supabase
+        .rpc('admin_list_results', {
+          p_sign_filter: signFilter || null,
+          p_sort_field: sortField,
+          p_sort_dir: sortDir,
+          p_offset: offset,
+          p_limit: PER_PAGE,
+        })
       if (error) { console.error(error); return }
       setEntries(data || [])
     } catch (err) {

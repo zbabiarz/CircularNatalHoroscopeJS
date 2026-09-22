@@ -47,6 +47,8 @@ function Result() {
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [fromEmail, setFromEmail] = useState(false)
+  const [hasPurchased, setHasPurchased] = useState(false)
+  const [checkoutSuccess, setCheckoutSuccess] = useState(searchParams.get('checkout') === 'success')
 
   const [resultData, setResultData] = useState({
     name: searchParams.get('name') || '',
@@ -62,12 +64,12 @@ function Result() {
     const hasFullData = resultData.name && resultData.shadowId
     const hasResultId = resultData.resultId
 
-    if (!hasFullData && hasResultId) {
-      setIsLoading(true)
+    if (hasResultId) {
+      const loadFromRpc = !hasFullData
+      if (loadFromRpc) setIsLoading(true)
+
       supabase
-        .from('shadow_work_results')
-        .select('name, email, chiron_sign, chiron_house, chiron_degree, shadow_id')
-        .eq('id', resultData.resultId)
+        .rpc('get_result', { p_result_id: resultData.resultId })
         .maybeSingle()
         .then(({ data, error }) => {
           if (error || !data) {
@@ -75,16 +77,19 @@ function Result() {
             setIsLoading(false)
             return
           }
-          setResultData({
-            name: data.name,
-            email: data.email,
-            chironSign: data.chiron_sign,
-            chironHouse: data.chiron_house || 'Unknown',
-            chironDegree: String(data.chiron_degree),
-            shadowId: data.shadow_id,
-            resultId: resultData.resultId,
-          })
-          setFromEmail(true)
+          if (data.has_purchased) setHasPurchased(true)
+          if (loadFromRpc) {
+            setResultData({
+              name: data.name,
+              email: data.email,
+              chironSign: data.chiron_sign,
+              chironHouse: data.chiron_house || 'Unknown',
+              chironDegree: String(data.chiron_degree),
+              shadowId: data.shadow_id,
+              resultId: resultData.resultId,
+            })
+            setFromEmail(true)
+          }
           setIsLoading(false)
         })
     }
@@ -268,51 +273,86 @@ function Result() {
             </div>
           )}
 
-          {/* UPSELL CARD */}
+          {/* UPSELL / PURCHASED / CHECKOUT SUCCESS */}
           <div id="checkout" className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              {fromEmail ? "You've seen the surface. Now go deeper." : "This is just the surface."}
-            </h2>
-            <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Your Chiron placement reveals the deepest shadow pattern running your entire life. Your relationships, your career, your money, your body, all of it.
-            </p>
-            <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              Get your full 26-page Shadow Map and see exactly how this wound has been operating behind the scenes, and how to flip it into the thing that actually gives you your edge.
-            </p>
-
-            <div className="space-y-3 mb-8 max-w-sm mx-auto text-left">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  How your wound shows up in relationships, career, money, and your body
+            {checkoutSuccess ? (
+              <>
+                <div className="flex justify-center mb-5">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(195,205,66,0.15)', border: '1px solid rgba(195,205,66,0.3)' }}>
+                    <span className="text-3xl" style={{ color: '#c3cd42' }}>&#10003;</span>
+                  </div>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Thank you!
+                </h2>
+                <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Your full Shadow Map is being generated right now. It will land in your inbox in about a minute.
                 </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  The protection patterns you built (and why they're keeping you stuck)
+                <p className="text-white/50 text-base max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Check your spam folder if you don't see it. The email will come from Love, Light, and Black Holes.
                 </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Your hidden superpower and how to actually use it
+              </>
+            ) : hasPurchased ? (
+              <>
+                <div className="flex justify-center mb-5">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'rgba(195,205,66,0.15)', border: '1px solid rgba(195,205,66,0.3)' }}>
+                    <span className="text-3xl" style={{ color: '#c3cd42' }}>&#10022;</span>
+                  </div>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Your Shadow Map has been sent to your email
+                </h2>
+                <p className="text-white/70 text-lg leading-relaxed max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Check your inbox (and spam folder) for the full 26-page deep dive. The email came from Love, Light, and Black Holes.
                 </p>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  {fromEmail ? "You've seen the surface. Now go deeper." : "This is just the surface."}
+                </h2>
+                <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Your Chiron placement reveals the deepest shadow pattern running your entire life. Your relationships, your career, your money, your body, all of it.
+                </p>
+                <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Get your full 26-page Shadow Map and see exactly how this wound has been operating behind the scenes, and how to flip it into the thing that actually gives you your edge.
+                </p>
 
-            <button
-              onClick={handleCheckout}
-              disabled={isRedirecting}
-              className="inline-block font-bold tracking-wide px-10 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-xl disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ background: '#c3cd42', color: '#1E2220', fontFamily: "'Montserrat', sans-serif" }}
-            >
-              {isRedirecting ? 'Redirecting to checkout...' : 'Get Your Full Shadow Map - $37'}
-            </button>
+                <div className="space-y-3 mb-8 max-w-sm mx-auto text-left">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
+                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      How your wound shows up in relationships, career, money, and your body
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
+                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      The protection patterns you built (and why they're keeping you stuck)
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
+                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                      Your hidden superpower and how to actually use it
+                    </p>
+                  </div>
+                </div>
 
-            <p className="text-white/40 mt-4 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              26-page personalized deep dive delivered to your inbox
-            </p>
+                <button
+                  onClick={handleCheckout}
+                  disabled={isRedirecting}
+                  className="inline-block font-bold tracking-wide px-10 py-4 rounded-full shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 text-xl disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ background: '#c3cd42', color: '#1E2220', fontFamily: "'Montserrat', sans-serif" }}
+                >
+                  {isRedirecting ? 'Redirecting to checkout...' : 'Get Your Full Shadow Map - $37'}
+                </button>
+
+                <p className="text-white/40 mt-4 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  26-page personalized deep dive delivered to your inbox
+                </p>
+              </>
+            )}
           </div>
 
           <div className={`mt-10 text-center transition-all duration-800 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
