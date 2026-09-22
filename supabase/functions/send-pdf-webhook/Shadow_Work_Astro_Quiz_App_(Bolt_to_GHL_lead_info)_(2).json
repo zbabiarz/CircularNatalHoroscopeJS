@@ -1,0 +1,327 @@
+{
+  "name": "Shadow Work Astro Quiz App (Bolt to GHL lead info)",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=tool: functions.contacts_upsert-contact\nargs:\n  body_locationId: KQwViSotgXlhDFQY6Xfg\n  body_firstName: {{ $json.contactData.body_firstName }}\n  body_lastName: {{ $json.contactData.body_lastName }}\n  body_email: {{ $json.contactData.body_email }}\n\n\n\n  body_tags:\n    - Astro_Shadow_Quiz\n\n\nbody_customFields:\n  - id: z8BpqRK8R32P3pjFeuoe\n    value: \"Sign: {{ $json.chironReport.chironSign }}\n\nHouse: {{ $json.chironReport.chironHouse }}\n\nReport:\n\n{{ $json.chironReport.aiReport }}\"\n",
+        "options": {
+          "systemMessage": "=You are an MCP-enabled assistant for GoHighLevel.\nAlways upsert the contact in location KQwViSotgXlhDFQY6Xfg using the MCP tool schema.\n\nStore the entire aiReport in custom field z8BpqRK8R32P3pjFeuoe\n\nAdd the tag \"Astro_Shadow_Quiz\".\n\nOn success return {\"status\":\"ok\",\"contactId\":\"<id>\"}.\n\nIf any tool returns 401, return {\"status\":\"error\",\"message\":\"Token not authorized – reauthorize integration to include Contacts and Custom Fields.\"}.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        -64
+      ],
+      "id": "6eb0d716-9b83-4ef4-b58b-4039fdc13d62",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -624,
+        160
+      ],
+      "id": "8ac9f2cc-a1f3-457f-abc4-459d6dbba872",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "4tmusUXnGrQQKfIZ",
+          "name": "Zachs OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://services.leadconnectorhq.com/mcp/",
+        "serverTransport": "httpStreamable",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        160
+      ],
+      "id": "81f63811-7994-43d6-abe1-c208ddcd56e4",
+      "name": "MCP Client",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "VKA8SnVpA9UmO2tE",
+          "name": "Zach Shadow quiz Convertwave"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- Parse webhook payload (array-safe) ----\nconst webhookPayload = Array.isArray($json) ? $json[0] : $json;\nconst body = webhookPayload.body || {};\n\n// ---- Extract basic contact info ----\nconst fullName = body.name || '';\nconst email = (body.email || '').toLowerCase().trim();\n\n// ---- Name helpers ----\nfunction splitName(fullName) {\n  const parts = String(fullName).trim().split(/\\s+/);\n  return {\n    first: parts[0] || '',\n    last: parts.slice(1).join(' ') || '',\n  };\n}\n\nconst { first, last } = splitName(fullName);\n\n// ---- Chiron / Astrology Data ----\nconst chironReport = {\n  birthDate: body.birthDate || '',\n  birthTime: body.birthTime || null,\n  birthLocation: body.birthLocation || '',\n  birthCoordinates: body.birthCoordinates || [],\n  chironSign: body.chironSign || '',\n  chironDegree: body.chironDegree || null,\n  chironHouse: body.chironHouse || null,\n  shadowId: body.shadowId || '',\n  aiReport: body.aiReport || '',\n  timestamp: body.timestamp || '',\n};\n\n// ---- Build GHL contact payload ----\nconst contactData = {\n  body_locationId: 'KQwViSotgXlhDFQY6Xfg', // your GHL location ID\n  body_firstName: first,\n  body_lastName: last,\n  body_email: email,\n\n  body_tags: [\n    'Chiron_Report_Completed',\n    chironReport.chironSign ? `Chiron_${chironReport.chironSign}` : null,\n    chironReport.chironHouse ? `Chiron_${chironReport.chironHouse.replace(/\\s+/g, '_')}` : null,\n    chironReport.shadowId ? `Shadow_${chironReport.shadowId}` : null,\n  ].filter(Boolean),\n\n  body_customFields: {\n    // Replace with your actual GHL custom field ID\n    czq4chc2frWMYtqzYxuH: JSON.stringify(chironReport),\n  },\n};\n\n// ---- Output to next node ----\nreturn [\n  {\n    json: {\n      contactData,\n      chironReport,\n      rawWebhookBody: body,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -64
+      ],
+      "id": "5bde8b9a-e93b-4ffc-90ad-cfac2c4ecff5",
+      "name": "Clean up"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f99dc2b5-b950-4752-ab9b-cbac9d60da0f",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1008,
+        -288
+      ],
+      "id": "5aa8ae44-e720-4bc2-8f66-9e16a05e05f9",
+      "name": "Webhook for PDF Report Email",
+      "webhookId": "f99dc2b5-b950-4752-ab9b-cbac9d60da0f"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "475b8845-0604-47ab-af7e-fe011922dcdd",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1008,
+        -64
+      ],
+      "id": "59e7dcbd-3bd8-45bc-8abd-517b9d48dee3",
+      "name": "Webhook to send info to Convertwave",
+      "webhookId": "475b8845-0604-47ab-af7e-fe011922dcdd"
+    },
+    {
+      "parameters": {
+        "fromEmail": "Morgan Garza <magic@lovelightandblackholes.com>",
+        "toEmail": "={{ $json.body.email }}",
+        "subject": "Your Chiron Shadow Report is ready 🗝️",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n\n  <!-- Hidden preview text (shows in the inbox next to the subject line) -->\n  <div style=\"display: none; max-height: 0; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #ffffff; opacity: 0;\">\n    well that explains a lot&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;\n  </div>\n\n  <p>Hey {{ $json.body.name }},</p>\n\n  <p>So now you know where your Chiron wound lives and what it's been trying to protect.</p>\n\n  <p>And you're probably thinking, \"Welp! That explains A LOT.\"</p>\n\n  <p>\n    But what I find way more useful is seeing how that same wound keeps popping up in places that seem completely unrelated until you connect the dots. Love. Money. Work. Visibility. The people who trigger the hell out of you. The places you keep shrinking, overthinking, proving, avoiding, or doing the same damn thing again even though you know better.\n  </p>\n\n  <p><strong>That's why I made the full Shadow Map.</strong></p>\n\n  <p>\n    It takes your Chiron placement and shows you how the pattern actually moves through your life, what it's been protecting, and where the same wound may be hiding some of your biggest gifts.\n  </p>\n\n  <p style=\"margin: 25px 0;\">\n    👉 <a href=\"https://lovelightandblackholes.com/result?resultId={{ $json.body.resultId }}\" style=\"color: #1a73e8; text-decoration: none; font-weight: bold;\">\n      GET YOUR FULL SHADOW MAP\n    </a>\n  </p>\n\n  <p>\n    What I found in my full Chiron map has shaped my entire career! I turned my 4<sup>th</sup> house Gemini Chiron (fear of using my voice and being seen) into what pays me, expands me, and makes me feel like I'm high when I do it. THAT'S the power of going into the dark to find the light.\n  </p>\n\n  <p>It's time to understand yourself on a whole new level.</p>\n\n  <p style=\"margin-top: 30px;\">\n    <a href=\"https://lovelightandblackholes.com\" style=\"color: #1a73e8; text-decoration: none;\">\n      Love, light, and black holes,\n    </a><br>\n    Morgan\n  </p>\n\n  <p style=\"margin-top: 30px;\">\n    <strong>PS:</strong> Your shadow is your greatest source of power. We've just never learned how to use it. Your shadow map tells you everything you need to move out of the way to get what you want!\n  </p>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        -288
+      ],
+      "id": "c9d2a2e8-f357-4936-abd2-713bae09177a",
+      "name": "Send email from love light and black holes email",
+      "webhookId": "21ace657-1f10-438c-ae2f-cc6f80bfb14c",
+      "credentials": {
+        "smtp": {
+          "id": "nDot8oaAHW67aYXO",
+          "name": "Love light and black holes"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook for PDF Report Email": [
+      {
+        "json": {
+          "headers": {
+            "host": "effortlessai.app.n8n.cloud",
+            "user-agent": "Deno/2.1.4 (variant; SupabaseEdgeRuntime/1.69.25)",
+            "content-length": "419",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "*",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2600:1f1c:e:2302:2622:be55:d463:39fe",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9b5badc924decf2e-SJC",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "2600:1f1c:e:2302:2622:be55:d463:39fe, 162.158.167.92",
+            "x-forwarded-host": "effortlessai.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-5-6fbf5bdbfc-mn9tr",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2600:1f1c:e:2302:2622:be55:d463:39fe"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "pdf_report",
+            "name": "Matt Rodgers",
+            "email": "bookbabiarz@gmail.com",
+            "chironSign": "Aries",
+            "chironHouse": "12th House",
+            "chironDegree": "2.6",
+            "shadowId": "chiron_aries_12",
+            "pdfUrl": "https://czuvjfyyidzzcskoksds.supabase.co/storage/v1/object/public/pdfs/reports/matt-rodgers-1767036277358-chiron-shadow-report.pdf",
+            "filename": "matt-rodgers-1767036277358-chiron-shadow-report.pdf",
+            "timestamp": "2025-12-29T19:24:38.057Z"
+          },
+          "webhookUrl": "https://effortlessai.app.n8n.cloud/webhook/f99dc2b5-b950-4752-ab9b-cbac9d60da0f",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook to send info to Convertwave": [
+      {
+        "json": {
+          "headers": {
+            "host": "effortlessai.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6.2 Mobile/15E148 Safari/605.1.15 (Ecosia ios@11.6.0.2689)",
+            "content-length": "5643",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2601:647:4400:2170:19e1:5a69:23c5:c4ac",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9d9443f62c7e483d-SJC",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://shadow.lovelightandblackholes.com",
+            "referer": "https://shadow.lovelightandblackholes.com/",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2601:647:4400:2170:19e1:5a69:23c5:c4ac, 104.22.20.178",
+            "x-forwarded-host": "effortlessai.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-5-8d55db77-hk6bn",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2601:647:4400:2170:19e1:5a69:23c5:c4ac"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "form_submission",
+            "name": "Patti Berryhill",
+            "email": "cottagegardens@gmail.com",
+            "birthDate": "1958-06-09",
+            "birthTime": "21:30",
+            "birthLocation": "San Angelo, TX, USA",
+            "birthCoordinates": [
+              31.4637723,
+              -100.4370375
+            ],
+            "chironSign": "Aquarius",
+            "chironDegree": 322.63,
+            "chironHouse": "2nd House",
+            "shadowId": "chiron_aquarius_2",
+            "aiReport": "**Archetype:** Misfit Builder\n\n**Theme:** Never feeling like you fit into the world of “enoughness” no matter how hard you try.\n\n**Chiron's Story**\n\nYour Chiron in Aquarius in the 2nd House tells a story of never quite finding your place in the world, especially when it comes to feeling secure, worthy, or truly valued. You probably grew up watching everyone else seem to belong—either to a group, a family, or a way of making money that seemed unreachable to you. Now it looks like always feeling a little outside, especially when it comes to self-worth, resources, and believing you actually deserve what you’ve worked your ass off for.\n\n**Core Wound**\n\nThis wound hits where your uniqueness and your sense of value collide. Somewhere early on, you got the message that being different meant being left out or unseen. Maybe the way you thought, dressed, or wanted to earn money felt out of step with everyone else. Or maybe you were told—directly or indirectly—that what makes you “you” isn’t quite acceptable currency in this world.\n\nSo you learned to question your own enoughness. You might remember feeling like your quirks made you unlovable or that your talents just didn’t hold weight. For some, this wound began right at the dinner table. Others felt it on the playground, or in every job where you had to tone yourself down just to survive. The voice in your head became: “I’m too weird, too much, too out-there to ever be truly safe or secure.”\n\nWhat really hurt? You started believing worth could only come from fitting in or conforming—so you either tried to become someone else or opted out completely. Either way, that strategy left you feeling more isolated than ever, always hungry for belonging and real value. The world keeps feeding you the lie that you need to change in order to earn and keep what matters most. And part of you almost believes it.\n\n**How It Feels**\n\nThis placement often comes with:\n\n- Feeling perpetually “other,” even in spaces meant for you\n- Worrying that your skills or personality will never translate into real security\n- Constantly comparing your value to “normal” people or conventional paths\n- Feeling anxious as hell about money, stability, or being “enough”\n- Needing to prove your worth by being the weirdest, smartest, or most original (or hiding those things entirely)\n\n**Shadow Patterns**\n\nWhen unhealed, this Chiron manifests as:\n\n- Undervaluing your gifts by hiding them or dumbing them down just to blend in\n- Self-sabotage with money or resources because you don’t believe you truly deserve them\n- Chasing belonging with people who don’t actually see or value you\n- Acting out your “outsider” role by rejecting every mainstream or traditional way of building value, even when it costs you\n- Overcompensating through rebellion—pushing people away before they can judge you\n- Staying stuck in scarcity thinking, convinced that abundance just isn’t for people like you\n- Always feeling on guard, waiting for someone to pull the rug out from under you\n\nIt starts to feel like being in a room full of people but still totally alone, always hustling to earn your own worth.\n\n**Your Medicine**\n\nWhen integrated, this placement becomes POWERFUL:\n\n- Seeing the genius in your difference and letting it be your calling card instead of your curse\n- Creating unconventional paths to abundance and security, on your own damn terms\n- Helping others realize there’s nothing wrong with being “too much” or “not enough” for the status quo\n- Building community around inclusion, where the weirdos are the VIPs\n- Modeling what it looks like to stop apologizing and start living as the most unapologetic version of yourself—even when it scares you\n\nYour wound becomes your superpower: When you finally trust that your uniqueness not only belongs, but is the missing puzzle piece, you become magnetic as hell.\n\n**Your Invitation**\n\nLet’s be real. You’ve spent enough time undercover. The healing edge for you? Stop waiting for proof that you’re valuable enough before you show up. Spoiler alert: You’ll be waiting forever. Start letting your quirks, your strange ideas, your unconventional skills actually take up space in the world—especially in places that pay you, feed you, or keep you safe.\n\nStart saying “yes” to yourself first. Stop asking permission from every “normal” person you meet. Your new task isn’t to fit in. It’s to build spaces where you and others like you can thrive unapologetically.\n\nYou might be sick of your own BS by now. Good. That’s the beginning of real change. You know what isn’t working. Now try the scary thing: trust that your true value is found exactly where you’re tempted to hide. Show up. Name your price. Create new models for worth and belonging, even if nobody’s done it before. That’s not arrogance, that’s survival. That’s freedom.\n\n**Journal / Reflection Prompts**\n\n- Where in your life do you still feel like you need to hide your quirks or play down your worth?\n- What would it look like (in real, tangible ways) to claim your “outsider” gifts as valuable, especially in spaces that scare you?",
+            "reportStatus": "completed",
+            "timestamp": "2026-03-08T19:32:21.370Z"
+          },
+          "webhookUrl": "https://effortlessai.app.n8n.cloud/webhook/475b8845-0604-47ab-af7e-fe011922dcdd",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Clean up": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook for PDF Report Email": {
+      "main": [
+        [
+          {
+            "node": "Send email from love light and black holes email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook to send info to Convertwave": {
+      "main": [
+        [
+          {
+            "node": "Clean up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ae26eaf0-71ae-42e2-b5ca-87bc9a75970f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98f14783c3837d428d9b183b3137a3d6a62c8a1cf8c3ddd144fe4d36d024b2e4"
+  },
+  "nodeGroups": [],
+  "id": "LKwSr0aYcVYro4Ie",
+  "tags": []
+}
