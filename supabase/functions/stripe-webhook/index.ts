@@ -267,6 +267,7 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
         chironDegree: record.chiron_degree,
         shadowId: record.shadow_id,
         resultId: record.id,
+        pdfUrl: pdfData.publicUrl,
         pdfBase64: pdfData.pdfBase64,
       }),
     }
