@@ -289,6 +289,14 @@ function drawWrappedText(
   fonts: Fonts
 ): number {
   const lines: string[] = doc.splitTextToSize(text, maxWidth);
+  if (lines.length >= 3) {
+    const totalHeight = lines.length * lineHeight;
+    const spaceLeft = 265 - y;
+    const linesOnThisPage = Math.floor(spaceLeft / lineHeight);
+    if (linesOnThisPage >= 1 && linesOnThisPage <= 2 && linesOnThisPage < lines.length) {
+      y = ensureSpace(doc, y, totalHeight, fonts);
+    }
+  }
   for (const line of lines) {
     y = ensureSpace(doc, y, lineHeight + 2, fonts);
     doc.text(line, x, y);
@@ -562,6 +570,31 @@ function parseTableRows(text: string): TableRow[] {
     .map((l) => ({ cells: l.split("|||").map((c) => c.trim()) }));
 }
 
+function drawTableHeader(
+  doc: Doc,
+  headers: string[],
+  x: number,
+  y: number,
+  totalWidth: number,
+  cw: number[],
+  fonts: Fonts
+): number {
+  const cellPad = 4;
+  fillRect(doc, x, y, totalWidth, 10, CHARCOAL);
+  setMontBold(doc, fonts, 8);
+  setColor(doc, WHITE);
+  let cx = x;
+  for (let c = 0; c < headers.length; c++) {
+    doc.text(headers[c], cx + cellPad, y + 7);
+    cx += cw[c];
+  }
+  y += 10;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.2);
+  doc.line(x, y, x + totalWidth, y);
+  return y;
+}
+
 function drawTable(
   doc: Doc,
   rows: TableRow[],
@@ -581,32 +614,16 @@ function drawTable(
   const rowPad = 4;
   const cellPad = 4;
 
-  // Header row
   y = ensureSpace(doc, y, 14, fonts);
-  fillRect(doc, x, y, totalWidth, 10, CHARCOAL);
-  setMontBold(doc, fonts, 8);
-  setColor(doc, WHITE);
-  let cx = x;
-  for (let c = 0; c < numCols; c++) {
-    doc.text(headers[c], cx + cellPad, y + 7);
-    cx += cw[c];
-  }
-  y += 10;
+  y = drawTableHeader(doc, headers, x, y, totalWidth, cw, fonts);
 
-  // Thin line
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.2);
-  doc.line(x, y, x + totalWidth, y);
-
-  // Data rows
   for (let r = 0; r < rows.length; r++) {
     const row = rows[r];
 
-    // Measure row height
     setMontRegular(doc, fonts, 8);
     let maxH = 10;
     const cellLines: string[][] = [];
-    cx = x;
+    let cx = x;
     for (let c = 0; c < numCols; c++) {
       const cellText = row.cells[c] || "";
       const lines: string[] = doc.splitTextToSize(cellText, cw[c] - cellPad * 2);
@@ -616,13 +633,15 @@ function drawTable(
       cx += cw[c];
     }
 
+    const prevPage = doc.getNumberOfPages();
     y = ensureSpace(doc, y, maxH + 2, fonts);
+    if (doc.getNumberOfPages() !== prevPage) {
+      y = drawTableHeader(doc, headers, x, y, totalWidth, cw, fonts);
+    }
 
-    // Alternating background
     const bgColor = r % 2 === 0 ? WHITE : { r: 245, g: 248, b: 235 };
     fillRect(doc, x, y, totalWidth, maxH, bgColor);
 
-    // Cell text
     setMontRegular(doc, fonts, 8);
     setColor(doc, DARK_TEXT);
     cx = x;
@@ -644,7 +663,6 @@ function drawTable(
 
     y += maxH;
 
-    // Row border
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.15);
     doc.line(x, y, x + totalWidth, y);
@@ -845,16 +863,6 @@ function buildOverviewPage(
 
   y += 4;
 
-  // "WANT TO GO DEEPER?" line
-  setMontBold(doc, fonts, 9);
-  setColor(doc, CREAM);
-  doc.text(
-    "WANT TO GO DEEPER? HERE\u2019S WHAT THE FULL SHADOW MAP UNLOCKS.",
-    MARGIN,
-    y
-  );
-  y += 7;
-
   // Bullet list
   const bullets = sections.get("OVERVIEW_BULLETS") || "";
   if (bullets) {
@@ -968,15 +976,16 @@ function buildSectionDivider(
 }
 
 // ---------------------------------------------------------------------------
-// CONTENT PAGE — generic sub-section builder
+// Flowing content block — draws a sub-section at a given Y, returns final Y
 // ---------------------------------------------------------------------------
-function buildContentPage(
+function drawContentBlock(
   doc: Doc,
   sections: Map<string, string>,
   prefix: string,
   fonts: Fonts,
-  pageCounter: { count: number }
-): void {
+  startY: number,
+  isContinuation: boolean
+): number {
   const title = sections.get(`${prefix}_TITLE`) || "";
   const subtitle = sections.get(`${prefix}_SUBTITLE`) || "";
   const subheader = sections.get(`${prefix}_SUBHEADER`) || "";
@@ -988,54 +997,63 @@ function buildContentPage(
   const callout2Title = sections.get(`${prefix}_CALLOUT2_TITLE`) || "";
   const callout2Body = sections.get(`${prefix}_CALLOUT2_BODY`) || "";
 
-  // If there is no content at all, skip
-  if (!title && !body && !gridText && !calloutBody) return;
+  if (!title && !body && !gridText && !calloutBody) return startY;
 
-  addCreamPage(doc);
-  pageCounter.count = doc.getNumberOfPages();
+  if (prefix === "SECTION_1C") {
+    addCreamPageWithFooter(doc, fonts);
+    startY = 35;
+    isContinuation = false;
+  }
 
-  let y = 40;
+  let y = startY;
 
-  // Title
+  if (isContinuation) {
+    y += 14;
+    if (y + 80 > 265) {
+      addCreamPageWithFooter(doc, fonts);
+      y = 35;
+    }
+  }
+
+  const titleSize = isContinuation ? 22 : 28;
+  const titleLineH = isContinuation ? 9 : 11;
+
   if (title) {
-    setMontBold(doc, fonts, 28);
+    setMontBold(doc, fonts, titleSize);
     setColor(doc, CHARCOAL);
-    const titleLines: string[] = doc.splitTextToSize(
-      title.toUpperCase(),
-      CONTENT_W
-    );
+    const titleLines: string[] = doc.splitTextToSize(title.toUpperCase(), CONTENT_W);
     for (const line of titleLines) {
+      y = ensureSpace(doc, y, titleLineH + 2, fonts);
       doc.text(line, MARGIN, y);
-      y += 11;
+      y += titleLineH;
     }
     y += 2;
   }
 
-  // Italic subtitle
   if (subtitle) {
-    setPlayfairItalic(doc, fonts, 14);
+    setPlayfairItalic(doc, fonts, isContinuation ? 12 : 14);
     setColor(doc, CHARCOAL);
     const subLines: string[] = doc.splitTextToSize(subtitle, CONTENT_W);
     for (const line of subLines) {
+      y = ensureSpace(doc, y, 7, fonts);
       doc.text(line, MARGIN, y);
       y += 6;
     }
     y += 4;
   }
 
-  // Uppercase sub-header
   if (subheader) {
     setMontBold(doc, fonts, 9);
     setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 8, fonts);
     doc.text(subheader.toUpperCase(), MARGIN, y);
     y += 6;
   }
 
-  // Pink line
+  y = ensureSpace(doc, y, 6, fonts);
   drawPinkLine(doc, MARGIN, y, CONTENT_W, 0.4);
   y += 10;
 
-  // Body text
   if (body) {
     setMontRegular(doc, fonts, 10);
     setColor(doc, DARK_TEXT);
@@ -1043,63 +1061,317 @@ function buildContentPage(
     y += 4;
   }
 
-  // Callout box
   if (calloutTitle || calloutBody) {
     y += 4;
-    y = drawCalloutBox(
-      doc,
-      calloutTitle,
-      calloutBody,
-      MARGIN,
-      y,
-      CONTENT_W,
-      fonts,
-      SOFT_GREEN,
-      true
-    );
+    y = drawCalloutBox(doc, calloutTitle, calloutBody, MARGIN, y, CONTENT_W, fonts, SOFT_GREEN, true);
     y += 8;
   }
 
-  // Body2 (after callout)
   if (body2) {
     setMontRegular(doc, fonts, 10);
     setColor(doc, DARK_TEXT);
+    const body2Lines: string[] = doc.splitTextToSize(body2, CONTENT_W);
+    const body2Height = body2Lines.length * 5.5 + 4;
+    if (body2Height < 40) {
+      y = ensureSpace(doc, y, body2Height, fonts);
+    }
     y = drawParagraphs(doc, body2, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
     y += 4;
   }
 
-  // Grid
   if (gridText) {
-    y += 4;
+    if (prefix === "SECTION_3C") {
+      addCreamPageWithFooter(doc, fonts);
+      y = 35;
+    } else {
+      y += 4;
+    }
     y = drawGrid(doc, gridText, MARGIN, y, CONTENT_W, fonts, 4);
     y += 4;
   }
 
-  // Second callout
   if (callout2Title || callout2Body) {
     y += 4;
-    y = drawCalloutBox(
-      doc,
-      callout2Title,
-      callout2Body,
-      MARGIN,
-      y,
-      CONTENT_W,
-      fonts,
-      SOFT_GREEN,
-      true
-    );
+    y = drawCalloutBox(doc, callout2Title, callout2Body, MARGIN, y, CONTENT_W, fonts, SOFT_GREEN, true);
     y += 8;
   }
 
-  // Footer on all pages of this section (the main one + any continuation pages)
-  const totalPages = doc.getNumberOfPages();
-  for (let p = pageCounter.count; p <= totalPages; p++) {
+  return y;
+}
+
+function drawJournalBlock(
+  doc: Doc,
+  sections: Map<string, string>,
+  prefix: string,
+  fonts: Fonts,
+  startY: number
+): number {
+  const title = sections.get(`${prefix}_TITLE`) || "JOURNAL IT";
+  const subtitle = sections.get(`${prefix}_SUBTITLE`) || "";
+
+  let y = startY + 14;
+  if (y + 100 > 265) {
+    addCreamPageWithFooter(doc, fonts);
+    y = 35;
+  }
+
+  setMontBold(doc, fonts, 22);
+  setColor(doc, CHARCOAL);
+  const titleLines: string[] = doc.splitTextToSize(title.toUpperCase(), CONTENT_W);
+  for (const line of titleLines) {
+    y = ensureSpace(doc, y, 10, fonts);
+    doc.text(line, MARGIN, y);
+    y += 9;
+  }
+
+  if (subtitle) {
+    setPlayfairItalic(doc, fonts, 12);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 7, fonts);
+    doc.text(subtitle, MARGIN, y);
+    y += 6;
+  }
+
+  y = ensureSpace(doc, y, 6, fonts);
+  drawPinkLine(doc, MARGIN, y, CONTENT_W, 0.4);
+  y += 8;
+
+  for (let i = 1; i <= 3; i++) {
+    const t = sections.get(`${prefix}_CALLOUT${i}_TITLE`) || sections.get(`${prefix}_CALLOUT_TITLE`) || "";
+    const b = sections.get(`${prefix}_CALLOUT${i}_BODY`) || sections.get(`${prefix}_CALLOUT_BODY`) || "";
+    if (t || b) {
+      y = drawCalloutBox(doc, t, b, MARGIN, y, CONTENT_W, fonts, SOFT_GREEN, true);
+      y += 6;
+    }
+  }
+
+  return y;
+}
+
+function drawTableBlock(
+  doc: Doc,
+  title: string,
+  subtitle: string,
+  tableText: string,
+  headers: string[],
+  fonts: Fonts,
+  startY: number,
+  colWidths: number[]
+): number {
+  let y = startY + 14;
+  if (y + 80 > 265) {
+    addCreamPageWithFooter(doc, fonts);
+    y = 35;
+  }
+
+  setMontBold(doc, fonts, 22);
+  setColor(doc, CHARCOAL);
+  const titleLines: string[] = doc.splitTextToSize(title.toUpperCase(), CONTENT_W);
+  for (const line of titleLines) {
+    y = ensureSpace(doc, y, 10, fonts);
+    doc.text(line, MARGIN, y);
+    y += 9;
+  }
+
+  if (subtitle) {
+    setPlayfairItalic(doc, fonts, 12);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 7, fonts);
+    doc.text(subtitle, MARGIN, y);
+    y += 6;
+  }
+
+  y = ensureSpace(doc, y, 6, fonts);
+  drawPinkLine(doc, MARGIN, y, CONTENT_W, 0.4);
+  y += 6;
+
+  const rows = parseTableRows(tableText);
+  y = drawTable(doc, rows, headers, MARGIN, y, CONTENT_W, fonts, colWidths);
+
+  return y;
+}
+
+function drawHowToLoveBlock(
+  doc: Doc,
+  sections: Map<string, string>,
+  fonts: Fonts,
+  startY: number
+): number {
+  const title = sections.get("SECTION_5C_TITLE") || "HOW TO LOVE SOMEONE";
+  const subtitle = sections.get("SECTION_5C_SUBTITLE") || "";
+  const subheader = sections.get("SECTION_5C_SUBHEADER") || "";
+  const body = sections.get("SECTION_5C_BODY") || "";
+  const calloutTitle = sections.get("SECTION_5C_CALLOUT_TITLE") || "";
+  const calloutBody = sections.get("SECTION_5C_CALLOUT_BODY") || "";
+  const body2 = sections.get("SECTION_5C_BODY2") || "";
+  const grid = sections.get("SECTION_5C_GRID") || "";
+
+  let y = startY + 14;
+  if (y + 80 > 265) {
+    addCreamPageWithFooter(doc, fonts);
+    y = 35;
+  }
+
+  setMontBold(doc, fonts, 22);
+  setColor(doc, CHARCOAL);
+  const tLines: string[] = doc.splitTextToSize(title.toUpperCase(), CONTENT_W);
+  for (const line of tLines) {
+    y = ensureSpace(doc, y, 10, fonts);
+    doc.text(line, MARGIN, y);
+    y += 9;
+  }
+
+  if (subtitle) {
+    setPlayfairItalic(doc, fonts, 12);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 7, fonts);
+    doc.text(subtitle, MARGIN, y);
+    y += 6;
+  }
+
+  if (subheader) {
+    setMontBold(doc, fonts, 9);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 8, fonts);
+    doc.text(subheader.toUpperCase(), MARGIN, y);
+    y += 6;
+  }
+
+  y = ensureSpace(doc, y, 6, fonts);
+  drawPinkLine(doc, MARGIN, y, CONTENT_W, 0.4);
+  y += 10;
+
+  if (body) {
+    setMontRegular(doc, fonts, 10);
+    setColor(doc, DARK_TEXT);
+    y = drawParagraphs(doc, body, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
+    y += 4;
+  }
+
+  if (grid) {
+    y += 4;
+    y = drawGrid(doc, grid, MARGIN, y, CONTENT_W, fonts, 4);
+    y += 4;
+  }
+
+  if (calloutTitle || calloutBody) {
+    y += 4;
+    y = drawCalloutBox(doc, calloutTitle, calloutBody, MARGIN, y, CONTENT_W, fonts, SOFT_GREEN, true);
+    y += 8;
+  }
+
+  if (body2) {
+    setMontRegular(doc, fonts, 10);
+    setColor(doc, DARK_TEXT);
+    const b2Lines: string[] = doc.splitTextToSize(body2, CONTENT_W);
+    const b2H = b2Lines.length * 5.5 + 4;
+    if (b2H < 40) y = ensureSpace(doc, y, b2H, fonts);
+    y = drawParagraphs(doc, body2, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
+  }
+
+  return y;
+}
+
+function drawClosingBlock(
+  doc: Doc,
+  sections: Map<string, string>,
+  fonts: Fonts,
+  startY: number
+): number {
+  const title = sections.get("SECTION_5D_TITLE") || "YOUR MAP IS NOT THE DESTINATION";
+  const subtitle = sections.get("SECTION_5D_SUBTITLE") || "";
+  const subheader = sections.get("SECTION_5D_SUBHEADER") || "";
+  const body = sections.get("SECTION_5D_BODY") || "";
+  const calloutTitle = sections.get("SECTION_5D_CALLOUT_TITLE") || "";
+  const calloutBody = sections.get("SECTION_5D_CALLOUT_BODY") || "";
+  const body2 = sections.get("SECTION_5D_BODY2") || "";
+
+  let y = startY + 14;
+  if (y + 80 > 265) {
+    addCreamPageWithFooter(doc, fonts);
+    y = 35;
+  }
+
+  setMontBold(doc, fonts, 22);
+  setColor(doc, CHARCOAL);
+  const tLines: string[] = doc.splitTextToSize(title.toUpperCase(), CONTENT_W);
+  for (const line of tLines) {
+    y = ensureSpace(doc, y, 10, fonts);
+    doc.text(line, MARGIN, y);
+    y += 9;
+  }
+
+  if (subtitle) {
+    setPlayfairItalic(doc, fonts, 12);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 7, fonts);
+    doc.text(subtitle, MARGIN, y);
+    y += 6;
+  }
+
+  if (subheader) {
+    setMontBold(doc, fonts, 9);
+    setColor(doc, CHARCOAL);
+    y = ensureSpace(doc, y, 8, fonts);
+    doc.text(subheader.toUpperCase(), MARGIN, y);
+    y += 6;
+  }
+
+  y = ensureSpace(doc, y, 6, fonts);
+  drawPinkLine(doc, MARGIN, y, CONTENT_W, 0.4);
+  y += 10;
+
+  if (body) {
+    setMontRegular(doc, fonts, 10);
+    setColor(doc, DARK_TEXT);
+    y = drawParagraphs(doc, body, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
+    y += 4;
+  }
+
+  if (calloutTitle || calloutBody) {
+    y += 4;
+    y = drawCalloutBox(doc, calloutTitle, calloutBody, MARGIN, y, CONTENT_W, fonts, SOFT_GREEN, true);
+    y += 8;
+  }
+
+  if (body2) {
+    setMontRegular(doc, fonts, 10);
+    setColor(doc, DARK_TEXT);
+    const b2Lines: string[] = doc.splitTextToSize(body2, CONTENT_W);
+    const b2H = b2Lines.length * 5.5 + 4;
+    if (b2H < 40) y = ensureSpace(doc, y, b2H, fonts);
+    y = drawParagraphs(doc, body2, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
+    y += 6;
+  }
+
+  y = ensureSpace(doc, y, 35, fonts);
+  y += 4;
+
+  setPlayfairItalic(doc, fonts, 14);
+  setColor(doc, CHARCOAL);
+  doc.text("Love, light, and black holes,", MARGIN, y);
+  y += 14;
+
+  setPlayfairItalic(doc, fonts, 22);
+  setColor(doc, CHARCOAL);
+  doc.text("Morgan", MARGIN, y);
+  y += 12;
+
+  setMontRegular(doc, fonts, 9);
+  setColor(doc, DARK_TEXT);
+  doc.text("hello@lovelightandblackholes.com", MARGIN, y);
+  y += 6;
+  doc.text("@lovelightandblackholes", MARGIN, y);
+
+  return y;
+}
+
+function addFootersToRange(doc: Doc, startPage: number, endPage: number, fonts: Fonts) {
+  for (let p = startPage; p <= endPage; p++) {
     doc.setPage(p);
     addFooter(doc, p, false, fonts);
   }
-  // Set back to last page
-  doc.setPage(totalPages);
+  doc.setPage(endPage);
 }
 
 // ---------------------------------------------------------------------------
@@ -1292,6 +1564,9 @@ function buildHowToLovePage(
   if (body2) {
     setMontRegular(doc, fonts, 10);
     setColor(doc, DARK_TEXT);
+    const b2Lines: string[] = doc.splitTextToSize(body2, CONTENT_W);
+    const b2H = b2Lines.length * 5.5 + 4;
+    if (b2H < 40) y = ensureSpace(doc, y, b2H, fonts);
     y = drawParagraphs(doc, body2, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
   }
 
@@ -1379,13 +1654,16 @@ function buildClosingPage(
   if (body2) {
     setMontRegular(doc, fonts, 10);
     setColor(doc, DARK_TEXT);
+    const b2Lines: string[] = doc.splitTextToSize(body2, CONTENT_W);
+    const b2H = b2Lines.length * 5.5 + 4;
+    if (b2H < 40) y = ensureSpace(doc, y, b2H, fonts);
     y = drawParagraphs(doc, body2, MARGIN, y, CONTENT_W, 5.5, 4, fonts);
     y += 6;
   }
 
   // Sign-off
-  y = ensureSpace(doc, y, 50, fonts);
-  y += 8;
+  y = ensureSpace(doc, y, 35, fonts);
+  y += 4;
 
   setPlayfairItalic(doc, fonts, 14);
   setColor(doc, CHARCOAL);
@@ -1414,31 +1692,31 @@ function buildClosingPage(
 // ---------------------------------------------------------------------------
 // Static cheat-sheet table data (used when AI doesn't generate 5A/5B)
 // ---------------------------------------------------------------------------
-const CHIRON_BY_SIGN_TABLE = `Aries|||Wound around identity and the right to exist. Feels invisible or too much.|||Courage to be unapologetically themselves and pioneer new paths for others.
-Taurus|||Wound around worth, security, and having enough. Fear of scarcity or loss.|||Deep resilience and the ability to build lasting value from nothing.
-Gemini|||Wound around being heard and taken seriously. Voice dismissed or misunderstood.|||Gift for translating complex truths into language anyone can understand.
-Cancer|||Wound around nurturing and emotional safety. Felt unwelcome or abandoned.|||Capacity to create genuine belonging and emotional sanctuary for others.
-Leo|||Wound around recognition and being seen. Creative light was dimmed or shamed.|||Radiance that inspires others to stop hiding and own their brilliance.
-Virgo|||Wound around perfection and being enough. Never feels finished or good enough.|||Mastery of detail and the ability to heal through practical service.
-Libra|||Wound around partnership and being chosen. Loses self in relationships.|||Gift for creating real harmony and modeling balanced, interdependent love.
-Scorpio|||Wound around trust, betrayal, and intimacy. Fear of vulnerability and power.|||Capacity to transform pain into power and guide others through darkness.
-Sagittarius|||Wound around meaning and belief. Faith shaken or truth dismissed.|||Vision to inspire others with authentic wisdom and bold exploration.
-Capricorn|||Wound around achievement and authority. Never feels successful enough.|||Natural leadership and the ability to build structures that last.
-Aquarius|||Wound around belonging and acceptance. Feels like a perpetual outsider.|||Innovation that changes communities and gives permission to be different.
-Pisces|||Wound around spiritual connection and boundaries. Absorbs everyone's pain.|||Deep compassion and the ability to hold space for collective healing.`;
+const CHIRON_BY_SIGN_TABLE = `Aries|||Feels invisible or like too much. Learned that existing loudly costs you something.|||Walks in and changes the room. Pioneers paths other people are too scared to take.
+Taurus|||Never feels like enough. Hoards proof of worth because scarcity taught them that having means surviving.|||Builds something real from nothing. Teaches other people that their worth is not negotiable.
+Gemini|||Got told they were too much, too loud, too weird. Started editing themselves before they finished the thought.|||Translates the hard thing into language anyone can sit with. People trust them with the truth.
+Cancer|||Felt unwelcome in their own home. Learned to manage everyone else's mood before their own.|||Creates rooms where nobody has to translate themselves. People stay because it feels like theirs.
+Leo|||Creative light got dimmed or shamed. Learned that being seen is dangerous.|||Radiates without trying. Gives other people permission to stop hiding.
+Virgo|||Never feels finished or good enough. Rewrites the email twelve times. Posts nothing.|||Notices what other people miss. Fixes things quietly. Makes everything they touch work better.
+Libra|||Loses themselves in other people. Says yes when they mean no. Keeps the peace at their own cost.|||Models what balanced love actually looks like. Shows people you can choose yourself and still stay connected.
+Scorpio|||Got burned by trust. Decided vulnerability is a trap. Now they test people before they let them in.|||Transforms pain into power. Walks other people through the dark because they already know the way.
+Sagittarius|||Had their faith or truth dismissed. Stopped saying what they actually believe out loud.|||Says the thing everyone is thinking. Gives people permission to want more from their life.
+Capricorn|||Never feels successful enough. Moves the goalpost every time they get close.|||Builds structures that last. Leads without apologizing for being in charge.
+Aquarius|||Felt like a perpetual outsider. Stopped trying to fit in and started performing difference instead.|||Changes communities by being unapologetically themselves. Gives other people permission to be weird.
+Pisces|||Absorbs everyone's pain. Forgets where they end and other people begin.|||Sits with what everyone else avoids. The person people bring the thing they cannot say out loud.`;
 
-const CHIRON_BY_HOUSE_TABLE = `1st House|||Wound around identity and self-expression. Feels their existence is not acknowledged.|||Courage to be fully themselves and inspire others to do the same.
-2nd House|||Wound around self-worth and material security. Never feels like enough.|||Ability to build real value and teach others their worth is inherent.
-3rd House|||Wound around communication and being heard. Voice was dismissed early on.|||Gift for authentic expression and teaching others to speak their truth.
-4th House|||Wound around home and family roots. Felt unsafe or like a stranger at home.|||Capacity to create sanctuary and help others heal family wounds.
-5th House|||Wound around creative expression and joy. Play was shamed or stifled.|||Permission to create fearlessly and inspire others to reclaim their joy.
-6th House|||Wound around work, health, and usefulness. Worth tied to productivity.|||Ability to serve from wholeness and model healthy boundaries in work.
-7th House|||Wound around partnership and being chosen. Loses self in others.|||Capacity for real, balanced partnership and teaching interdependence.
-8th House|||Wound around power, intimacy, and shared resources. Fear of vulnerability.|||Ability to transform and regenerate, guiding others through their depths.
-9th House|||Wound around meaning, faith, and truth. Beliefs were dismissed.|||Vision to teach authentic wisdom and inspire others to trust their path.
-10th House|||Wound around authority, career, and public recognition. Fear of exposure.|||Natural leadership and the ability to redefine success on their own terms.
-11th House|||Wound around belonging in community. Felt like an outsider in groups.|||Gift for building communities that celebrate authenticity and difference.
-12th House|||Wound around spiritual identity and surrender. Carries ancestral or collective pain.|||Capacity for deep spiritual healing and guiding others through the dark.`;
+const CHIRON_BY_HOUSE_TABLE = `1st House|||Feels their existence is not acknowledged. Learned to disappear before anyone could tell them to.|||Shows up fully. Gives other people permission to stop apologizing for existing.
+2nd House|||Never feels like enough. Ties their worth to what they produce or what they own.|||Builds real value. Teaches people their worth is not something they earn.
+3rd House|||Voice was dismissed early. Learned that saying the wrong thing costs more than staying quiet.|||Says the thing nobody else will say. Teaches people to stop editing themselves.
+4th House|||Felt like a stranger in their own home. Learned to make themselves small so they would not be a burden.|||Creates home wherever they go. Helps other people heal the thing they inherited.
+5th House|||Play was shamed or stifled. Learned that joy is something you earn, not something you get.|||Creates fearlessly. Shows people that joy is not something you have to deserve.
+6th House|||Worth tied to productivity. Feels guilty for resting. Burns out and calls it discipline.|||Serves from wholeness, not depletion. Models what healthy work actually looks like.
+7th House|||Loses themselves in other people. Stays in the relationship past the point of self-abandonment.|||Shows people what real partnership looks like. Chooses themselves and stays connected.
+8th House|||Fear of vulnerability and shared power. Keeps control because letting go felt like dying.|||Transforms. Walks people through their own depths because they already survived theirs.
+9th House|||Beliefs were dismissed. Stopped sharing what they actually think about meaning and truth.|||Teaches by example. Gives people permission to trust their own path.
+10th House|||Fear of exposure. Hides from recognition because being seen felt like being targeted.|||Leads on their own terms. Redefines success so it stops costing them their identity.
+11th House|||Felt like an outsider in groups. Stopped trying to belong and started performing instead.|||Builds communities where people do not have to perform. Celebrates the weird ones.
+12th House|||Carries pain that is not entirely theirs. Absorbs the room. Forgets where they end.|||Sits with what others cannot. Guides people through the dark because they live there too.`;
 
 // ---------------------------------------------------------------------------
 // MASTER BUILD — orchestrate all 26 pages
@@ -1462,7 +1740,6 @@ async function buildPdf(
   console.log("Parsed sections:", Array.from(sections.keys()).join(", "));
 
   const woundName = sections.get("WOUND_NAME") || "Your Wound";
-  const pc = { count: 1 }; // mutable page counter
 
   // -----------------------------------------------------------------------
   // PAGE 1 — COVER
@@ -1498,22 +1775,18 @@ async function buildPdf(
   );
 
   // -----------------------------------------------------------------------
-  // PAGE 4 — 1A: THE CHILDHOOD WOUND
+  // SECTION 1 content (1A, 1B, 1C) — flowing on cream pages
   // -----------------------------------------------------------------------
-  buildContentPage(doc, sections, "SECTION_1A", fonts, pc);
+  addCreamPage(doc);
+  let sectionStartPage = doc.getNumberOfPages();
+  let y = 40;
+  y = drawContentBlock(doc, sections, "SECTION_1A", fonts, y, false);
+  y = drawContentBlock(doc, sections, "SECTION_1B", fonts, y, true);
+  y = drawContentBlock(doc, sections, "SECTION_1C", fonts, y, true);
+  addFootersToRange(doc, sectionStartPage, doc.getNumberOfPages(), fonts);
 
   // -----------------------------------------------------------------------
-  // PAGE 5 — 1B: THE PROTECTION
-  // -----------------------------------------------------------------------
-  buildContentPage(doc, sections, "SECTION_1B", fonts, pc);
-
-  // -----------------------------------------------------------------------
-  // PAGE 6 — 1C: RECURRING TRIGGERS
-  // -----------------------------------------------------------------------
-  buildContentPage(doc, sections, "SECTION_1C", fonts, pc);
-
-  // -----------------------------------------------------------------------
-  // PAGE 7 — SECTION 2 DIVIDER: "WHERE IT SHOWS UP"
+  // SECTION 2 DIVIDER: "WHERE IT SHOWS UP"
   // -----------------------------------------------------------------------
   addDarkPage(doc);
   buildSectionDivider(
@@ -1526,15 +1799,19 @@ async function buildPdf(
   );
 
   // -----------------------------------------------------------------------
-  // PAGES 8–13 — Section 2 sub-sections (2A through 2F)
+  // SECTION 2 content (2A through 2F) — flowing on cream pages
   // -----------------------------------------------------------------------
+  addCreamPage(doc);
+  sectionStartPage = doc.getNumberOfPages();
+  y = 40;
   const section2Subs = ["2A", "2B", "2C", "2D", "2E", "2F"];
-  for (const sub of section2Subs) {
-    buildContentPage(doc, sections, `SECTION_${sub}`, fonts, pc);
+  for (let i = 0; i < section2Subs.length; i++) {
+    y = drawContentBlock(doc, sections, `SECTION_${section2Subs[i]}`, fonts, y, i > 0);
   }
+  addFootersToRange(doc, sectionStartPage, doc.getNumberOfPages(), fonts);
 
   // -----------------------------------------------------------------------
-  // PAGE 14 — SECTION 3 DIVIDER: "THE OTHER SIDE OF THE COIN"
+  // SECTION 3 DIVIDER: "THE OTHER SIDE OF THE COIN"
   // -----------------------------------------------------------------------
   addDarkPage(doc);
   buildSectionDivider(
@@ -1547,15 +1824,19 @@ async function buildPdf(
   );
 
   // -----------------------------------------------------------------------
-  // PAGES 15–17 — Section 3 sub-sections (3A, 3B, 3C)
+  // SECTION 3 content (3A, 3B, 3C) — flowing on cream pages
   // -----------------------------------------------------------------------
+  addCreamPage(doc);
+  sectionStartPage = doc.getNumberOfPages();
+  y = 40;
   const section3Subs = ["3A", "3B", "3C"];
-  for (const sub of section3Subs) {
-    buildContentPage(doc, sections, `SECTION_${sub}`, fonts, pc);
+  for (let i = 0; i < section3Subs.length; i++) {
+    y = drawContentBlock(doc, sections, `SECTION_${section3Subs[i]}`, fonts, y, i > 0);
   }
+  addFootersToRange(doc, sectionStartPage, doc.getNumberOfPages(), fonts);
 
   // -----------------------------------------------------------------------
-  // PAGE 18 — SECTION 4 DIVIDER: "INTEGRATION"
+  // SECTION 4 DIVIDER: "INTEGRATION"
   // -----------------------------------------------------------------------
   addDarkPage(doc);
   buildSectionDivider(
@@ -1568,87 +1849,18 @@ async function buildPdf(
   );
 
   // -----------------------------------------------------------------------
-  // PAGE 19 — 4A: TRIGGERS ARE PORTALS
+  // SECTION 4 content (4A, 4B, 4C) — flowing on cream pages
   // -----------------------------------------------------------------------
-  buildContentPage(doc, sections, "SECTION_4A", fonts, pc);
+  addCreamPage(doc);
+  sectionStartPage = doc.getNumberOfPages();
+  y = 40;
+  y = drawContentBlock(doc, sections, "SECTION_4A", fonts, y, false);
+  y = drawJournalBlock(doc, sections, "SECTION_4B", fonts, y);
+  y = drawJournalBlock(doc, sections, "SECTION_4C", fonts, y);
+  addFootersToRange(doc, sectionStartPage, doc.getNumberOfPages(), fonts);
 
   // -----------------------------------------------------------------------
-  // PAGE 20 — 4B: JOURNAL IT (page 1)
-  // -----------------------------------------------------------------------
-  {
-    const j1Prompts: { title: string; body: string }[] = [];
-    for (let i = 1; i <= 3; i++) {
-      const t = sections.get(`SECTION_4B_CALLOUT${i}_TITLE`) || sections.get(`SECTION_4B_CALLOUT_TITLE`) || "";
-      const b = sections.get(`SECTION_4B_CALLOUT${i}_BODY`) || sections.get(`SECTION_4B_CALLOUT_BODY`) || "";
-      if (t || b) j1Prompts.push({ title: t, body: b });
-    }
-    // Fallback: if no numbered callouts found, try standard callout
-    if (j1Prompts.length === 0) {
-      const ct = sections.get("SECTION_4B_CALLOUT_TITLE") || "";
-      const cb = sections.get("SECTION_4B_CALLOUT_BODY") || "";
-      if (ct || cb) j1Prompts.push({ title: ct, body: cb });
-      // Also check for body content as prompts
-      const bodyText = sections.get("SECTION_4B_BODY") || "";
-      if (bodyText) {
-        const paras = bodyText.split(/\n\n+/).filter((p) => p.trim());
-        for (const p of paras) {
-          j1Prompts.push({ title: "", body: p.trim() });
-        }
-      }
-    }
-    if (j1Prompts.length > 0) {
-      buildJournalPage(
-        doc,
-        sections.get("SECTION_4B_TITLE") || "JOURNAL IT",
-        sections.get("SECTION_4B_SUBTITLE") || "",
-        j1Prompts,
-        fonts,
-        pc
-      );
-    } else {
-      // Use generic content page builder as fallback
-      buildContentPage(doc, sections, "SECTION_4B", fonts, pc);
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // PAGE 21 — 4C: JOURNAL IT (page 2)
-  // -----------------------------------------------------------------------
-  {
-    const j2Prompts: { title: string; body: string }[] = [];
-    for (let i = 1; i <= 3; i++) {
-      const t = sections.get(`SECTION_4C_CALLOUT${i}_TITLE`) || "";
-      const b = sections.get(`SECTION_4C_CALLOUT${i}_BODY`) || "";
-      if (t || b) j2Prompts.push({ title: t, body: b });
-    }
-    if (j2Prompts.length === 0) {
-      const ct = sections.get("SECTION_4C_CALLOUT_TITLE") || "";
-      const cb = sections.get("SECTION_4C_CALLOUT_BODY") || "";
-      if (ct || cb) j2Prompts.push({ title: ct, body: cb });
-      const bodyText = sections.get("SECTION_4C_BODY") || "";
-      if (bodyText) {
-        const paras = bodyText.split(/\n\n+/).filter((p) => p.trim());
-        for (const p of paras) {
-          j2Prompts.push({ title: "", body: p.trim() });
-        }
-      }
-    }
-    if (j2Prompts.length > 0) {
-      buildJournalPage(
-        doc,
-        sections.get("SECTION_4C_TITLE") || "JOURNAL IT",
-        sections.get("SECTION_4C_SUBTITLE") || "(continued)",
-        j2Prompts,
-        fonts,
-        pc
-      );
-    } else {
-      buildContentPage(doc, sections, "SECTION_4C", fonts, pc);
-    }
-  }
-
-  // -----------------------------------------------------------------------
-  // PAGE 22 — SECTION 5 DIVIDER: "CHIRON CHEAT SHEETS"
+  // SECTION 5 DIVIDER: "CHIRON CHEAT SHEETS"
   // -----------------------------------------------------------------------
   addDarkPage(doc);
   buildSectionDivider(
@@ -1661,48 +1873,51 @@ async function buildPdf(
   );
 
   // -----------------------------------------------------------------------
-  // PAGE 23 — 5A: CHIRON BY SIGN (table)
+  // SECTION 5 content (5A, 5B, 5C, 5D) — flowing on cream pages
   // -----------------------------------------------------------------------
+  addCreamPage(doc);
+  sectionStartPage = doc.getNumberOfPages();
+  y = 40;
+
+  // 5A: Chiron by Sign table
   {
     const tableText = sections.get("SECTION_5A_BODY") || sections.get("SECTION_5A_GRID") || CHIRON_BY_SIGN_TABLE;
-    buildTablePage(
+    y = drawTableBlock(
       doc,
       sections.get("SECTION_5A_TITLE") || "CHIRON BY SIGN",
       sections.get("SECTION_5A_SUBTITLE") || "Quick reference for reading others",
       tableText,
       ["SIGN", "WOUND", "GIFT"],
       fonts,
-      pc,
+      y,
       [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
     );
   }
 
-  // -----------------------------------------------------------------------
-  // PAGE 24 — 5B: CHIRON BY HOUSE (table)
-  // -----------------------------------------------------------------------
+  // 5B: Chiron by House table
   {
     const tableText = sections.get("SECTION_5B_BODY") || sections.get("SECTION_5B_GRID") || CHIRON_BY_HOUSE_TABLE;
-    buildTablePage(
+    y = drawTableBlock(
       doc,
       sections.get("SECTION_5B_TITLE") || "CHIRON BY HOUSE",
       sections.get("SECTION_5B_SUBTITLE") || "Where the wound lives in the chart",
       tableText,
       ["HOUSE", "WOUND", "GIFT"],
       fonts,
-      pc,
+      y,
       [CONTENT_W * 0.18, CONTENT_W * 0.41, CONTENT_W * 0.41]
     );
   }
 
-  // -----------------------------------------------------------------------
-  // PAGE 25 — 5C: HOW TO LOVE SOMEONE
-  // -----------------------------------------------------------------------
-  buildHowToLovePage(doc, sections, fonts, pc);
+  // 5C: How to Love Someone
+  y = drawHowToLoveBlock(doc, sections, fonts, y);
 
-  // -----------------------------------------------------------------------
-  // PAGE 26 — 5D: YOUR MAP IS NOT THE DESTINATION (closing)
-  // -----------------------------------------------------------------------
-  buildClosingPage(doc, sections, fonts, pc);
+  // 5D: Closing
+  addCreamPageWithFooter(doc, fonts);
+  y = 35;
+  y = drawClosingBlock(doc, sections, fonts, y);
+
+  addFootersToRange(doc, sectionStartPage, doc.getNumberOfPages(), fonts);
 
   const pageCount = doc.getNumberOfPages();
   console.log(`PDF built with ${pageCount} pages`);
@@ -1713,12 +1928,63 @@ async function buildPdf(
 // ---------------------------------------------------------------------------
 // Deno.serve() handler
 // ---------------------------------------------------------------------------
+// Internal only: called by the Stripe webhook after a confirmed payment using
+// the service role key.
+function isInternalCaller(req: Request): boolean {
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceKey) return false;
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.replace(/^Bearer\s+/i, "").trim();
+  if (token.length !== serviceKey.length) return false;
+  let diff = 0;
+  for (let i = 0; i < token.length; i++) {
+    diff |= token.charCodeAt(i) ^ serviceKey.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+function normalizePdfText(value: unknown): string {
+  return typeof value === "string" ? value.replace(/\u2014/g, " - ") : "";
+}
+
+async function isAdminPasscode(passcode: unknown): Promise<boolean> {
+  if (typeof passcode !== "string" || passcode.length === 0) return false;
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) return false;
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/admin_passcode_ok`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({ p_passcode: passcode }),
+  });
+
+  if (!response.ok) return false;
+  return (await response.json()) === true;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
+    const body = await req.json();
+    const authorized =
+      isInternalCaller(req) || (await isAdminPasscode(body.passcode));
+
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: "Not authorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const {
       name,
       email,
@@ -1727,7 +1993,7 @@ Deno.serve(async (req: Request) => {
       chironDegree,
       shadowId,
       report,
-    } = await req.json();
+    } = body;
 
     if (!report || !name) {
       return new Response(
@@ -1739,18 +2005,26 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const pdfName = normalizePdfText(name || "Friend");
+    const pdfEmail = normalizePdfText(email || "");
+    const pdfChironSign = normalizePdfText(chironSign || "Unknown");
+    const pdfChironHouse = normalizePdfText(chironHouse || "Unknown");
+    const pdfChironDegree = normalizePdfText(chironDegree || "");
+    const pdfShadowId = normalizePdfText(shadowId || "report");
+    const pdfReport = normalizePdfText(report);
+
     console.log(
-      `Generating PDF for: ${name}, report length: ${report.length}`
+      `Generating PDF for: ${pdfName}, report length: ${pdfReport.length}`
     );
 
     const { doc, pageCount } = await buildPdf({
-      name: name || "Friend",
-      email: email || "",
-      chironSign: chironSign || "Unknown",
-      chironHouse: chironHouse || "Unknown",
-      chironDegree: chironDegree || "",
-      shadowId: shadowId || "report",
-      report,
+      name: pdfName,
+      email: pdfEmail,
+      chironSign: pdfChironSign,
+      chironHouse: pdfChironHouse,
+      chironDegree: pdfChironDegree,
+      shadowId: pdfShadowId,
+      report: pdfReport,
     });
 
     // Generate PDF binary
@@ -1779,16 +2053,25 @@ Deno.serve(async (req: Request) => {
       console.error("Storage upload failed:", uploadError);
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("shadow-reports").getPublicUrl(filename);
+    // The bucket is private: hand out a time limited signed link instead of a
+    // public URL so the report is not readable by anyone who finds the path.
+    let downloadUrl = "";
+    const { data: signed, error: signError } = await supabase.storage
+      .from("shadow-reports")
+      .createSignedUrl(filename, 60 * 60 * 24 * 365);
 
-    console.log("PDF uploaded:", publicUrl);
+    if (signError) {
+      console.error("Could not create signed URL:", signError);
+    } else {
+      downloadUrl = signed?.signedUrl ?? "";
+    }
+
+    console.log("PDF uploaded:", filename);
 
     return new Response(
       JSON.stringify({
         pdfBase64,
-        publicUrl,
+        publicUrl: downloadUrl,
         pages: pageCount,
         filename,
       }),
@@ -1799,12 +2082,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("PDF generation error:", error);
     return new Response(
-      JSON.stringify({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate PDF",
-      }),
+      JSON.stringify({ error: "Failed to generate PDF" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

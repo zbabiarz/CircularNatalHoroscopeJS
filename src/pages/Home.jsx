@@ -109,7 +109,7 @@ function Home() {
                 Your Shadow Map
               </p>
               <h1 className="text-3xl md:text-4xl font-bold mb-5 text-white leading-tight" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                Your shadow has been in your birth chart this whole time!
+                Personalized shadow work based on your birth chart
               </h1>
               <p className="text-base text-white/90 leading-relaxed inline-block rounded-xl px-4 py-3" style={{ fontFamily: "'Montserrat', sans-serif", background: 'rgba(0,0,0,0.45)' }}>
                 I'll tell you your deepest shadow and how it's run your whole life based on your Chiron placement. Eerily accurate. Totally liberating. Enter your birth info and let me blow your mind.
@@ -117,11 +117,7 @@ function Home() {
             </div>
           </div>
 
-          <div className="rounded-2xl shadow-xl p-8 md:p-10" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 px-2">
             <div className="rounded-2xl overflow-hidden p-3" style={{ background: 'rgba(30,30,35,0.7)' }}>
               <img
                 src="https://assets.cdn.filesafe.space/KQwViSotgXlhDFQY6Xfg/media/6a236520e8bb5ac427f064ac.png"
@@ -136,6 +132,10 @@ function Home() {
                 className="rounded-lg w-full"
               />
             </div>
+          </div>
+
+          <div className="rounded-2xl shadow-xl p-8 md:p-10" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <Form onSubmit={handleSubmit} isSubmitting={isSubmitting} />
           </div>
 
           <footer className="mt-6 text-center text-sm rounded-xl p-4">

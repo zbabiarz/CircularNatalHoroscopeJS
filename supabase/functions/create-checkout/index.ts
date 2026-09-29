@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
+import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,31 @@ const stripe = new Stripe(stripeSecret, {
 });
 
 const PRODUCT_ID = 'prod_VF4Gq1OPQSHlOR';
+// Force redeploy to ensure success_url includes /result path
+
+const ALLOWED_ORIGINS = [
+  'https://shadow.lovelightandblackholes.com',
+  'https://lovelightandblackholes.com',
+  'https://www.lovelightandblackholes.com',
+];
+const DEFAULT_ORIGIN = 'https://shadow.lovelightandblackholes.com';
+
+function resolveOrigin(req: Request): string {
+  const origin = req.headers.get('origin') ?? '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  try {
+    const url = new URL(origin);
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return origin;
+  } catch {
+    // not a valid URL, fall through to the default
+  }
+  return DEFAULT_ORIGIN;
+}
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+);
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -30,14 +56,40 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { email, resultId, name } = await req.json();
+    const { resultId } = await req.json();
 
-    if (!email || !resultId) {
+    if (!resultId || typeof resultId !== 'string') {
       return new Response(
-        JSON.stringify({ error: 'Missing email or resultId' }),
+        JSON.stringify({ error: 'Missing resultId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // The buyer's email and name are never taken from the request body: a caller
+    // could otherwise point somebody else's purchase at an address they control.
+    const { data: result, error: lookupError } = await supabase
+      .from('shadow_work_results')
+      .select('email, name')
+      .eq('id', resultId)
+      .maybeSingle();
+
+    if (lookupError) {
+      console.error('Result lookup failed:', lookupError);
+      return new Response(
+        JSON.stringify({ error: 'Could not start checkout' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!result || !result.email) {
+      return new Response(
+        JSON.stringify({ error: 'Result not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const email = result.email as string;
+    const name = (result.name as string | null) ?? '';
 
     const product = await stripe.products.retrieve(PRODUCT_ID);
 
@@ -60,7 +112,7 @@ Deno.serve(async (req: Request) => {
       priceId = prices.data[0].id;
     }
 
-    const origin = req.headers.get('origin') || 'https://lovelightandblackholes.com';
+    const origin = resolveOrigin(req);
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -73,25 +125,34 @@ Deno.serve(async (req: Request) => {
       mode: 'payment',
       customer_creation: 'always',
       customer_email: email,
+      allow_promotion_codes: true,
+      payment_intent_data: {
+        description: 'The Shadow Map ($37)',
+        metadata: {
+          product: 'The Shadow Map',
+          price: '37',
+        },
+      },
       metadata: {
         result_id: resultId,
         email: email,
-        name: name || '',
+        name: name,
+        product: 'The Shadow Map',
       },
       success_url: `${origin}/result?checkout=success&resultId=${resultId}`,
       cancel_url: `${origin}/result?checkout=cancelled&resultId=${resultId}`,
     });
 
-    console.log(`Created checkout session ${session.id} for result ${resultId}, email ${email}`);
+    console.log(`Created checkout session ${session.id} for result ${resultId}`);
 
     return new Response(
       JSON.stringify({ url: session.url }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
+    console.error(`Checkout error: ${error?.message}`);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Could not start checkout' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

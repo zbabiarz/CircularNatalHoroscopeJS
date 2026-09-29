@@ -196,8 +196,8 @@ Deno.serve(async (req) => {
 
     return corsResponse({ sessionId: session.id, url: session.url });
   } catch (error: any) {
-    console.error(`Checkout error: ${error.message}`);
-    return corsResponse({ error: error.message }, 500);
+    console.error(`Checkout error: ${error?.message}`);
+    return corsResponse({ error: 'Could not start checkout' }, 500);
   }
 });
 

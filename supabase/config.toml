@@ -12,3 +12,12 @@ verify_jwt = false
 
 [functions.create-checkout]
 verify_jwt = false
+
+[functions.stripe-checkout]
+verify_jwt = true
+
+[functions.regenerate-report]
+verify_jwt = false
+
+[functions.resend-report]
+verify_jwt = false

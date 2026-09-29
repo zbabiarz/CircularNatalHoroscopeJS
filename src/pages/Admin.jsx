@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabase'
 import AdminLogin from '../components/AdminLogin'
 import AdminDetailModal from '../components/AdminDetailModal'
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
 const ZODIAC_SIGNS = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
   'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
@@ -30,14 +33,19 @@ function StatusBadge({ status }) {
     completed: { background: 'rgba(34,197,94,0.12)', color: 'rgba(134,239,172,0.9)', border: '1px solid rgba(34,197,94,0.2)' },
     failed: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
     pending: { background: 'rgba(141,18,70,0.15)', color: 'rgba(198,190,186,0.8)', border: '1px solid rgba(141,18,70,0.3)' },
+    error: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
+    incomplete_generic_voice: { background: 'rgba(245,158,11,0.12)', color: 'rgba(252,211,77,0.9)', border: '1px solid rgba(245,158,11,0.2)' },
+    incomplete_missing_sections: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
+    incomplete_too_short: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
   }
   const s = styles[status] || { background: 'rgba(255,255,255,0.05)', color: 'rgba(198,190,186,0.5)', border: '1px solid rgba(198,190,186,0.1)' }
+  const label = status === 'incomplete_generic_voice' ? 'incomplete' : (status || '—')
   return (
     <span
       className="text-xs font-medium px-2 py-0.5 rounded-full"
       style={{ ...s, letterSpacing: '0.05em' }}
     >
-      {status || '—'}
+      {label}
     </span>
   )
 }
@@ -48,9 +56,10 @@ function SortIcon({ field, sortField, sortDir }) {
 }
 
 function Admin() {
-  const [authenticated, setAuthenticated] = useState(
-    sessionStorage.getItem('admin_authenticated') === 'true'
+  const [passcode, setPasscode] = useState(
+    sessionStorage.getItem('admin_passcode') || ''
   )
+  const authenticated = Boolean(passcode)
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
@@ -60,37 +69,77 @@ function Admin() {
   const [selectedEntry, setSelectedEntry] = useState(null)
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
+  const [sendingId, setSendingId] = useState(null)
+  const [sendResult, setSendResult] = useState({})
 
   useEffect(() => {
     if (!authenticated) return
     fetchEntries()
-  }, [authenticated, page, signFilter, sortField, sortDir])
+  }, [authenticated, passcode, page, signFilter, sortField, sortDir])
 
   const fetchEntries = async () => {
     setLoading(true)
     try {
       const { data: countData, error: countError } = await supabase
         .rpc('admin_count_results', {
+          p_passcode: passcode,
           p_sign_filter: signFilter || null,
         })
-      if (!countError) setTotalCount(Number(countData) || 0)
+      if (countError) {
+        // The server rejected the passcode. Drop the session and show the gate again.
+        sessionStorage.removeItem('admin_passcode')
+        setPasscode('')
+        return
+      }
+      setTotalCount(Number(countData) || 0)
 
       const offset = (page - 1) * PER_PAGE
 
       const { data, error } = await supabase
         .rpc('admin_list_results', {
+          p_passcode: passcode,
           p_sign_filter: signFilter || null,
           p_sort_field: sortField,
           p_sort_dir: sortDir,
           p_offset: offset,
           p_limit: PER_PAGE,
         })
-      if (error) { console.error(error); return }
+      if (error) {
+        sessionStorage.removeItem('admin_passcode')
+        setPasscode('')
+        return
+      }
       setEntries(data || [])
     } catch (err) {
-      console.error(err)
+      console.error('Could not load entries')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForceSend = async (entry) => {
+    setSendingId(entry.id)
+    setSendResult(prev => ({ ...prev, [entry.id]: null }))
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/resend-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ resultId: entry.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSendResult(prev => ({ ...prev, [entry.id]: { success: false, message: data.error || `Failed (${res.status})` }}))
+      } else {
+        setSendResult(prev => ({ ...prev, [entry.id]: { success: true, message: `Sent! PDF: ${data.pdfPages} pages, delivered: ${data.deliverySent}` }}))
+        setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, ai_report_status: 'completed', ai_report_error: null } : e))
+      }
+    } catch (err) {
+      setSendResult(prev => ({ ...prev, [entry.id]: { success: false, message: err.message }}))
+    } finally {
+      setSendingId(null)
     }
   }
 
@@ -137,7 +186,7 @@ function Admin() {
   const fmt = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 
   if (!authenticated) {
-    return <AdminLogin onAuthenticated={() => setAuthenticated(true)} />
+    return <AdminLogin onAuthenticated={(code) => setPasscode(code)} />
   }
 
   return (
@@ -180,7 +229,7 @@ function Admin() {
               </p>
             </div>
             <button
-              onClick={() => { sessionStorage.removeItem('admin_authenticated'); setAuthenticated(false) }}
+              onClick={() => { sessionStorage.removeItem('admin_passcode'); setPasscode('') }}
               className="text-xs transition-colors"
               style={{ color: 'rgba(198,190,186,0.35)', letterSpacing: '0.1em' }}
               onMouseEnter={e => e.target.style.color = rose}
@@ -274,6 +323,7 @@ function Admin() {
                       { label: 'Status', field: null },
                       { label: 'Submitted', field: 'created_at' },
                       { label: '', field: null },
+                      { label: '', field: null },
                     ].map(({ label, field }) => (
                       <th
                         key={label}
@@ -292,7 +342,7 @@ function Admin() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.3)' }}>
+                      <td colSpan={10} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.3)' }}>
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-8 h-8 rounded-full border-t-2 border-b-2 animate-spin" style={{ borderColor: magentaAccent }} />
                           <span style={{ letterSpacing: '0.1em', fontSize: '0.75rem' }}>LOADING</span>
@@ -301,7 +351,7 @@ function Admin() {
                     </tr>
                   ) : filteredEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.25)', letterSpacing: '0.1em', fontSize: '0.8rem' }}>
+                      <td colSpan={10} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.25)', letterSpacing: '0.1em', fontSize: '0.8rem' }}>
                         {search ? 'NO RESULTS FOUND' : 'NO ENTRIES YET'}
                       </td>
                     </tr>
@@ -327,6 +377,32 @@ function Admin() {
                         <td className="px-4 py-3.5 text-sm" style={{ color: 'rgba(198,190,186,0.35)' }}>{fmt(entry.created_at)}</td>
                         <td className="px-4 py-3.5">
                           <span className="transition-all duration-150" style={{ color: 'rgba(198,190,186,0.2)' }}>›</span>
+                        </td>
+                        <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                          {entry.ai_report_status !== 'completed' && entry.ai_report ? (
+                            <button
+                              onClick={() => handleForceSend(entry)}
+                              disabled={sendingId === entry.id}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap"
+                              style={{
+                                background: sendingId === entry.id ? 'rgba(141,18,70,0.3)' : 'rgba(195,205,66,0.15)',
+                                color: sendingId === entry.id ? 'rgba(198,190,186,0.4)' : 'rgba(195,205,66,0.9)',
+                                border: '1px solid rgba(195,205,66,0.3)',
+                                cursor: sendingId === entry.id ? 'wait' : 'pointer',
+                                opacity: sendingId === entry.id ? 0.5 : 1,
+                              }}
+                              onMouseEnter={e => { if (sendingId !== entry.id) e.currentTarget.style.background = 'rgba(195,205,66,0.25)' }}
+                              onMouseLeave={e => { if (sendingId !== entry.id) e.currentTarget.style.background = 'rgba(195,205,66,0.15)' }}
+                            >
+                              {sendingId === entry.id ? 'Sending...' : 'Force Send'}
+                            </button>
+                          ) : sendResult[entry.id] ? (
+                            <span className="text-xs" style={{ color: sendResult[entry.id].success ? 'rgba(134,239,172,0.7)' : 'rgba(252,165,165,0.7)' }}>
+                              {sendResult[entry.id].success ? 'Sent' : 'Failed'}
+                            </span>
+                          ) : (
+                            <span className="text-xs" style={{ color: 'rgba(198,190,186,0.15)' }}>—</span>
+                          )}
                         </td>
                       </tr>
                     ))

@@ -1,66 +1,51 @@
 import React, { useState, useRef, useEffect } from 'react'
-
-const PASSCODE = '7777'
+import { supabase } from '../lib/supabase'
 
 function AdminLogin({ onAuthenticated }) {
-  const [digits, setDigits] = useState(['', '', '', ''])
+  const [passcode, setPasscode] = useState('')
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
   const [glowing, setGlowing] = useState(false)
-  const inputRefs = [useRef(), useRef(), useRef(), useRef()]
+  const [checking, setChecking] = useState(false)
+  const inputRef = useRef()
 
   useEffect(() => {
-    inputRefs[0].current?.focus()
+    inputRef.current?.focus()
   }, [])
 
-  const handleDigitChange = (index, value) => {
-    if (!/^\d?$/.test(value)) return
-    const newDigits = [...digits]
-    newDigits[index] = value
-    setDigits(newDigits)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!passcode || checking) return
+
+    setChecking(true)
     setError(false)
 
-    if (value && index < 3) {
-      inputRefs[index + 1].current?.focus()
-    }
+    // The passcode is never compared in the browser. The server verifies it and
+    // simply refuses to return any data when it does not match.
+    const { error: rpcError } = await supabase.rpc('admin_count_results', {
+      p_passcode: passcode,
+      p_sign_filter: null,
+    })
 
-    if (value && index === 3) {
-      const code = [...newDigits.slice(0, 3), value].join('')
-      if (code.length === 4) {
-        setTimeout(() => checkCode([...newDigits.slice(0, 3), value]), 100)
-      }
-    }
-  }
+    setChecking(false)
 
-  const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !digits[index] && index > 0) {
-      inputRefs[index - 1].current?.focus()
-    }
-  }
-
-  const checkCode = (d) => {
-    const code = d.join('')
-    if (code === PASSCODE) {
-      setGlowing(true)
-      setTimeout(() => {
-        sessionStorage.setItem('admin_authenticated', 'true')
-        onAuthenticated()
-      }, 500)
-    } else {
+    if (rpcError) {
       setError(true)
       setShake(true)
       setTimeout(() => {
-        setDigits(['', '', '', ''])
+        setPasscode('')
         setShake(false)
         setError(false)
-        inputRefs[0].current?.focus()
-      }, 700)
+        inputRef.current?.focus()
+      }, 900)
+      return
     }
-  }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    checkCode(digits)
+    setGlowing(true)
+    setTimeout(() => {
+      sessionStorage.setItem('admin_passcode', passcode)
+      onAuthenticated(passcode)
+    }, 400)
   }
 
   return (
@@ -145,31 +130,25 @@ function AdminLogin({ onAuthenticated }) {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="flex justify-center gap-3 mb-8">
-              {digits.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={inputRefs[i]}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleDigitChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="text-center text-2xl font-mono w-14 h-14 rounded-xl outline-none transition-all duration-200"
-                  style={{
-                    background: digit ? 'rgba(141,18,70,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: error
-                      ? '1px solid rgba(220,38,38,0.6)'
-                      : digit
-                        ? '1px solid rgba(141,18,70,0.6)'
-                        : '1px solid rgba(198,190,186,0.12)',
-                    color: '#f9f2eb',
-                    boxShadow: digit ? '0 0 12px rgba(141,18,70,0.2)' : 'none',
-                  }}
-                />
-              ))}
-            </div>
+            <input
+              ref={inputRef}
+              type="password"
+              autoComplete="current-password"
+              value={passcode}
+              onChange={(e) => { setPasscode(e.target.value); setError(false) }}
+              placeholder="••••••••••"
+              className="w-full text-center text-lg font-mono px-4 py-3 mb-6 rounded-xl outline-none transition-all duration-200"
+              style={{
+                background: passcode ? 'rgba(141,18,70,0.15)' : 'rgba(255,255,255,0.04)',
+                border: error
+                  ? '1px solid rgba(220,38,38,0.6)'
+                  : passcode
+                    ? '1px solid rgba(141,18,70,0.6)'
+                    : '1px solid rgba(198,190,186,0.12)',
+                color: '#f9f2eb',
+                boxShadow: passcode ? '0 0 12px rgba(141,18,70,0.2)' : 'none',
+              }}
+            />
 
             {error && (
               <p
@@ -182,20 +161,20 @@ function AdminLogin({ onAuthenticated }) {
 
             <button
               type="submit"
-              disabled={digits.some(d => d === '')}
+              disabled={!passcode || checking}
               className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
               style={{
                 fontFamily: "'Cinzel', serif",
                 letterSpacing: '0.1em',
-                background: digits.every(d => d !== '')
+                background: passcode
                   ? 'linear-gradient(135deg, #8d1246 0%, #c6beba22 100%)'
                   : 'rgba(141,18,70,0.15)',
                 border: '1px solid rgba(141,18,70,0.5)',
                 color: '#f9f2eb',
-                boxShadow: digits.every(d => d !== '') ? '0 0 20px rgba(141,18,70,0.3)' : 'none',
+                boxShadow: passcode ? '0 0 20px rgba(141,18,70,0.3)' : 'none',
               }}
             >
-              Enter
+              {checking ? 'Checking…' : 'Enter'}
             </button>
           </form>
         </div>

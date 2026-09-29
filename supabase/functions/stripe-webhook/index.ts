@@ -2,69 +2,81 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
-const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
-const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
-const stripe = new Stripe(stripeSecret, {
-  appInfo: {
-    name: 'Bolt Integration',
-    version: '1.0.0',
-  },
-});
-
-const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+};
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
   try {
-    // Handle OPTIONS request for CORS preflight
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { status: 204 });
+    const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
+    const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+
+    if (!stripeSecret || !stripeWebhookSecret) {
+      console.error('Missing Stripe secrets — STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET not set');
+      return new Response('OK', { status: 200 });
     }
 
-    if (req.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 });
-    }
+    const stripe = new Stripe(stripeSecret, {
+      appInfo: {
+        name: 'Bolt Integration',
+        version: '1.0.0',
+      },
+    });
 
-    // get the signature from the header
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
     const signature = req.headers.get('stripe-signature');
-
     if (!signature) {
-      return new Response('No signature found', { status: 400 });
+      console.error('No stripe-signature header found');
+      return new Response('OK', { status: 200 });
     }
 
-    // get the raw body
     const body = await req.text();
 
-    // verify the webhook signature
     let event: Stripe.Event;
-
     try {
       event = await stripe.webhooks.constructEventAsync(body, signature, stripeWebhookSecret);
     } catch (error: any) {
-      console.error(`Webhook signature verification failed: ${error.message}`);
-      return new Response(`Webhook signature verification failed: ${error.message}`, { status: 400 });
+      console.error(`Webhook signature verification failed: ${error?.message}`);
+      return new Response('OK', { status: 200 });
     }
 
-    EdgeRuntime.waitUntil(handleEvent(event));
+    console.log(`Received event: ${event.type} (id: ${event.id})`);
 
-    return Response.json({ received: true });
+    EdgeRuntime.waitUntil(handleEvent(event, stripe, supabase));
+
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error: any) {
     console.error('Error processing webhook:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 
-async function handleEvent(event: Stripe.Event) {
+async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: ReturnType<typeof createClient>) {
   const stripeData = event?.data?.object ?? {};
 
-  if (!stripeData) {
-    return;
-  }
+  if (!stripeData) return;
+  if (!('customer' in stripeData)) return;
 
-  if (!('customer' in stripeData)) {
-    return;
-  }
-
-  // for one time payments, we only listen for the checkout.session.completed event
   if (event.type === 'payment_intent.succeeded' && event.data.object.invoice === null) {
     return;
   }
@@ -73,68 +85,91 @@ async function handleEvent(event: Stripe.Event) {
 
   if (!customerId || typeof customerId !== 'string') {
     console.error(`No customer received on event: ${JSON.stringify(event)}`);
-  } else {
-    let isSubscription = true;
+    return;
+  }
 
-    if (event.type === 'checkout.session.completed') {
-      const { mode } = stripeData as Stripe.Checkout.Session;
+  let isSubscription = true;
 
-      isSubscription = mode === 'subscription';
+  if (event.type === 'checkout.session.completed') {
+    const { mode } = stripeData as Stripe.Checkout.Session;
+    isSubscription = mode === 'subscription';
+    console.info(`Processing ${isSubscription ? 'subscription' : 'one-time payment'} checkout session`);
+  }
 
-      console.info(`Processing ${isSubscription ? 'subscription' : 'one-time payment'} checkout session`);
-    }
+  const { mode, payment_status } = stripeData as Stripe.Checkout.Session;
 
-    const { mode, payment_status } = stripeData as Stripe.Checkout.Session;
+  if (isSubscription) {
+    console.info(`Starting subscription sync for customer: ${customerId}`);
+    await syncCustomerFromStripe(customerId, stripe, supabase);
+  } else if (mode === 'payment' && payment_status === 'paid') {
+    try {
+      const {
+        id: checkout_session_id,
+        payment_intent,
+        amount_subtotal,
+        amount_total,
+        currency,
+        metadata,
+        customer_details,
+      } = stripeData as Stripe.Checkout.Session;
 
-    if (isSubscription) {
-      console.info(`Starting subscription sync for customer: ${customerId}`);
-      await syncCustomerFromStripe(customerId);
-    } else if (mode === 'payment' && payment_status === 'paid') {
-      try {
-        // Extract the necessary information from the session
-        const {
-          id: checkout_session_id,
-          payment_intent,
-          amount_subtotal,
-          amount_total,
-          currency,
-          metadata,
-          customer_details,
-        } = stripeData as Stripe.Checkout.Session;
+      const { data: existingOrder } = await supabase
+        .from('stripe_orders')
+        .select('id')
+        .eq('checkout_session_id', checkout_session_id)
+        .maybeSingle();
 
-        // Insert the order into the stripe_orders table
-        const { error: orderError } = await supabase.from('stripe_orders').insert({
-          checkout_session_id,
-          payment_intent_id: payment_intent,
-          customer_id: customerId,
-          amount_subtotal,
-          amount_total,
-          currency,
-          payment_status,
-          status: 'completed',
-        });
-
-        if (orderError) {
-          console.error('Error inserting order:', orderError);
-          return;
-        }
-        console.info(`Successfully processed one-time payment for session: ${checkout_session_id}`);
-
-        // Trigger the Shadow Map report/PDF pipeline
+      if (existingOrder) {
+        console.info(`Order already processed for session: ${checkout_session_id}, skipping (idempotent)`);
         const resultId = metadata?.result_id;
         const customerEmail = customer_details?.email || metadata?.email;
-
         if (resultId || customerEmail) {
-          await triggerShadowMapPipeline(resultId, customerEmail);
+          const { data: record } = await supabase
+            .from('shadow_work_results')
+            .select('id, ai_report_status')
+            .eq(resultId ? 'id' : 'email', resultId || customerEmail)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (record && record.ai_report_status !== 'completed') {
+            console.info(`Report not completed for ${checkout_session_id}, re-triggering pipeline`);
+            await triggerShadowMapPipeline(resultId, customerEmail, supabase);
+          }
         }
-      } catch (error) {
-        console.error('Error processing one-time payment:', error);
+        return;
       }
+
+      const { error: orderError } = await supabase.from('stripe_orders').insert({
+        checkout_session_id,
+        payment_intent_id: payment_intent ?? null,
+        customer_id: customerId,
+        amount_subtotal,
+        amount_total,
+        currency,
+        payment_status,
+        status: 'completed',
+      });
+
+      if (orderError) {
+        console.error('Error inserting order:', orderError);
+        return;
+      }
+      console.info(`Successfully processed one-time payment for session: ${checkout_session_id} (amount: ${amount_total})`);
+
+      const resultId = metadata?.result_id;
+      const customerEmail = customer_details?.email || metadata?.email;
+
+      if (resultId || customerEmail) {
+        await triggerShadowMapPipeline(resultId, customerEmail, supabase);
+      }
+    } catch (error) {
+      console.error('Error processing one-time payment:', error);
     }
   }
 }
 
-async function triggerShadowMapPipeline(resultId?: string, email?: string) {
+async function triggerShadowMapPipeline(resultId: string | undefined, email: string | undefined, supabase: ReturnType<typeof createClient>) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -174,7 +209,11 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
 
   console.log('Marked has_purchased = true for record:', record.id);
 
-  // Generate the deep dive AI report
+  if (record.ai_report && record.ai_report.length > 5000 && record.ai_report_status === 'completed') {
+    console.log('Report already completed and delivered, skipping regeneration');
+    return;
+  }
+
   console.log('Generating deep dive report...');
   const reportResponse = await fetch(
     `${supabaseUrl}/functions/v1/generate-report`,
@@ -188,7 +227,7 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
         name: record.name,
         chironSign: record.chiron_sign,
         chironHouse: record.chiron_house,
-        chironDegree: record.chiron_degree,
+        chironDegree: Number(record.chiron_degree) || 0,
       }),
     }
   );
@@ -206,8 +245,55 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
     return;
   }
 
-  const reportData = await reportResponse.json();
+  let reportData = await reportResponse.json();
   console.log('Report generated, length:', reportData.report?.length, 'status:', reportData.status);
+
+  if (!reportData.isValid || (reportData.report?.length ?? 0) < 1000) {
+    console.warn('Report incomplete or refused, retrying once...');
+    const retryResponse = await fetch(
+      `${supabaseUrl}/functions/v1/generate-report`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          name: record.name,
+          chironSign: record.chiron_sign,
+          chironHouse: record.chiron_house,
+          chironDegree: Number(record.chiron_degree) || 0,
+        }),
+      }
+    );
+
+    if (retryResponse.ok) {
+      const retryData = await retryResponse.json();
+      console.log('Retry report length:', retryData.report?.length, 'status:', retryData.status);
+      if ((retryData.report?.length ?? 0) > (reportData.report?.length ?? 0)) {
+        reportData = retryData;
+      }
+    } else {
+      console.error('Retry also failed:', retryResponse.status);
+    }
+  }
+
+  if (!reportData.report || reportData.report.length < 5000) {
+    console.error('Report is too short or empty after retry, aborting pipeline');
+    await supabase
+      .from('shadow_work_results')
+      .update({
+        ai_report: reportData.report || null,
+        ai_report_status: 'error',
+        ai_report_error: `AI did not produce a usable report (length: ${reportData.report?.length ?? 0}, status: ${reportData.status ?? 'unknown'})`,
+      })
+      .eq('id', record.id);
+    return;
+  }
+
+  if (!reportData.isValid) {
+    console.warn(`Report has minor voice flags (status: ${reportData.status}) but is long enough (${reportData.report.length} chars) — proceeding with delivery`);
+  }
 
   await supabase
     .from('shadow_work_results')
@@ -218,7 +304,6 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
     })
     .eq('id', record.id);
 
-  // Generate PDF
   console.log('Generating PDF...');
   const pdfResponse = await fetch(
     `${supabaseUrl}/functions/v1/generate-pdf`,
@@ -233,7 +318,7 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
         email: record.email,
         chironSign: record.chiron_sign,
         chironHouse: record.chiron_house,
-        chironDegree: record.chiron_degree,
+        chironDegree: Number(record.chiron_degree) || 0,
         shadowId: record.shadow_id,
         report: reportData.report,
       }),
@@ -249,7 +334,6 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
   const pdfData = await pdfResponse.json();
   console.log('PDF generated successfully');
 
-  // Send to n8n webhook for email delivery
   console.log('Sending PDF to delivery webhook...');
   const webhookResponse = await fetch(
     `${supabaseUrl}/functions/v1/send-pdf-webhook`,
@@ -264,7 +348,7 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
         email: record.email,
         chironSign: record.chiron_sign,
         chironHouse: record.chiron_house,
-        chironDegree: record.chiron_degree,
+        chironDegree: Number(record.chiron_degree) || 0,
         shadowId: record.shadow_id,
         resultId: record.id,
         pdfUrl: pdfData.publicUrl,
@@ -282,10 +366,8 @@ async function triggerShadowMapPipeline(resultId?: string, email?: string) {
   console.log('Full pipeline complete for:', record.email);
 }
 
-// based on the excellent https://github.com/t3dotgg/stripe-recommendations
-async function syncCustomerFromStripe(customerId: string) {
+async function syncCustomerFromStripe(customerId: string, stripe: Stripe, supabase: ReturnType<typeof createClient>) {
   try {
-    // fetch latest subscription data from Stripe
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       limit: 1,
@@ -293,7 +375,6 @@ async function syncCustomerFromStripe(customerId: string) {
       expand: ['data.default_payment_method'],
     });
 
-    // TODO verify if needed
     if (subscriptions.data.length === 0) {
       console.info(`No active subscriptions found for customer: ${customerId}`);
       const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
@@ -312,10 +393,8 @@ async function syncCustomerFromStripe(customerId: string) {
       }
     }
 
-    // assumes that a customer can only have a single subscription
     const subscription = subscriptions.data[0];
 
-    // store subscription state
     const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
       {
         customer_id: customerId,

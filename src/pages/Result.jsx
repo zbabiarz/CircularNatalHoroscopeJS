@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import SparkleImage from '../components/SparkleImage'
@@ -49,6 +49,7 @@ function Result() {
   const [fromEmail, setFromEmail] = useState(false)
   const [hasPurchased, setHasPurchased] = useState(false)
   const [checkoutSuccess, setCheckoutSuccess] = useState(searchParams.get('checkout') === 'success')
+  const checkoutRef = useRef(null)
 
   const [resultData, setResultData] = useState({
     name: searchParams.get('name') || '',
@@ -81,7 +82,7 @@ function Result() {
           if (loadFromRpc) {
             setResultData({
               name: data.name,
-              email: data.email,
+              email: '',
               chironSign: data.chiron_sign,
               chironHouse: data.chiron_house || 'Unknown',
               chironDegree: String(data.chiron_degree),
@@ -94,13 +95,24 @@ function Result() {
         })
     }
 
+    if (!checkoutSuccess) {
+      window.scrollTo(0, 0)
+    }
     setTimeout(() => setIsVisible(true), 100)
   }, [])
+
+  useEffect(() => {
+    if (checkoutSuccess && !isLoading && checkoutRef.current) {
+      setTimeout(() => {
+        checkoutRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }, [checkoutSuccess, isLoading])
 
   const { name, chironSign, chironHouse, chironDegree, shadowId, email, resultId } = resultData
 
   const handleCheckout = async () => {
-    if (!email || !resultId) {
+    if (!resultId) {
       alert('Missing required information for checkout. Please run your chart again.')
       return
     }
@@ -109,7 +121,7 @@ function Result() {
 
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { email, resultId, name },
+        body: { resultId },
       })
 
       if (error || !data?.url) {
@@ -274,7 +286,7 @@ function Result() {
           )}
 
           {/* UPSELL / PURCHASED / CHECKOUT SUCCESS */}
-          <div id="checkout" className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
+          <div ref={checkoutRef} id="checkout" className={`rounded-2xl p-8 md:p-10 mb-8 text-center transition-all duration-800 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
             {checkoutSuccess ? (
               <>
                 <div className="flex justify-center mb-5">

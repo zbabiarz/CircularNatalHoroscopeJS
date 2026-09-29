@@ -1,10 +1,79 @@
-import React from 'react'
+import React, { useState } from 'react'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const cream = '#f9f2eb'
 const rose = '#c6beba'
 const magenta = '#8d1246'
 
 function AdminDetailModal({ entry, onClose }) {
+  const [regenerating, setRegenerating] = useState(false)
+  const [regenResult, setRegenResult] = useState(null)
+  const [forceSending, setForceSending] = useState(false)
+  const [forceSendResult, setForceSendResult] = useState(null)
+
+  const handleRegenerate = async (sendEmail) => {
+    const passcode = sessionStorage.getItem('admin_passcode')
+    if (!passcode) return
+
+    setRegenerating(true)
+    setRegenResult(null)
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/regenerate-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          passcode,
+          resultId: entry.id,
+          sendEmail,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        setRegenResult({ success: false, message: data.error || `Server returned ${res.status}` })
+      } else {
+        setRegenResult({
+          success: true,
+          message: `Report: ${data.reportLength?.toLocaleString()} chars, PDF: ${data.pdfPages} pages, Email: ${data.deliveryStatus}`,
+        })
+      }
+    } catch (err) {
+      setRegenResult({ success: false, message: err.message })
+    } finally {
+      setRegenerating(false)
+    }
+  }
+  const handleForceSend = async () => {
+    setForceSending(true)
+    setForceSendResult(null)
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/resend-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ resultId: entry.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setForceSendResult({ success: false, message: data.error || `Failed (${res.status})` })
+      } else {
+        setForceSendResult({ success: true, message: `PDF: ${data.pdfPages} pages, delivered: ${data.deliverySent ? 'yes' : 'no'}` })
+      }
+    } catch (err) {
+      setForceSendResult({ success: false, message: err.message })
+    } finally {
+      setForceSending(false)
+    }
+  }
+
   if (!entry) return null
 
   const formatDate = (d) => {
@@ -25,6 +94,10 @@ function AdminDetailModal({ entry, onClose }) {
       completed: { background: 'rgba(34,197,94,0.12)', color: 'rgba(134,239,172,0.9)', border: '1px solid rgba(34,197,94,0.2)' },
       failed: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
       pending: { background: 'rgba(141,18,70,0.15)', color: 'rgba(198,190,186,0.8)', border: '1px solid rgba(141,18,70,0.3)' },
+      error: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
+      incomplete_generic_voice: { background: 'rgba(245,158,11,0.12)', color: 'rgba(252,211,77,0.9)', border: '1px solid rgba(245,158,11,0.2)' },
+      incomplete_missing_sections: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
+      incomplete_too_short: { background: 'rgba(239,68,68,0.12)', color: 'rgba(252,165,165,0.9)', border: '1px solid rgba(239,68,68,0.2)' },
     }
     return map[status] || { background: 'rgba(255,255,255,0.05)', color: 'rgba(198,190,186,0.5)', border: '1px solid rgba(198,190,186,0.1)' }
   }
@@ -118,7 +191,7 @@ function AdminDetailModal({ entry, onClose }) {
                 className="text-xs font-medium px-2 py-0.5 rounded-full"
                 style={{ ...getStatusStyle(entry.ai_report_status), letterSpacing: '0.05em' }}
               >
-                {entry.ai_report_status || 'unknown'}
+                {entry.ai_report_status === 'incomplete_generic_voice' ? 'incomplete' : (entry.ai_report_status || 'unknown')}
               </span>
             </div>
 
@@ -170,6 +243,104 @@ function AdminDetailModal({ entry, onClose }) {
                 </p>
               )}
             </div>
+          </div>
+
+          {/* FORCE SEND CONTROLS */}
+          {entry.ai_report && entry.ai_report_status !== 'completed' && (
+            <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+              <p className="text-xs mb-3" style={{ color: 'rgba(245,158,11,0.7)', letterSpacing: '0.1em' }}>
+                FORCE SEND
+              </p>
+              <p className="text-xs mb-3" style={{ color: 'rgba(198,190,186,0.4)' }}>
+                This report exists but wasn't delivered. Force send will generate a PDF and email it now.
+              </p>
+              <button
+                onClick={handleForceSend}
+                disabled={forceSending}
+                style={{
+                  background: forceSending ? 'rgba(141,18,70,0.3)' : 'rgba(195,205,66,0.8)',
+                  color: forceSending ? 'rgba(198,190,186,0.4)' : '#1E2220',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: forceSending ? 'wait' : 'pointer',
+                  opacity: forceSending ? 0.5 : 1,
+                }}
+              >
+                {forceSending ? 'Sending...' : 'Force Send Report'}
+              </button>
+              {forceSendResult && (
+                <div
+                  className="rounded-xl p-3 mt-3"
+                  style={{
+                    background: forceSendResult.success ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                    border: `1px solid ${forceSendResult.success ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                  }}
+                >
+                  <p className="text-sm" style={{ color: forceSendResult.success ? 'rgba(134,239,172,0.9)' : 'rgba(252,165,165,0.9)' }}>
+                    {forceSendResult.success ? 'Done — ' : 'Error — '}{forceSendResult.message}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* REGENERATE CONTROLS */}
+          <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+            <p className="text-xs mb-3" style={{ color: 'rgba(198,190,186,0.35)', letterSpacing: '0.1em' }}>
+              REGENERATE
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={() => handleRegenerate(false)}
+                disabled={regenerating}
+                style={{
+                  background: regenerating ? '#555' : 'rgba(141,18,70,0.6)',
+                  color: cream,
+                  border: '1px solid rgba(141,18,70,0.8)',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: regenerating ? 'wait' : 'pointer',
+                  opacity: regenerating ? 0.6 : 1,
+                }}
+              >
+                {regenerating ? 'Working...' : 'Regenerate Report + PDF'}
+              </button>
+              <button
+                onClick={() => handleRegenerate(true)}
+                disabled={regenerating}
+                style={{
+                  background: regenerating ? '#555' : '#C3CD42',
+                  color: '#1E2220',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: regenerating ? 'wait' : 'pointer',
+                  opacity: regenerating ? 0.6 : 1,
+                }}
+              >
+                {regenerating ? 'Working...' : 'Regenerate + Send Email'}
+              </button>
+            </div>
+            {regenResult && (
+              <div
+                className="rounded-xl p-3 mt-3"
+                style={{
+                  background: regenResult.success ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                  border: `1px solid ${regenResult.success ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                }}
+              >
+                <p className="text-sm" style={{ color: regenResult.success ? 'rgba(134,239,172,0.9)' : 'rgba(252,165,165,0.9)' }}>
+                  {regenResult.success ? 'Done — ' : 'Error — '}{regenResult.message}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
