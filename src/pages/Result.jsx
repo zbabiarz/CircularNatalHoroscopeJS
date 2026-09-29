@@ -300,8 +300,15 @@ function Result() {
                 <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Your full Shadow Map is being generated right now. It will land in your inbox in about a minute.
                 </p>
-                <p className="text-white/50 text-base max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                <p className="text-white/50 text-base mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                   Check your spam folder if you don't see it. The email will come from Love, Light, and Black Holes.
+                </p>
+                <p className="text-white/40 text-sm max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Haven't received your report in 10 minutes? Reach out to{' '}
+                  <a href="mailto:magic@lovelightandblackholes.com" style={{ color: '#c3cd42', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                    magic@lovelightandblackholes.com
+                  </a>
+                  {' '}and we'll get it to you.
                 </p>
               </>
             ) : hasPurchased ? (
