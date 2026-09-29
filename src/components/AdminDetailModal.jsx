@@ -50,6 +50,9 @@ function AdminDetailModal({ entry, onClose }) {
     }
   }
   const handleForceSend = async () => {
+    const passcode = sessionStorage.getItem('admin_passcode')
+    if (!passcode) return
+
     setForceSending(true)
     setForceSendResult(null)
     try {
@@ -59,7 +62,7 @@ function AdminDetailModal({ entry, onClose }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ resultId: entry.id }),
+        body: JSON.stringify({ passcode, resultId: entry.id }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -245,14 +248,14 @@ function AdminDetailModal({ entry, onClose }) {
             </div>
           </div>
 
-          {/* FORCE SEND CONTROLS */}
-          {entry.ai_report && entry.ai_report_status !== 'completed' && (
+          {/* FORCE SEND CONTROLS — available when a valid report already exists */}
+          {entry.ai_report && entry.ai_report.length >= 5000 && (
             <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
               <p className="text-xs mb-3" style={{ color: 'rgba(245,158,11,0.7)', letterSpacing: '0.1em' }}>
                 FORCE SEND
               </p>
               <p className="text-xs mb-3" style={{ color: 'rgba(198,190,186,0.4)' }}>
-                This report exists but wasn't delivered. Force send will generate a PDF and email it now.
+                Re-generate the PDF from the existing report and email it now.
               </p>
               <button
                 onClick={handleForceSend}
@@ -284,6 +287,20 @@ function AdminDetailModal({ entry, onClose }) {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* HINT when report is missing or too short */}
+          {(!entry.ai_report || entry.ai_report.length < 5000) && entry.ai_report_status === 'error' && (
+            <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+              <div
+                className="rounded-xl p-3"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}
+              >
+                <p className="text-xs" style={{ color: 'rgba(252,165,165,0.8)' }}>
+                  The report is missing or too short to send. Use "Regenerate + Send Email" below to create a new report and deliver it.
+                </p>
+              </div>
             </div>
           )}
 

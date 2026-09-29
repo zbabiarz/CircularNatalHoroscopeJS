@@ -15,12 +15,30 @@ Deno.serve(async (req: Request) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   try {
-    const { resultId } = await req.json();
+    const { passcode, resultId } = await req.json();
     if (!resultId || typeof resultId !== "string") {
       return new Response(JSON.stringify({ error: "resultId required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Admin auth check
+    const authRes = await fetch(`${supabaseUrl}/rest/v1/rpc/admin_passcode_ok`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: supabaseServiceKey,
+        Authorization: `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ p_passcode: passcode }),
+    });
+
+    if (!authRes.ok || (await authRes.json()) !== true) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Fetch the record
