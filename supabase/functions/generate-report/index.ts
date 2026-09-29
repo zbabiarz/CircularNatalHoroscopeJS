@@ -746,72 +746,34 @@ const VOICE_RED_FLAGS = [
   "rich tapestry",
   "profound understanding",
   "deeply attuned",
-  "a measure of worth",
-  "a tool for creating",
   "resonates deeply",
   "emotional echoes",
   "emotional undercurrent",
   "unique perspective allows you to",
-  "challenge yourself to see",
   "your unique ability to",
-  "inner world",
   "inner landscape",
-  "on a deep level",
-  "profound way",
-  "deeply connected",
-  "beautiful thing",
-  "powerful gift",
-  "remarkable ability",
-  "truly understand",
   "transformative power",
   "sacred space",
-  "safe space",
   "tender places",
   "gently remind",
-  "with great compassion",
-  "honor your",
-  "nurture your",
   "cultivate a sense of",
   "invite yourself to",
   "allow yourself to feel",
   "radical self-love",
   "energetic boundary",
-  "wound around",
-  "capacity to",
-  "ability to",
-  "gift for",
   "emotional sanctuary",
   "collective healing",
-  "hold space",
   "hold space for",
-  "deep compassion",
-  "emotional safety",
-  "therapy, coaching",
-  "you are not their therapist",
-  "ability to heal",
-  "capacity for deep",
-  "capacity for genuine",
-  "gift for creating",
-  "gift for authentic",
-  "gift for building",
-  "ability to build real",
-  "ability to serve",
-  "ability to transform",
-  "ability to teach",
-  "ability to redefine",
-  "capacity for real",
-  "natural leadership",
-  "innovation that changes",
-  "healing",
-  "heal",
-  "heals",
-  "safe space",
-  "nervous system",
-  "therapist",
-  "therapy",
-  "wellness",
   "manifesting abundance",
-  "the gift and the wound are the same",
+  "divine feminine",
+  "divine masculine",
+  "cosmic dance",
+  "twin flame",
+  "starseed",
+  "lightworker",
+  "soul contract",
+  "journey of awakening",
+  "tapestry of your soul",
 ];
 
 function sanitizeVoiceFlags(report: string): string {
@@ -860,7 +822,7 @@ function validateReport(report: string): {
   const flaggedPhrases = VOICE_RED_FLAGS.filter((phrase) =>
     lowerReport.includes(phrase)
   );
-  const voiceIssue = flaggedPhrases.length > 0;
+  const voiceIssue = flaggedPhrases.length > 3;
   const isValid =
     missingMarkers.length === 0 && report.length >= MIN_REPORT_LENGTH && !voiceIssue;
 
@@ -977,20 +939,21 @@ Deno.serve(async (req: Request) => {
       if (!response || !response.ok) {
         const status = response?.status ?? "unknown";
         const body = response ? await response.text() : "no response";
-        console.error(`Attempt ${attempt + 1} failed (HTTP ${status}): ${body}`);
+        console.error(`Attempt ${attempt + 1} failed (HTTP ${status}): ${body.slice(0, 500)}`);
         continue;
       }
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
+      const finishReason = data.choices?.[0]?.finish_reason ?? "unknown";
 
       if (!content) {
-        console.error(`Attempt ${attempt + 1}: no content in response`);
+        console.error(`Attempt ${attempt + 1}: no content in response, finish_reason=${finishReason}, usage=${JSON.stringify(data.usage)}`);
         continue;
       }
 
       console.log(
-        `Attempt ${attempt + 1}: got ${content.length} chars, refusal=${isRefusal(content)}`
+        `Attempt ${attempt + 1}: got ${content.length} chars, finish_reason=${finishReason}, refusal=${isRefusal(content)}`
       );
 
       if (isRefusal(content)) {

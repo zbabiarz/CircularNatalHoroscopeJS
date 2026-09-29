@@ -242,6 +242,29 @@ async function triggerShadowMapPipeline(resultId: string | undefined, email: str
         ai_report_error: `Report generation failed: ${errText.slice(0, 500)}`,
       })
       .eq('id', record.id);
+
+    try {
+      await fetch(
+        `${supabaseUrl}/functions/v1/send-pdf-webhook`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            name: record.name,
+            email: record.email,
+            chironSign: record.chiron_sign,
+            chironHouse: record.chiron_house,
+            shadowId: record.shadow_id,
+            resultId: record.id,
+            type: 'report_generation_failed',
+            error: `Report generation HTTP error: ${reportResponse.status}`,
+          }),
+        }
+      );
+    } catch (_) { /* best-effort */ }
     return;
   }
 
@@ -288,6 +311,34 @@ async function triggerShadowMapPipeline(resultId: string | undefined, email: str
         ai_report_error: `AI did not produce a usable report (length: ${reportData.report?.length ?? 0}, status: ${reportData.status ?? 'unknown'})`,
       })
       .eq('id', record.id);
+
+    // Notify n8n so the admin knows a paid customer's report failed
+    try {
+      await fetch(
+        `${supabaseUrl}/functions/v1/send-pdf-webhook`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            name: record.name,
+            email: record.email,
+            chironSign: record.chiron_sign,
+            chironHouse: record.chiron_house,
+            chironDegree: Number(record.chiron_degree) || 0,
+            shadowId: record.shadow_id,
+            resultId: record.id,
+            type: 'report_generation_failed',
+            error: `AI report too short (${reportData.report?.length ?? 0} chars). Customer paid but report could not be generated.`,
+          }),
+        }
+      );
+      console.log('Failure notification sent to webhook');
+    } catch (webhookErr) {
+      console.error('Failed to send failure notification:', webhookErr);
+    }
     return;
   }
 
