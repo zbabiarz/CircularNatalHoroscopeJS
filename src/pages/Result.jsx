@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import SparkleImage from '../components/SparkleImage'
+import MysticalLoader from '../components/MysticalLoader'
 import TurbulentFlow from '../components/ui/turbulent-flow'
 import { supabase } from '../lib/supabase'
 
@@ -35,9 +36,46 @@ const trapInsights = {
   pisces: "The trap: you keep absorbing everyone else's pain and calling it empathy. But drowning with someone doesn't save them. It just means there are two people drowning. Put on your own oxygen mask first.",
 }
 
+const READING_KEYS = ['opening', 'pattern', 'money', 'trap']
+const POLL_INTERVAL_MS = 3000
+const MAX_POLLS = 30
+
 function getSignKey(chironSign) {
   if (!chironSign) return ''
   return chironSign.toLowerCase().trim()
+}
+
+function isValidReading(reading) {
+  return Boolean(reading) && READING_KEYS.every((key) => typeof reading[key] === 'string' && reading[key].trim())
+}
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function requestMiniReading(resultId) {
+  const { data, error } = await supabase.functions.invoke('generate-mini-reading', { body: { resultId } })
+  if (error) {
+    console.error('Mini reading error:', error)
+    return null
+  }
+  if (data?.status === 'completed') return isValidReading(data.reading) ? data.reading : null
+  if (data?.status !== 'generating') return null
+
+  for (let i = 0; i < MAX_POLLS; i++) {
+    await wait(POLL_INTERVAL_MS)
+    const { data: row, error: pollError } = await supabase.rpc('get_result', { p_result_id: resultId }).maybeSingle()
+    if (pollError || !row) return null
+    if (isValidReading(row.mini_reading)) return row.mini_reading
+    if (row.mini_reading_status !== 'generating') return null
+  }
+  return null
+}
+
+function Paragraphs({ text, className }) {
+  return text.split(/\n\s*\n/).filter((p) => p.trim()).map((paragraph, i) => (
+    <p key={i} className={`${className} ${i > 0 ? 'mt-4' : ''}`} style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      {paragraph.trim()}
+    </p>
+  ))
 }
 
 function Result() {
@@ -50,6 +88,10 @@ function Result() {
   const [hasPurchased, setHasPurchased] = useState(false)
   const [checkoutSuccess, setCheckoutSuccess] = useState(searchParams.get('checkout') === 'success')
   const checkoutRef = useRef(null)
+  const [miniReading, setMiniReading] = useState(null)
+  const [isWriting, setIsWriting] = useState(
+    Boolean(searchParams.get('resultId') && searchParams.get('name') && searchParams.get('shadowId'))
+  )
 
   const [resultData, setResultData] = useState({
     name: searchParams.get('name') || '',
@@ -72,13 +114,24 @@ function Result() {
       supabase
         .rpc('get_result', { p_result_id: resultData.resultId })
         .maybeSingle()
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (error || !data) {
             console.error('Failed to load result:', error)
             setIsLoading(false)
+            setIsWriting(false)
             return
           }
           if (data.has_purchased) setHasPurchased(true)
+          if (isValidReading(data.mini_reading)) {
+            setMiniReading(data.mini_reading)
+            setIsWriting(false)
+          } else if (hasFullData && data.mini_reading_status !== 'failed') {
+            requestMiniReading(resultData.resultId)
+              .then((reading) => { if (reading) setMiniReading(reading) })
+              .finally(() => setIsWriting(false))
+          } else {
+            setIsWriting(false)
+          }
           if (loadFromRpc) {
             setResultData({
               name: data.name,
@@ -139,6 +192,15 @@ function Result() {
     }
   }
 
+  if (isWriting) {
+    return (
+      <>
+        <TurbulentFlow />
+        <MysticalLoader />
+      </>
+    )
+  }
+
   if (isLoading) {
     return (
       <>
@@ -187,8 +249,9 @@ function Result() {
     : `The ${shadowData.archetype}`
 
   const signKey = getSignKey(chironSign)
-  const moneyText = moneyInsights[signKey] || ''
-  const trapText = trapInsights[signKey] || ''
+  const moneyText = miniReading?.money || moneyInsights[signKey] || ''
+  const trapText = miniReading?.trap || trapInsights[signKey] || ''
+  const openingText = miniReading?.opening || shadowData.description
 
   return (
     <>
@@ -243,21 +306,27 @@ function Result() {
               </p>
             </div>
 
-            <p className="text-white/70 text-lg leading-relaxed max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              {shadowData.description}
-            </p>
+            <div className={`max-w-lg mx-auto ${miniReading ? 'text-left' : ''}`}>
+              <Paragraphs text={openingText} className="text-white/80 text-lg leading-relaxed" />
+            </div>
 
             {/* THE PATTERN UNDERNEATH */}
             <div className="mt-7 pt-7 border-t border-white/10 text-left max-w-lg mx-auto">
               <p className="text-base font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
                 The pattern underneath
               </p>
-              <p className="text-white/85 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                Here's the thing about {archetypeName}: this isn't a label. It's the pattern underneath the pattern. You may have learned to edit yourself, over-give, stay guarded, or work twice as hard to feel safe. That strategy probably helped you once. It may also be the thing keeping you from feeling fully at home in your own life now.
-              </p>
-              <p className="text-white/85 text-lg leading-relaxed mt-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                Your first question is simple: where are you still choosing approval, control, or belonging over being honest about what you actually need?
-              </p>
+              {miniReading ? (
+                <Paragraphs text={miniReading.pattern} className="text-white/85 text-lg leading-relaxed" />
+              ) : (
+                <>
+                  <p className="text-white/85 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Here's the thing about {archetypeName}: this isn't a label. It's the pattern underneath the pattern. You may have learned to edit yourself, over-give, stay guarded, or work twice as hard to feel safe. That strategy probably helped you once. It may also be the thing keeping you from feeling fully at home in your own life now.
+                  </p>
+                  <p className="text-white/85 text-lg leading-relaxed mt-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    Your first question is simple: where are you still choosing approval, control, or belonging over being honest about what you actually need?
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -267,9 +336,7 @@ function Result() {
               <p className="text-base font-semibold uppercase tracking-[0.16em] mb-4" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
                 Where this shows up in your money
               </p>
-              <p className="text-white/85 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                {moneyText}
-              </p>
+              <Paragraphs text={moneyText} className="text-white/85 text-lg leading-relaxed" />
             </div>
           )}
 
@@ -279,9 +346,7 @@ function Result() {
               <p className="text-base font-semibold uppercase tracking-[0.16em] mb-4" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
                 The trap you keep falling into
               </p>
-              <p className="text-white/85 text-lg leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                {trapText}
-              </p>
+              <Paragraphs text={trapText} className="text-white/85 text-lg leading-relaxed" />
             </div>
           )}
 

@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.resend-report]
 verify_jwt = false
+
+[functions.generate-mini-reading]
+verify_jwt = false
