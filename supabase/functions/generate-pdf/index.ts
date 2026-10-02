@@ -149,12 +149,19 @@ async function loadFonts(doc: Doc): Promise<Fonts> {
 // ---------------------------------------------------------------------------
 // Report parsing
 // ---------------------------------------------------------------------------
+function stripMarkdownEmphasis(text: string): string {
+  if (!text) return text;
+  let out = text.replace(/\*\*([^\n*][^\n*]*?)\*\*/g, "$1");
+  out = out.replace(/(?<![*\w])\*(?!\s)([^\n*]+?)(?<!\s)\*(?!\w)/g, "$1");
+  out = out.replace(/(?<![_\w])_(?!\s)([^\n_]+?)(?<!\s)_(?!\w)/g, "$1");
+  return out;
+}
+
 function parseStructuredReport(report: string): Map<string, string> {
   const sections = new Map<string, string>();
   const parts = report.split(/===([A-Z0-9_]+)===/);
-  // parts[0] is before first marker (ignore), then alternating key, value
   for (let i = 1; i < parts.length; i += 2) {
-    sections.set(parts[i], (parts[i + 1] || "").trim());
+    sections.set(parts[i], stripMarkdownEmphasis((parts[i + 1] || "").trim()));
   }
   return sections;
 }
