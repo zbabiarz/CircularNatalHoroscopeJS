@@ -10,8 +10,7 @@ const magenta = '#8d1246'
 function AdminDetailModal({ entry, onClose }) {
   const [regenerating, setRegenerating] = useState(false)
   const [regenResult, setRegenResult] = useState(null)
-  const [forceSending, setForceSending] = useState(false)
-  const [forceSendResult, setForceSendResult] = useState(null)
+
 
   const handleRegenerate = async (sendEmail) => {
     const passcode = sessionStorage.getItem('admin_passcode')
@@ -49,33 +48,7 @@ function AdminDetailModal({ entry, onClose }) {
       setRegenerating(false)
     }
   }
-  const handleForceSend = async () => {
-    const passcode = sessionStorage.getItem('admin_passcode')
-    if (!passcode) return
 
-    setForceSending(true)
-    setForceSendResult(null)
-    try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/resend-report`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ passcode, resultId: entry.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setForceSendResult({ success: false, message: data.error || `Failed (${res.status})` })
-      } else {
-        setForceSendResult({ success: true, message: `PDF: ${data.pdfPages} pages, delivered: ${data.deliverySent ? 'yes' : 'no'}` })
-      }
-    } catch (err) {
-      setForceSendResult({ success: false, message: err.message })
-    } finally {
-      setForceSending(false)
-    }
-  }
 
   if (!entry) return null
 
@@ -153,11 +126,22 @@ function AdminDetailModal({ entry, onClose }) {
             >
               {entry.name}
             </h2>
-            {entry.chiron_sign && (
-              <p style={{ color: rose, fontSize: '0.75rem', letterSpacing: '0.1em', marginTop: 2 }}>
-                CHIRON IN {entry.chiron_sign.toUpperCase()}
-              </p>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              {entry.chiron_sign && (
+                <p style={{ color: rose, fontSize: '0.75rem', letterSpacing: '0.1em' }}>
+                  CHIRON IN {entry.chiron_sign.toUpperCase()}
+                </p>
+              )}
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                style={entry.has_purchased
+                  ? { background: 'rgba(234,179,8,0.12)', color: 'rgba(250,204,21,0.9)', border: '1px solid rgba(234,179,8,0.25)', letterSpacing: '0.05em' }
+                  : { background: 'rgba(255,255,255,0.04)', color: 'rgba(198,190,186,0.45)', border: '1px solid rgba(198,190,186,0.08)', letterSpacing: '0.05em' }
+                }
+              >
+                {entry.has_purchased ? 'Paid' : 'Free'}
+              </span>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -248,103 +232,28 @@ function AdminDetailModal({ entry, onClose }) {
             </div>
           </div>
 
-          {/* FORCE SEND CONTROLS — available when a valid report already exists */}
-          {entry.ai_report && entry.ai_report.length >= 5000 && (
-            <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
-              <p className="text-xs mb-3" style={{ color: 'rgba(245,158,11,0.7)', letterSpacing: '0.1em' }}>
-                FORCE SEND
-              </p>
-              <p className="text-xs mb-3" style={{ color: 'rgba(198,190,186,0.4)' }}>
-                Re-generate the PDF from the existing report and email it now.
-              </p>
-              <button
-                onClick={handleForceSend}
-                disabled={forceSending}
-                style={{
-                  background: forceSending ? 'rgba(141,18,70,0.3)' : 'rgba(195,205,66,0.8)',
-                  color: forceSending ? 'rgba(198,190,186,0.4)' : '#1E2220',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: forceSending ? 'wait' : 'pointer',
-                  opacity: forceSending ? 0.5 : 1,
-                }}
-              >
-                {forceSending ? 'Sending...' : 'Force Send Report'}
-              </button>
-              {forceSendResult && (
-                <div
-                  className="rounded-xl p-3 mt-3"
-                  style={{
-                    background: forceSendResult.success ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                    border: `1px solid ${forceSendResult.success ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                  }}
-                >
-                  <p className="text-sm" style={{ color: forceSendResult.success ? 'rgba(134,239,172,0.9)' : 'rgba(252,165,165,0.9)' }}>
-                    {forceSendResult.success ? 'Done — ' : 'Error — '}{forceSendResult.message}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* HINT when report is missing or too short */}
-          {(!entry.ai_report || entry.ai_report.length < 5000) && entry.ai_report_status === 'error' && (
-            <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
-              <div
-                className="rounded-xl p-3"
-                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}
-              >
-                <p className="text-xs" style={{ color: 'rgba(252,165,165,0.8)' }}>
-                  The report is missing or too short to send. Use "Regenerate + Send Email" below to create a new report and deliver it.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* REGENERATE CONTROLS */}
+          {/* REGENERATE + SEND */}
           <div style={{ borderTop: '1px solid rgba(198,190,186,0.07)', paddingTop: '1.25rem', marginTop: '1rem' }}>
-            <p className="text-xs mb-3" style={{ color: 'rgba(198,190,186,0.35)', letterSpacing: '0.1em' }}>
-              REGENERATE
+            <p className="text-xs mb-2" style={{ color: 'rgba(198,190,186,0.4)' }}>
+              Regenerate the report from scratch and email it.
             </p>
-            <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => handleRegenerate(false)}
-                disabled={regenerating}
-                style={{
-                  background: regenerating ? '#555' : 'rgba(141,18,70,0.6)',
-                  color: cream,
-                  border: '1px solid rgba(141,18,70,0.8)',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: regenerating ? 'wait' : 'pointer',
-                  opacity: regenerating ? 0.6 : 1,
-                }}
-              >
-                {regenerating ? 'Working...' : 'Regenerate Report + PDF'}
-              </button>
-              <button
-                onClick={() => handleRegenerate(true)}
-                disabled={regenerating}
-                style={{
-                  background: regenerating ? '#555' : '#C3CD42',
-                  color: '#1E2220',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  cursor: regenerating ? 'wait' : 'pointer',
-                  opacity: regenerating ? 0.6 : 1,
-                }}
-              >
-                {regenerating ? 'Working...' : 'Regenerate + Send Email'}
-              </button>
-            </div>
+            <button
+              onClick={() => handleRegenerate(true)}
+              disabled={regenerating}
+              style={{
+                background: regenerating ? '#555' : '#C3CD42',
+                color: '#1E2220',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '10px 20px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: regenerating ? 'wait' : 'pointer',
+                opacity: regenerating ? 0.6 : 1,
+              }}
+            >
+              {regenerating ? 'Working...' : 'Regenerate + Send Email'}
+            </button>
             {regenResult && (
               <div
                 className="rounded-xl p-3 mt-3"

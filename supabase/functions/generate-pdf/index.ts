@@ -231,6 +231,9 @@ function setPlayfairItalic(doc: Doc, fonts: Fonts, size: number) {
 // ---------------------------------------------------------------------------
 function addFooter(doc: Doc, pageNum: number, isDark: boolean, fonts: Fonts) {
   const y = 285;
+  const prevFont = doc.getFont();
+  const prevSize = doc.getFontSize();
+  const prevColor = doc.getTextColor();
   const textColor = isDark ? FOOTER_GRAY_DARK : FOOTER_GRAY_CREAM;
   setColor(doc, textColor);
   setMontRegular(doc, fonts, 7);
@@ -240,6 +243,9 @@ function addFooter(doc: Doc, pageNum: number, isDark: boolean, fonts: Fonts) {
     y
   );
   doc.text(String(pageNum), PAGE_W - MARGIN, y, { align: "right" });
+  doc.setFont(prevFont.fontName, prevFont.fontStyle);
+  doc.setFontSize(prevSize);
+  doc.setTextColor(prevColor);
 }
 
 // ---------------------------------------------------------------------------
@@ -1204,7 +1210,7 @@ function drawHowToLoveBlock(
   const calloutTitle = sections.get("SECTION_5C_CALLOUT_TITLE") || "";
   const calloutBody = sections.get("SECTION_5C_CALLOUT_BODY") || "";
   const body2 = sections.get("SECTION_5C_BODY2") || "";
-  const grid = sections.get("SECTION_5C_GRID") || "";
+  const grid = sections.get("SECTION_5C_GRID") || sections.get("SECTION_5C_TABLE") || "";
 
   let y = startY + 14;
   if (y + 80 > 265) {
@@ -1499,7 +1505,7 @@ function buildHowToLovePage(
   const calloutTitle = sections.get("SECTION_5C_CALLOUT_TITLE") || "";
   const calloutBody = sections.get("SECTION_5C_CALLOUT_BODY") || "";
   const body2 = sections.get("SECTION_5C_BODY2") || "";
-  const grid = sections.get("SECTION_5C_GRID") || "";
+  const grid = sections.get("SECTION_5C_GRID") || sections.get("SECTION_5C_TABLE") || "";
 
   addCreamPage(doc);
   pageCounter.count = doc.getNumberOfPages();

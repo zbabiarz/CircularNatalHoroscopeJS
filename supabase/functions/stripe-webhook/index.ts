@@ -101,7 +101,7 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: Return
   if (isSubscription) {
     console.info(`Starting subscription sync for customer: ${customerId}`);
     await syncCustomerFromStripe(customerId, stripe, supabase);
-  } else if (mode === 'payment' && payment_status === 'paid') {
+  } else if (mode === 'payment' && (payment_status === 'paid' || payment_status === 'no_payment_required')) {
     try {
       const {
         id: checkout_session_id,
@@ -242,37 +242,24 @@ async function triggerShadowMapPipeline(resultId: string | undefined, email: str
         ai_report_error: `Report generation failed: ${errText.slice(0, 500)}`,
       })
       .eq('id', record.id);
-
-    try {
-      await fetch(
-        `${supabaseUrl}/functions/v1/send-pdf-webhook`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${supabaseServiceKey}`,
-          },
-          body: JSON.stringify({
-            name: record.name,
-            email: record.email,
-            chironSign: record.chiron_sign,
-            chironHouse: record.chiron_house,
-            shadowId: record.shadow_id,
-            resultId: record.id,
-            type: 'report_generation_failed',
-            error: `Report generation HTTP error: ${reportResponse.status}`,
-          }),
-        }
-      );
-    } catch (_) { /* best-effort */ }
+    // Intentionally do NOT call the delivery webhook here. The admin dashboard
+    // surfaces the failure so the report can be regenerated manually without
+    // sending the customer a broken "your map is ready" email.
     return;
   }
 
   let reportData = await reportResponse.json();
   console.log('Report generated, length:', reportData.report?.length, 'status:', reportData.status);
 
-  if (!reportData.isValid || (reportData.report?.length ?? 0) < 1000) {
-    console.warn('Report incomplete or refused, retrying once...');
+  // Paid customer: if the first full-generate pass came back short/refused,
+  // retry up to 2 more times with a short backoff before giving up.
+  for (let retryAttempt = 0; retryAttempt < 2; retryAttempt++) {
+    if (reportData.isValid && (reportData.report?.length ?? 0) >= 5000) break;
+
+    const backoffMs = 2000 * (retryAttempt + 1);
+    console.warn(`Report incomplete (len=${reportData.report?.length ?? 0}, status=${reportData.status}), retry ${retryAttempt + 1}/2 after ${backoffMs}ms...`);
+    await new Promise((r) => setTimeout(r, backoffMs));
+
     const retryResponse = await fetch(
       `${supabaseUrl}/functions/v1/generate-report`,
       {
@@ -290,14 +277,14 @@ async function triggerShadowMapPipeline(resultId: string | undefined, email: str
       }
     );
 
-    if (retryResponse.ok) {
-      const retryData = await retryResponse.json();
-      console.log('Retry report length:', retryData.report?.length, 'status:', retryData.status);
-      if ((retryData.report?.length ?? 0) > (reportData.report?.length ?? 0)) {
-        reportData = retryData;
-      }
-    } else {
-      console.error('Retry also failed:', retryResponse.status);
+    if (!retryResponse.ok) {
+      console.error('Retry HTTP failure:', retryResponse.status);
+      continue;
+    }
+    const retryData = await retryResponse.json();
+    console.log('Retry report length:', retryData.report?.length, 'status:', retryData.status);
+    if ((retryData.report?.length ?? 0) > (reportData.report?.length ?? 0)) {
+      reportData = retryData;
     }
   }
 
@@ -311,34 +298,11 @@ async function triggerShadowMapPipeline(resultId: string | undefined, email: str
         ai_report_error: `AI did not produce a usable report (length: ${reportData.report?.length ?? 0}, status: ${reportData.status ?? 'unknown'})`,
       })
       .eq('id', record.id);
-
-    // Notify n8n so the admin knows a paid customer's report failed
-    try {
-      await fetch(
-        `${supabaseUrl}/functions/v1/send-pdf-webhook`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${supabaseServiceKey}`,
-          },
-          body: JSON.stringify({
-            name: record.name,
-            email: record.email,
-            chironSign: record.chiron_sign,
-            chironHouse: record.chiron_house,
-            chironDegree: Number(record.chiron_degree) || 0,
-            shadowId: record.shadow_id,
-            resultId: record.id,
-            type: 'report_generation_failed',
-            error: `AI report too short (${reportData.report?.length ?? 0} chars). Customer paid but report could not be generated.`,
-          }),
-        }
-      );
-      console.log('Failure notification sent to webhook');
-    } catch (webhookErr) {
-      console.error('Failed to send failure notification:', webhookErr);
-    }
+    // Intentionally do NOT send to the delivery webhook here. Previously this
+    // called send-pdf-webhook with a "report_generation_failed" marker but no
+    // pdfUrl/pdfBase64, which caused n8n to send the "Your Shadow Map is here"
+    // email with no attachment and a button that linked back to /result.
+    // The admin dashboard surfaces this failure so it can be regenerated.
     return;
   }
 

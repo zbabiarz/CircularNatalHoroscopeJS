@@ -50,6 +50,21 @@ function StatusBadge({ status }) {
   )
 }
 
+function TierBadge({ purchased }) {
+  const isPaid = Boolean(purchased)
+  const style = isPaid
+    ? { background: 'rgba(234,179,8,0.12)', color: 'rgba(250,204,21,0.9)', border: '1px solid rgba(234,179,8,0.25)' }
+    : { background: 'rgba(255,255,255,0.04)', color: 'rgba(198,190,186,0.45)', border: '1px solid rgba(198,190,186,0.08)' }
+  return (
+    <span
+      className="text-xs font-medium px-2 py-0.5 rounded-full"
+      style={{ ...style, letterSpacing: '0.05em' }}
+    >
+      {isPaid ? 'Paid' : 'Free'}
+    </span>
+  )
+}
+
 function SortIcon({ field, sortField, sortDir }) {
   if (sortField !== field) return <span style={{ color: 'rgba(198,190,186,0.2)', marginLeft: 4 }}>⇅</span>
   return <span style={{ color: magentaAccent, marginLeft: 4 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
@@ -69,8 +84,7 @@ function Admin() {
   const [selectedEntry, setSelectedEntry] = useState(null)
   const [sortField, setSortField] = useState('created_at')
   const [sortDir, setSortDir] = useState('desc')
-  const [sendingId, setSendingId] = useState(null)
-  const [sendResult, setSendResult] = useState({})
+
 
   useEffect(() => {
     if (!authenticated) return
@@ -117,31 +131,7 @@ function Admin() {
     }
   }
 
-  const handleForceSend = async (entry) => {
-    setSendingId(entry.id)
-    setSendResult(prev => ({ ...prev, [entry.id]: null }))
-    try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/resend-report`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ resultId: entry.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setSendResult(prev => ({ ...prev, [entry.id]: { success: false, message: data.error || `Failed (${res.status})` }}))
-      } else {
-        setSendResult(prev => ({ ...prev, [entry.id]: { success: true, message: `Sent! PDF: ${data.pdfPages} pages, delivered: ${data.deliverySent}` }}))
-        setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, ai_report_status: 'completed', ai_report_error: null } : e))
-      }
-    } catch (err) {
-      setSendResult(prev => ({ ...prev, [entry.id]: { success: false, message: err.message }}))
-    } finally {
-      setSendingId(null)
-    }
-  }
+
 
   const filteredEntries = useMemo(() => {
     if (!search.trim()) return entries
@@ -163,11 +153,11 @@ function Admin() {
   const handleSignFilter = (sign) => { setSignFilter(sign); setPage(1) }
 
   const exportCSV = () => {
-    const headers = ['Name', 'Email', 'Birth Date', 'Birth Time', 'Birth Location', 'Chiron Sign', 'Chiron House', 'Chiron Degree', 'Shadow ID', 'Report Status', 'Submitted']
+    const headers = ['Name', 'Email', 'Birth Date', 'Birth Time', 'Birth Location', 'Chiron Sign', 'Chiron House', 'Chiron Degree', 'Shadow ID', 'Tier', 'Report Status', 'Submitted']
     const rows = filteredEntries.map(e => [
       e.name, e.email, e.birth_date, e.birth_time || '', e.birth_location || '',
       e.chiron_sign, e.chiron_house || '', e.chiron_degree || '',
-      e.shadow_id, e.ai_report_status || '', e.created_at
+      e.shadow_id, e.has_purchased ? 'Paid' : 'Free', e.ai_report_status || '', e.created_at
     ])
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -320,6 +310,7 @@ function Admin() {
                       { label: 'Sign', field: 'chiron_sign' },
                       { label: 'House', field: null },
                       { label: 'Degree', field: null },
+                      { label: 'Tier', field: null },
                       { label: 'Status', field: null },
                       { label: 'Submitted', field: 'created_at' },
                       { label: '', field: null },
@@ -342,7 +333,7 @@ function Admin() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={10} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.3)' }}>
+                      <td colSpan={11} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.3)' }}>
                         <div className="flex flex-col items-center gap-3">
                           <div className="w-8 h-8 rounded-full border-t-2 border-b-2 animate-spin" style={{ borderColor: magentaAccent }} />
                           <span style={{ letterSpacing: '0.1em', fontSize: '0.75rem' }}>LOADING</span>
@@ -351,7 +342,7 @@ function Admin() {
                     </tr>
                   ) : filteredEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.25)', letterSpacing: '0.1em', fontSize: '0.8rem' }}>
+                      <td colSpan={11} className="text-center py-20" style={{ color: 'rgba(198,190,186,0.25)', letterSpacing: '0.1em', fontSize: '0.8rem' }}>
                         {search ? 'NO RESULTS FOUND' : 'NO ENTRIES YET'}
                       </td>
                     </tr>
@@ -373,37 +364,13 @@ function Admin() {
                         <td className="px-4 py-3.5 text-sm font-mono" style={{ color: 'rgba(198,190,186,0.45)' }}>
                           {entry.chiron_degree ? `${parseFloat(entry.chiron_degree).toFixed(1)}°` : '—'}
                         </td>
+                        <td className="px-4 py-3.5"><TierBadge purchased={entry.has_purchased} /></td>
                         <td className="px-4 py-3.5"><StatusBadge status={entry.ai_report_status} /></td>
                         <td className="px-4 py-3.5 text-sm" style={{ color: 'rgba(198,190,186,0.35)' }}>{fmt(entry.created_at)}</td>
                         <td className="px-4 py-3.5">
                           <span className="transition-all duration-150" style={{ color: 'rgba(198,190,186,0.2)' }}>›</span>
                         </td>
-                        <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                          {entry.ai_report_status !== 'completed' && entry.ai_report ? (
-                            <button
-                              onClick={() => handleForceSend(entry)}
-                              disabled={sendingId === entry.id}
-                              className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap"
-                              style={{
-                                background: sendingId === entry.id ? 'rgba(141,18,70,0.3)' : 'rgba(195,205,66,0.15)',
-                                color: sendingId === entry.id ? 'rgba(198,190,186,0.4)' : 'rgba(195,205,66,0.9)',
-                                border: '1px solid rgba(195,205,66,0.3)',
-                                cursor: sendingId === entry.id ? 'wait' : 'pointer',
-                                opacity: sendingId === entry.id ? 0.5 : 1,
-                              }}
-                              onMouseEnter={e => { if (sendingId !== entry.id) e.currentTarget.style.background = 'rgba(195,205,66,0.25)' }}
-                              onMouseLeave={e => { if (sendingId !== entry.id) e.currentTarget.style.background = 'rgba(195,205,66,0.15)' }}
-                            >
-                              {sendingId === entry.id ? 'Sending...' : 'Force Send'}
-                            </button>
-                          ) : sendResult[entry.id] ? (
-                            <span className="text-xs" style={{ color: sendResult[entry.id].success ? 'rgba(134,239,172,0.7)' : 'rgba(252,165,165,0.7)' }}>
-                              {sendResult[entry.id].success ? 'Sent' : 'Failed'}
-                            </span>
-                          ) : (
-                            <span className="text-xs" style={{ color: 'rgba(198,190,186,0.15)' }}>—</span>
-                          )}
-                        </td>
+
                       </tr>
                     ))
                   )}
