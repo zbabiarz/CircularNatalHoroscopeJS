@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { shadowMap } from '../data/shadowMap'
 import SparkleImage from '../components/SparkleImage'
 import MysticalLoader from '../components/MysticalLoader'
+import CollapsibleSection from '../components/CollapsibleSection'
 import TurbulentFlow from '../components/ui/turbulent-flow'
 import { supabase } from '../lib/supabase'
 
@@ -316,9 +317,7 @@ function Result() {
 
             {/* THE PATTERN UNDERNEATH */}
             <div className="mt-7 pt-7 border-t border-white/10 text-left max-w-lg mx-auto">
-              <p className="text-base font-semibold uppercase tracking-[0.16em] mb-3" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
-                The pattern underneath
-              </p>
+              <CollapsibleSection title="The pattern underneath">
               {miniReading ? (
                 <Paragraphs text={miniReading.pattern} className="text-white/85 text-lg leading-relaxed" />
               ) : (
@@ -331,26 +330,25 @@ function Result() {
                   </p>
                 </>
               )}
+              </CollapsibleSection>
             </div>
           </div>
 
           {/* MONEY SECTION */}
           {moneyText && (
-            <div className={`rounded-2xl p-8 md:p-10 mb-8 transition-all duration-800 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
-              <p className="text-base font-semibold uppercase tracking-[0.16em] mb-4" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
-                Where this shows up in your money
-              </p>
-              <Paragraphs text={moneyText} className="text-white/85 text-lg leading-relaxed" />
+            <div className={`rounded-2xl p-6 md:p-8 mb-6 transition-all duration-800 delay-100 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
+              <CollapsibleSection title="Where this shows up in your money">
+                <Paragraphs text={moneyText} className="text-white/85 text-lg leading-relaxed" />
+              </CollapsibleSection>
             </div>
           )}
 
           {/* THE TRAP SECTION */}
           {trapText && (
-            <div className={`rounded-2xl p-8 md:p-10 mb-8 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
-              <p className="text-base font-semibold uppercase tracking-[0.16em] mb-4" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
-                The trap you keep falling into
-              </p>
-              <Paragraphs text={trapText} className="text-white/85 text-lg leading-relaxed" />
+            <div className={`rounded-2xl p-6 md:p-8 mb-8 transition-all duration-800 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`} style={{ background: 'rgba(10,10,15,0.85)', border: '1px solid rgba(195,205,66,0.2)' }}>
+              <CollapsibleSection title="The trap you keep falling into">
+                <Paragraphs text={trapText} className="text-white/85 text-lg leading-relaxed" />
+              </CollapsibleSection>
             </div>
           )}
 
