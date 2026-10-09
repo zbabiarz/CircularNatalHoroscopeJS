@@ -1,3 +1,5 @@
+import SwissEPH from 'sweph-wasm'
+
 let swissEph = null
 let initSucceeded = false
 let epheFilesLoaded = false
@@ -14,7 +16,6 @@ export async function initSwissEph() {
 
   initPromise = (async () => {
     try {
-      const SwissEPH = (await import('sweph-wasm')).default
       swissEph = await SwissEPH.init()
 
       initSucceeded = true
