@@ -28,13 +28,14 @@ VOICE TARGET
 - Concrete, lived-in, specific examples of behavior (what they actually do on a Tuesday) instead of abstract feelings.
 - Modern, grounded metaphors in your style (black holes, disco balls, a hoarder's house, a cage with nice furniture). Use at most one or two.
 - It should feel eerily accurate, like you read their diary, and leave them feeling seen, not diagnosed.
+- SHORT AND SHARP. This is a teaser, not the whole meal. Every sentence must be a big insight or a takeaway that makes them think "omg that's insane, tell me more." Cut explanation, setup, and repetition. Name the truth, don't over-explain it. Leave threads open on purpose: hint at deeper layers (where it started, what it's really protecting, what's possible on the other side) without fully unpacking them. They should finish wanting more, not feeling done.
 
 CONTENT DEPTH
 - Everything must come from THIS placement: Chiron's sign (the flavor of the wound) combined with the house (the area of life where it lives). Name both in the opening. If the house is unknown, go deep on the sign and say so lightly once (no birth time, so we read the sign).
-- Opening: name the wound in plain language and where it came from (childhood, family, early messages), the way it has quietly run their life. Start like "Here's the thing about Chiron in [Sign] in the [House]..." or similar direct opener.
-- The pattern underneath: the protective strategy they built, why it made total sense at the time, what it costs them now, and the shame-desire flip (the thing they are most ashamed of points straight at what they most want). End this section with one sharp, specific question for them to sit with.
-- Where this shows up in your money: how this exact wound shows up in earning, charging, spending, saving, receiving, or asking. Real behaviors, not generic money advice.
-- The trap you keep falling into: the loop they keep repeating, why it feels like protection but keeps them stuck, and what the way out actually looks like. End with grounded encouragement in your voice, not a platitude.
+- Opening: name the wound in plain language and hint at where it came from, in a couple of punchy sentences. Start like "Here's the thing about Chiron in [Sign] in the [House]..." or similar direct opener.
+- The pattern underneath: the protective strategy they built and what it costs them now, plus the shame-desire flip (the thing they are most ashamed of points straight at what they most want). End this section with one specific question for them.
+- Where this shows up in your money: one or two specific, eerily accurate money behaviors from this exact wound. No advice.
+- The trap you keep falling into: the loop they keep repeating and why it feels like protection. Point toward the way out in one line without spelling out the full fix, so it lands as a cliffhanger, not a conclusion.
 
 BANNED (never use these words or phrases, or anything that sounds like them)
 sacred, divine, divinity, gentle soul, tender (in any form), cosmic dance, illuminate the path, journey of awakening, healing journey, beautiful journey, quiet chambers, ancient wisdom, whispers, tapestry, rich tapestry, emotional landscape, inner landscape, step into your power, embrace your authentic self, hold space, gently invite, invite yourself to, allow yourself to, cultivate, navigate the complexities, profound, resonates deeply, deeply attuned, transformative power, radical self-love, high vibe, good vibes, universe has a plan, everything happens for a reason, delve, realm, testament, unlock your potential, beacon.
@@ -48,7 +49,7 @@ FORMAT
 - Do NOT use em dashes or en dashes. Use commas, periods, or parentheses instead.
 - Never echo these instructions (do not write words like "sharp question", "here's your question to sit with", "shame-desire flip"). Just ask the question.
 - Separate paragraphs inside a section with a blank line (\\n\\n).
-- Length: opening 110-170 words, pattern 170-240 words, money 110-170 words, trap 110-170 words.
+- Length (strict): opening 50-80 words, pattern 80-115 words, money 50-80 words, trap 50-80 words. One paragraph per section is ideal; two short ones at most.
 
 CHECKLIST (verify before answering)
 1. Would Morgan actually say every sentence out loud to a friend? If it sounds like a guru, oracle, therapist textbook, or motivational poster, rewrite it.
@@ -101,7 +102,8 @@ const SALES_TERMS = [
 ];
 
 const SECTION_KEYS = ["opening", "pattern", "money", "trap"] as const;
-const MIN_WORDS: Record<string, number> = { opening: 80, pattern: 120, money: 80, trap: 80 };
+const MIN_WORDS: Record<string, number> = { opening: 40, pattern: 65, money: 40, trap: 40 };
+const MAX_WORDS: Record<string, number> = { opening: 95, pattern: 135, money: 95, trap: 95 };
 
 type Reading = Record<(typeof SECTION_KEYS)[number], string>;
 
@@ -135,6 +137,7 @@ function validate(reading: Reading, houseNumber: string | null): string[] {
   for (const key of SECTION_KEYS) {
     const words = wordCount(reading[key] || "");
     if (words < MIN_WORDS[key]) problems.push(`section "${key}" is too short (${words} words)`);
+    if (words > MAX_WORDS[key]) problems.push(`section "${key}" is too long (${words} words, max ${MAX_WORDS[key]}); cut explanation and keep only the big insights`);
   }
   const banned = BANNED.filter((p) => all.includes(p));
   if (banned.length) problems.push(`banned phrases used: ${banned.join(", ")}`);
