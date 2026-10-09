@@ -37,6 +37,13 @@ const trapInsights = {
 }
 
 const READING_KEYS = ['opening', 'pattern', 'money', 'trap']
+const UPSELL_BENEFITS = [
+  'The missing piece that connects the dots across your whole life',
+  'How the same pattern shows up in love, money, work, self-worth, and health',
+  'The exact practices I use to catch the pattern in real time and stop letting it make decisions',
+  'How your shadow can get you paid, known + recommended as your superpower',
+  'A chart for how to love the people in your life better based on their Chiron',
+]
 const POLL_INTERVAL_MS = 3000
 const MAX_POLLS = 30
 
@@ -162,7 +169,7 @@ function Result() {
     }
   }, [checkoutSuccess, isLoading])
 
-  const { name, chironSign, chironHouse, chironDegree, shadowId, email, resultId } = resultData
+  const { name, chironSign, chironHouse, shadowId, email, resultId } = resultData
 
   const handleCheckout = async () => {
     if (!resultId) {
@@ -300,9 +307,6 @@ function Result() {
                 {chironHouse && chironHouse !== 'Unknown' && (
                   <> in the <span className="font-semibold text-white">{chironHouse}</span></>
                 )}
-                {chironDegree && (
-                  <> at <span className="font-semibold text-white">{parseFloat(chironDegree).toFixed(1)}°</span></>
-                )}
               </p>
             </div>
 
@@ -392,36 +396,32 @@ function Result() {
               </>
             ) : (
               <>
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  {fromEmail ? "You've seen the surface. Now go deeper." : "This is just the surface."}
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 uppercase leading-tight" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  You found the wound. Now find the gold.
                 </h2>
-                <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Your Chiron placement reveals the deepest shadow pattern running your entire life. Your relationships, your career, your money, your body, all of it.
+                <p className="text-white/85 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Because that pattern has fingerprints ALL over your life.
                 </p>
-                <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  Get your full 26-page Shadow Map and see exactly how this wound has been operating behind the scenes, and how to flip it into the thing that actually gives you your edge.
+                <p className="text-white/70 text-lg leading-relaxed mb-4 max-w-lg mx-auto" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  Love, money, work, visibility, self-worth, health … all the places you thought were separate start connecting fast once you know what you're looking at.
+                </p>
+                <p className="text-white/85 text-lg leading-relaxed mb-6 max-w-lg mx-auto font-semibold" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  The full Shadow Map shows you how this pain becomes your superpower!
                 </p>
 
-                <div className="space-y-3 mb-8 max-w-sm mx-auto text-left">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                      How your wound shows up in relationships, career, money, and your body
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                      The protection patterns you built (and why they're keeping you stuck)
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
-                    <p className="text-white/80 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                      Your hidden superpower and how to actually use it
-                    </p>
-                  </div>
-                </div>
+                <p className="text-base font-semibold uppercase tracking-[0.16em] mb-4" style={{ color: '#c3cd42', fontFamily: "'Montserrat', sans-serif" }}>
+                  Here's what you get in 26+ pages
+                </p>
+                <ul className="space-y-3 mb-8 max-w-md mx-auto text-left">
+                  {UPSELL_BENEFITS.map((benefit) => (
+                    <li key={benefit} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex-shrink-0" style={{ color: '#c3cd42' }}>&#10022;</span>
+                      <p className="text-white/80 text-base leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                        {benefit}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
 
                 <button
                   onClick={handleCheckout}
@@ -433,7 +433,7 @@ function Result() {
                 </button>
 
                 <p className="text-white/40 mt-4 text-base" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                  26-page personalized deep dive delivered to your inbox
+                  26+ page personalized deep dive delivered to your inbox
                 </p>
               </>
             )}
