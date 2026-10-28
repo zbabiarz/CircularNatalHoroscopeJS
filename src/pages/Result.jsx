@@ -156,6 +156,17 @@ function Result() {
         })
     }
 
+    const sessionId = searchParams.get('session_id')
+    if (checkoutSuccess && sessionId && hasResultId) {
+      // Backup to the Stripe notification: confirm the payment directly so a missed notice can't strand a buyer.
+      supabase.functions
+        .invoke('confirm-checkout', { body: { sessionId, resultId: resultData.resultId } })
+        .then(({ data, error }) => {
+          if (error) console.error('Purchase confirmation failed:', error)
+          else if (data?.status === 'confirmed') setHasPurchased(true)
+        })
+    }
+
     if (!checkoutSuccess) {
       window.scrollTo(0, 0)
     }

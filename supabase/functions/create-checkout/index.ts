@@ -17,7 +17,6 @@ const stripe = new Stripe(stripeSecret, {
 });
 
 const PRODUCT_ID = 'prod_VF4Gq1OPQSHlOR';
-// Force redeploy to ensure success_url includes /result path
 
 const ALLOWED_ORIGINS = [
   'https://shadow.lovelightandblackholes.com',
@@ -139,7 +138,7 @@ Deno.serve(async (req: Request) => {
         name: name,
         product: 'The Shadow Map',
       },
-      success_url: `${origin}/result?checkout=success&resultId=${resultId}`,
+      success_url: `${origin}/result?checkout=success&resultId=${resultId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/result?checkout=cancelled&resultId=${resultId}`,
     });
 

@@ -1,0 +1,49 @@
+{
+  "projectId": "60961992",
+  "functions": {
+    "create-checkout": {
+      "hasChanged": false,
+      "hash": "123ca3f84cafa210f1c902adfb700e42ad90863e701148990915348931a33687"
+    },
+    "generate-mini-reading": {
+      "hasChanged": false,
+      "hash": "9a4c8c3b979b1ea71b4c07b7a12f906c7fa707796e11970e0276ca470dd7bba5"
+    },
+    "generate-pdf": {
+      "hasChanged": false,
+      "hash": "e713ba062b02cedf7cc50edda3b1c950f7ad99269d5a76f0f0a508e37a24cc84"
+    },
+    "generate-report": {
+      "hasChanged": false,
+      "hash": "01ba514f5df61d1fadc4193913f25ec4dcd90e1d2c14cc2ecc392d5457f780db"
+    },
+    "regenerate-report": {
+      "hasChanged": false,
+      "hash": "b02a8fa1ec07f85137a388283b43986f99968f4273c72c4a3d12f4845133db78"
+    },
+    "resend-report": {
+      "hasChanged": false,
+      "hash": "b196c25cd8683ff5be07e96974c3db3feaa250d217b9d975aa897121e2da5816"
+    },
+    "send-pdf-webhook": {
+      "hasChanged": false,
+      "hash": "49e8d7d8da3ff8183838172088d33b29b9b4c2cf2560b5001991ba003b6c2511"
+    },
+    "stripe-checkout": {
+      "hasChanged": false,
+      "hash": "e6ab23f705797d8776f70de98647aadcfad270a26bde6dec19bdc72e6d7e9ad3"
+    },
+    "stripe-webhook": {
+      "hasChanged": false,
+      "hash": "c0880999298b45826784b8ad36f1ca791a5efa1bb9bf23c9653ac3d6dc0441c5"
+    },
+    "confirm-checkout": {
+      "hasChanged": false,
+      "hash": "a3ecba8e9d46dcbcecd33843f83953c305b572ed38bff4c2fdebc11cfa7d4608"
+    },
+    "fulfill-order": {
+      "hasChanged": false,
+      "hash": "48175ffadadef815a6ecd5ebdef28f67cca18c768de72069d2be77d92b2d4edc"
+    }
+  }
+}
