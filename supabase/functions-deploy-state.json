@@ -1,9 +1,17 @@
 {
   "projectId": "60961992",
   "functions": {
+    "confirm-checkout": {
+      "hasChanged": false,
+      "hash": "a3ecba8e9d46dcbcecd33843f83953c305b572ed38bff4c2fdebc11cfa7d4608"
+    },
     "create-checkout": {
       "hasChanged": false,
       "hash": "123ca3f84cafa210f1c902adfb700e42ad90863e701148990915348931a33687"
+    },
+    "fulfill-order": {
+      "hasChanged": false,
+      "hash": "48175ffadadef815a6ecd5ebdef28f67cca18c768de72069d2be77d92b2d4edc"
     },
     "generate-mini-reading": {
       "hasChanged": false,
@@ -37,13 +45,9 @@
       "hasChanged": false,
       "hash": "c0880999298b45826784b8ad36f1ca791a5efa1bb9bf23c9653ac3d6dc0441c5"
     },
-    "confirm-checkout": {
+    "reconcile-payments": {
       "hasChanged": false,
-      "hash": "a3ecba8e9d46dcbcecd33843f83953c305b572ed38bff4c2fdebc11cfa7d4608"
-    },
-    "fulfill-order": {
-      "hasChanged": false,
-      "hash": "48175ffadadef815a6ecd5ebdef28f67cca18c768de72069d2be77d92b2d4edc"
+      "hash": "f0941621484b4590b4ac4419b06df5f2f4591b5934ce0abdc0bb20a38e77e7a0"
     }
   }
 }

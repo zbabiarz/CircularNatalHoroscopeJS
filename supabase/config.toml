@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.confirm-checkout]
 verify_jwt = false
+
+[functions.reconcile-payments]
+verify_jwt = false
