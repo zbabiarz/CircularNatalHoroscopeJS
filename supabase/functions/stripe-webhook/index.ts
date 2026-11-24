@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
     console.log(`Received event: ${event.type} (id: ${event.id})`);
 
-    const handled = await handleEvent(event, stripe, supabase);
+    const handled = await handleEvent(event, supabase);
     if (!handled) {
       return respond({ error: 'Processing failed' }, 500);
     }
@@ -74,23 +74,17 @@ Deno.serve(async (req) => {
   }
 });
 
-async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: ReturnType<typeof createClient>): Promise<boolean> {
+async function handleEvent(event: Stripe.Event, supabase: ReturnType<typeof createClient>): Promise<boolean> {
   if (event.type !== 'checkout.session.completed' && event.type !== 'checkout.session.async_payment_succeeded') {
     return true;
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+  const resultId = session.metadata?.result_id;
 
-  if (session.mode === 'subscription') {
-    if (!customerId) {
-      console.error(`Subscription checkout without customer: ${session.id}`);
-      return true;
-    }
-    return syncCustomerFromStripe(customerId, stripe, supabase);
-  }
-
-  if (session.mode !== 'payment') return true;
+  // The Stripe account also sells unrelated products; only checkouts started by this app carry a result_id.
+  // Shadow Map add-ons bought elsewhere are picked up by reconcile-payments.
+  if (session.mode !== 'payment' || !resultId) return true;
 
   if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') {
     console.info(`Checkout ${session.id} not paid yet (${session.payment_status}), waiting for async payment`);
@@ -101,7 +95,7 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: Return
     {
       checkout_session_id: session.id,
       payment_intent_id: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id ?? null,
-      customer_id: customerId,
+      customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null,
       amount_subtotal: session.amount_subtotal ?? 0,
       amount_total: session.amount_total ?? 0,
       currency: session.currency ?? 'usd',
@@ -116,21 +110,13 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: Return
     return false;
   }
 
-  const resultId = session.metadata?.result_id;
-  const email = session.customer_details?.email || session.metadata?.email;
-
-  if (!resultId && !email) {
-    console.error(`No result_id or email on checkout ${session.id}; cannot match a buyer`);
-    return true;
-  }
-
   const fulfillResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/fulfill-order`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
     },
-    body: JSON.stringify({ resultId, email }),
+    body: JSON.stringify({ resultId }),
   });
 
   if (!fulfillResponse.ok) {
@@ -140,57 +126,4 @@ async function handleEvent(event: Stripe.Event, stripe: Stripe, supabase: Return
 
   console.info(`Fulfillment handed off for checkout ${session.id} (amount: ${session.amount_total})`);
   return true;
-}
-
-async function syncCustomerFromStripe(customerId: string, stripe: Stripe, supabase: ReturnType<typeof createClient>): Promise<boolean> {
-  try {
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      limit: 1,
-      status: 'all',
-      expand: ['data.default_payment_method'],
-    });
-
-    if (subscriptions.data.length === 0) {
-      const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
-        { customer_id: customerId, subscription_status: 'not_started' },
-        { onConflict: 'customer_id' },
-      );
-      if (noSubError) {
-        console.error('Error updating subscription status:', noSubError);
-        return false;
-      }
-      return true;
-    }
-
-    const subscription = subscriptions.data[0];
-
-    const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
-      {
-        customer_id: customerId,
-        subscription_id: subscription.id,
-        price_id: subscription.items.data[0].price.id,
-        current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        ...(subscription.default_payment_method && typeof subscription.default_payment_method !== 'string'
-          ? {
-              payment_method_brand: subscription.default_payment_method.card?.brand ?? null,
-              payment_method_last4: subscription.default_payment_method.card?.last4 ?? null,
-            }
-          : {}),
-        status: subscription.status,
-      },
-      { onConflict: 'customer_id' },
-    );
-
-    if (subError) {
-      console.error('Error syncing subscription:', subError);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error(`Failed to sync subscription for customer ${customerId}:`, error);
-    return false;
-  }
 }
